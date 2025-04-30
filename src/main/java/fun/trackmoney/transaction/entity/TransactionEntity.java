@@ -1,6 +1,7 @@
 package fun.trackmoney.transaction.entity;
 
 import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
 import jakarta.persistence.*;
 
@@ -15,11 +16,14 @@ public class TransactionEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer transactionId;
   @ManyToOne
-  private AccountEntity accountId;
-  @OneToMany
-  private AccountEntity categoryId;
-
+  @JoinColumn(name = "account_id", nullable = false)
+  private AccountEntity account;
+  @ManyToOne
+  @JoinColumn(name = "category_id", nullable = false)
+  private CategoryEntity category;
+  @Enumerated(EnumType.STRING)
   private TransactionType transactionType;
+
   private BigDecimal amount;
   private String description;
   private Timestamp transactionDate;
@@ -27,10 +31,10 @@ public class TransactionEntity {
   public TransactionEntity() {
   }
 
-  public TransactionEntity(Integer transactionId, AccountEntity accountId, AccountEntity categoryId, TransactionType transactionType, BigDecimal amount, String description, Timestamp transactionDate) {
+  public TransactionEntity(Integer transactionId, AccountEntity account, CategoryEntity category, TransactionType transactionType, BigDecimal amount, String description, Timestamp transactionDate) {
     this.transactionId = transactionId;
-    this.accountId = accountId;
-    this.categoryId = categoryId;
+    this.account = account;
+    this.category = category;
     this.transactionType = transactionType;
     this.amount = amount;
     this.description = description;
@@ -45,20 +49,20 @@ public class TransactionEntity {
     this.transactionId = transactionId;
   }
 
-  public AccountEntity getAccountId() {
-    return accountId;
+  public AccountEntity getaccount() {
+    return account;
   }
 
-  public void setAccountId(AccountEntity accountId) {
-    this.accountId = accountId;
+  public void setaccount(AccountEntity account) {
+    this.account = account;
   }
 
-  public AccountEntity getCategoryId() {
-    return categoryId;
+  public CategoryEntity getcategory() {
+    return category;
   }
 
-  public void setCategoryId(AccountEntity categoryId) {
-    this.categoryId = categoryId;
+  public void setcategory(CategoryEntity category) {
+    this.category = category;
   }
 
   public TransactionType getTransactionType() {
