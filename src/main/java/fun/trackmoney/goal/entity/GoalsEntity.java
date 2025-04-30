@@ -1,11 +1,12 @@
 package fun.trackmoney.goal.entity;
 
+import fun.trackmoney.account.entity.AccountEntity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "tb_transaction")
+@Table(name = "tb_goals")
 public class GoalsEntity {
 
   @Id
@@ -13,8 +14,9 @@ public class GoalsEntity {
   private Integer goalsId;
 
   private String goal;
-
-  private Integer accountId;
+  @ManyToOne
+  @JoinColumn(name = "account_id", nullable = false)
+  private AccountEntity account;
   private BigDecimal targetAmount;
   private BigDecimal currentAmount;
   private Integer progress;
@@ -22,10 +24,10 @@ public class GoalsEntity {
   public GoalsEntity() {
   }
 
-  public GoalsEntity(Integer goalsId, String goal, Integer accountId, BigDecimal targetAmount, BigDecimal currentAmount, Integer progress) {
+  public GoalsEntity(Integer goalsId, String goal, AccountEntity account, BigDecimal targetAmount, BigDecimal currentAmount, Integer progress) {
     this.goalsId = goalsId;
     this.goal = goal;
-    this.accountId = accountId;
+    this.account = account;
     this.targetAmount = targetAmount;
     this.currentAmount = currentAmount;
     this.progress = progress;
@@ -47,12 +49,12 @@ public class GoalsEntity {
     this.goal = goal;
   }
 
-  public Integer getAccountId() {
-    return accountId;
+  public AccountEntity getAccount() {
+    return account;
   }
 
-  public void setAccountId(Integer accountId) {
-    this.accountId = accountId;
+  public void setAccount(AccountEntity account) {
+    this.account = account;
   }
 
   public BigDecimal getTargetAmount() {
