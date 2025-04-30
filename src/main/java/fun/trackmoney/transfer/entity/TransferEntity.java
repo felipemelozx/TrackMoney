@@ -19,9 +19,11 @@ public class TransferEntity {
   private Timestamp transferDate;
 
   @ManyToOne
+  @JoinColumn(name = "from_account_id", nullable = false)
   private AccountEntity fromAccountId;
 
   @ManyToOne
+  @JoinColumn(name = "to_account_id", nullable = false)
   private AccountEntity toAccountId;
 
   public TransferEntity() {

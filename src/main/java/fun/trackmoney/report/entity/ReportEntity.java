@@ -15,7 +15,8 @@ public class ReportEntity {
   private Integer reportId;
 
   @ManyToOne
-  private AccountEntity accountId;
+  @JoinColumn(name = "account_id", nullable = false)
+  private AccountEntity account;
   private Timestamp startDate;
   private Timestamp endDate;
   private BigDecimal totalIncome;
@@ -26,7 +27,7 @@ public class ReportEntity {
 
   public ReportEntity(Integer reportId, AccountEntity accountId, Timestamp startDate, Timestamp endDate, BigDecimal totalIncome, BigDecimal totalExpense) {
     this.reportId = reportId;
-    this.accountId = accountId;
+    this.account = accountId;
     this.startDate = startDate;
     this.endDate = endDate;
     this.totalIncome = totalIncome;
@@ -41,12 +42,12 @@ public class ReportEntity {
     this.reportId = reportId;
   }
 
-  public AccountEntity getAccountId() {
-    return accountId;
+  public AccountEntity getAccount() {
+    return account;
   }
 
-  public void setAccountId(AccountEntity accountId) {
-    this.accountId = accountId;
+  public void setAccount(AccountEntity account) {
+    this.account = account;
   }
 
   public Timestamp getStartDate() {

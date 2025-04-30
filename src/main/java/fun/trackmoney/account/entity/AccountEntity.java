@@ -4,7 +4,6 @@ import fun.trackmoney.user.entity.UserEntity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Entity
 @Table(name = "tb_account")
@@ -15,7 +14,8 @@ public class AccountEntity {
   private Integer accountId;
 
   @ManyToOne
-  private UserEntity userId;
+  @JoinColumn(name = "user_id", nullable = false)
+  private UserEntity user;
 
   private String name;
   private BigDecimal balance;
@@ -24,9 +24,9 @@ public class AccountEntity {
   public AccountEntity() {
   }
 
-  public AccountEntity(Integer accountId, UserEntity userId, String name, BigDecimal balance, Boolean isAccountDefault) {
+  public AccountEntity(Integer accountId, UserEntity user, String name, BigDecimal balance, Boolean isAccountDefault) {
     this.accountId = accountId;
-    this.userId = userId;
+    this.user = user;
     this.name = name;
     this.balance = balance;
     this.isAccountDefault = isAccountDefault;
@@ -40,12 +40,12 @@ public class AccountEntity {
     this.accountId = accountId;
   }
 
-  public UserEntity getUserId() {
-    return userId;
+  public UserEntity getUser() {
+    return user;
   }
 
-  public void setUserId(UserEntity userId) {
-    this.userId = userId;
+  public void setUser(UserEntity user) {
+    this.user = user;
   }
 
   public String getName() {
