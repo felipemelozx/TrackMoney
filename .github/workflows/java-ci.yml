@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - - name: Start PostgreSQL with Docker Compose
+      - run: |
+      - docker compose up -d
+      - sleep 20
+
       - name: Checkout code
         uses: actions/checkout@v2
 
