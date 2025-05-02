@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<checkstyle>
+
+    <!-- Define the global rules -->
+    <module name="Checker">
+
+        <!-- Limits the length of code lines -->
+        <module name="LineLength">
+            <property name="max" value="120"/> <!-- Maximum of 120 characters per line -->
+        </module>
+
+        <!-- Indentation: uses 2 spaces (or 4 spaces, depending on your preferences) -->
+        <module name="Indentation">
+            <property name="tabWidth" value="2"/>
+            <property name="useTabCharacter" value="false"/>
+        </module>
+
+        <!-- Checks class and method naming conventions -->
+        <module name="TypeName">
+            <property name="format" value="^[A-Z][a-zA-Z0-9]*$"/> <!-- CamelCase for classes -->
+        </module>
+
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/> <!-- camelCase for methods -->
+        </module>
+
+        <!-- Checks the use of curly braces for code blocks, even in a single line -->
+        <module name="RightCurly">
+            <property name="option" value="ALWAYS"/>
+        </module>
+
+        <!-- Checks the use of spaces around operators -->
+        <module name="WhitespaceAround">
+            <property name="allow" value="a,=,[]"/>
+        </module>
+
+        <!-- Requires a blank line between methods -->
+        <module name="SeparatorWrap">
+            <property name="requireEmptyLine" value="true"/>
+        </module>
+
+        <!-- Checks if variables are named correctly -->
+        <module name="LocalVariableName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/> <!-- camelCase for local variables -->
+        </module>
+
+        <module name="ConstantName">
+            <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/> <!-- Upper case and separated by underscores -->
+        </module>
+
+        <!-- Checks the use of access modifiers (public/private/protected) -->
+        <module name="VisibilityModifier">
+            <property name="public" value="false"/> <!-- Requires public members to be well justified -->
+        </module>
+
+        <!-- Avoids methods with too many parameters -->
+        <module name="MethodParamPad">
+            <property name="max" value="7"/> <!-- Maximum of 7 parameters in a method -->
+        </module>
+
+        <!-- Checks if spaces are used to align elements properly -->
+        <module name="WhitespaceAround">
+            <property name="checkParameters" value="true"/>
+        </module>
+
+        <!-- Ensures that methods have Javadoc comments explaining their functionality -->
+        <module name="JavadocMethod">
+            <property name="requireJavadoc" value="true"/>
+            <property name="scope" value="public"/>
+        </module>
+
+        <!-- Checks if classes have Javadoc -->
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+        </module>
+
+        <!-- Ensures that the code style adheres to Java conventions -->
+        <module name="FileTabCharacter">
+            <property name="useTabs" value="false"/> <!-- Use spaces instead of tabs -->
+        </module>
+
+        <!-- Requires a space between the type and the variable name -->
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        </module>
+
+    </module>
+</checkstyle>
