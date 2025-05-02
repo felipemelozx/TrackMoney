@@ -26,7 +26,7 @@ jobs:
         run: mvn clean install -DskipTests
 
       - name: Run tests
-        run: mvn test
+        run: mvn test -Dspring.profiles.active=test
 
       - name: Run Checkstyle
         run: mvn checkstyle:check
