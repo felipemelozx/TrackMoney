@@ -109,23 +109,36 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!--<plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.1.2</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<consoleOutput>true</consoleOutput>
+					<failsOnError>false</failsOnError>
+					<failOnViolation>true</failOnViolation>
+					<violationSeverity>warning</violationSeverity>
+					<outputFile>target/checkstyle-result.xml</outputFile>
+					<configLocation>sun_checks.xml</configLocation>
+				</configuration>
 				<executions>
 					<execution>
+						<id>check-style</id>
+						<phase>validate</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
-						<configuration>
-							<configLocation>checks.xml</configLocation>
-							<encoding>UTF-8</encoding>
-							<failOnViolation>true</failOnViolation>
-						</configuration>
 					</execution>
 				</executions>
-			</plugin>-->
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>8.30</version>
+					</dependency>
+				</dependencies>
+			</plugin>
 		</plugins>
 	</build>
 </project>

@@ -31,8 +31,8 @@ jobs:
       - name: Run tests
         run: mvn test -Dspring.profiles.active=test
 
-      #- name: Run Checkstyle
-       # run: mvn checkstyle:check
+      - name: Run Checkstyle
+        run: mvn checkstyle:check
 
       - name: Build JAR file
         run: mvn package
