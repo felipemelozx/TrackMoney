@@ -39,8 +39,9 @@ jobs:
           restore-keys: ${{ runner.os }}-maven
 
       - name: SonarCloud Scan
-        run: mvn verify sonar:sonar -DskipTests \
-          -Dsonar.projectKey=felipemelozx_TrackMoney \
-          -Dsonar.organization=felipemelozx-trackmoney \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn verify sonar:sonar -DskipTests \
+            -Dsonar.projectKey=felipemelozx_TrackMoney \
+            -Dsonar.organization=felipemelozx-trackmoney \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
