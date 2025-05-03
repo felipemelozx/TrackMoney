@@ -40,8 +40,9 @@ jobs:
 
       - name: SonarCloud Scan
         run: |
-          mvn verify sonar:sonar -DskipTests \
+          mvn verify sonar:sonar -Dspring.profiles.active=test \
             -Dsonar.projectKey=felipemelozx_TrackMoney \
             -Dsonar.organization=felipemelozx-trackmoney \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
