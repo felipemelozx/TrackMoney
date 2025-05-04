@@ -120,7 +120,7 @@
 					<failOnViolation>true</failOnViolation>
 					<violationSeverity>warning</violationSeverity>
 					<outputFile>target/checkstyle-result.xml</outputFile>
-					<configLocation>sun_checks.xml</configLocation>
+					<configLocation>google_checks.xml</configLocation>
 				</configuration>
 				<executions>
 					<execution>
