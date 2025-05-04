@@ -1,9 +1,12 @@
 package fun.trackmoney.user.repository;
 
 import fun.trackmoney.user.entity.UserEntity;
+import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.UUID;
-
+/**
+ * Repository interface for accessing and managing
+ * {@link UserEntity} instances in the database.
+ */
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 }
