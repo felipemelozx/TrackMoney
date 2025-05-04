@@ -1,4 +1,4 @@
-# Financial Management Application (Backend)
+# TrackMoney (Backend)
 
 ## Overview
 
@@ -42,7 +42,7 @@ This is the backend part of a full-stack financial management application, desig
 ### Infrastructure Management
 
 - **Terraform** for automating infrastructure provisioning on **AWS**.
-    - The infrastructure includes resources like **EC2**, **RDS** (for PostgreSQL), and **VPC**.
+    - The infrastructure includes resources like **EC2**, **RDS** (for PostgreSQL).
 
 ## Key Features
 
@@ -85,19 +85,13 @@ The backend follows a **Clean Architecture** approach, organizing the code into 
 1. Clone the repository:
 
 ```bash
-bash
-CopyEdit
-git clone https://github.com/your-username/financial-management-backend.git
-
+git clone https://github.com/felipemelozx/TrackMoney.git
 ```
 
 1. Navigate into the project folder:
 
 ```bash
-bash
-CopyEdit
-cd financial-management-backend
-
+cd TrackMoney
 ```
 
 1. Set up your PostgreSQL instance (either locally or using Docker).
@@ -105,34 +99,19 @@ cd financial-management-backend
 2. Build and run the application:
 
 ```bash
-bash
-CopyEdit
 mvn spring-boot:run
-
 ```
 
 1. The backend will be running on `http://localhost:8080`.
 
 ### Docker Setup
 
-For development, you can use Docker Compose to spin up the application with its dependencies (database, cache, etc.):
+For development, you can use Docker Compose to spin up the application with its dependencies:
 
-1. Build the Docker image:
-
-```bash
-bash
-CopyEdit
-docker-compose build
-
-```
-
-1. Run the application:
+1. Start the application and database:
 
 ```bash
-bash
-CopyEdit
-docker-compose up
-
+docker compose up -d
 ```
 
 This will start the application along with PostgreSQL and other services defined in `docker-compose.yml`.
@@ -154,4 +133,4 @@ The project uses **GitHub Actions** for CI/CD to ensure that code changes are te
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/felipemelozx/TrackMoney/blob/main/LICENSE) file for details.
