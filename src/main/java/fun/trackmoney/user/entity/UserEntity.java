@@ -5,6 +5,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 /**
@@ -26,17 +29,23 @@ public class UserEntity {
   /**
    * The name of the user.
    */
+  @NotNull
+  @NotBlank
   private String name;
 
   /**
    * The email address of the user.
    */
+  @NotNull
+  @Email
   private String email;
 
   /**
    * The password of the user.
    * It is stored in plain text (should be encrypted in production).
    */
+  @NotNull
+  @NotBlank
   private String password;
 
   /**
