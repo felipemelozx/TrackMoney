@@ -129,7 +129,7 @@
 					<failOnViolation>true</failOnViolation>
 					<violationSeverity>warning</violationSeverity>
 					<outputFile>target/checkstyle-result.xml</outputFile>
-					<configLocation>google_checks.xml</configLocation>
+					<configLocation>custom_check.xml</configLocation>
 				</configuration>
 				<executions>
 					<execution>
