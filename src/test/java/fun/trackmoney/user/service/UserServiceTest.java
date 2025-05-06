@@ -1,0 +1,98 @@
+package fun.trackmoney.user.service;
+
+import fun.trackmoney.user.dtos.UserRequestDTO;
+import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.user.exception.EmailAlreadyExistsException;
+import fun.trackmoney.user.exception.PasswordNotValid;
+import fun.trackmoney.user.mapper.UserMapper;
+import fun.trackmoney.user.repository.UserRepository;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class UserServiceTest {
+
+  @Mock
+  private UserRepository userRepository;
+
+  @Mock
+  private UserMapper userMapper;
+
+  @Mock
+  private PasswordEncoder passwordEncoder;
+
+  @InjectMocks
+  private UserService userService;
+
+  @BeforeEach
+  void setup() {
+    MockitoAnnotations.openMocks(this);
+  }
+
+  @Test
+  void register_ValidUser_ReturnsUserResponseDTO() {
+    // Arrange
+    UserRequestDTO requestDTO = new UserRequestDTO("name", "test@example.com", "StrongPassword123#");
+    UUID uuid = UUID.randomUUID();
+    UserEntity entityToSave = new UserEntity(uuid, "name", "test@example.com", "StrongPassword123#");
+    UserEntity savedEntity = new UserEntity(uuid, "name", "test@example.com", "encodedPass");
+    UserResponseDTO expectedResponse = new UserResponseDTO(uuid, "name", "test@example.com");
+
+    when(userMapper.userRequestDTOToEntity(requestDTO)).thenReturn(entityToSave);
+    when(passwordEncoder.encode("StrongPassword123#")).thenReturn("encodedPass");
+    when(userRepository.save(entityToSave)).thenReturn(savedEntity);
+    when(userMapper.userEntityToUserResponseDto(savedEntity)).thenReturn(expectedResponse);
+
+    // Act
+    UserResponseDTO actualResponse = userService.register(requestDTO);
+
+    // Assert
+    assertNotNull(actualResponse);
+    assertEquals(expectedResponse, actualResponse);
+    verify(userRepository, times(1)).save(entityToSave);
+  }
+
+
+  @Test
+  void register_InvalidPassword_ThrowsPasswordNotValid() {
+    // Arrange
+    UserRequestDTO requestDTO = new UserRequestDTO("name", "test@example.com", "123");
+
+    // Força erro de validação — senhas fracas retornam lista de erros
+    when(userMapper.userRequestDTOToEntity(any())).thenReturn(null); // nunca deve ser chamado
+    when(userRepository.save(any())).thenReturn(null); // nunca deve ser chamado
+
+    // Act & Assert
+    PasswordNotValid exception = assertThrows(PasswordNotValid.class, () -> userService.register(requestDTO));
+    assertFalse(exception.getErrors().isEmpty()); // ou qualquer verificação nos erros
+    verify(userRepository, never()).save(any());
+  }
+
+
+  @Test
+  void register_EmailAlreadyExists_ThrowsEmailAlreadyExistsException() {
+    // Arrange
+    UserRequestDTO requestDTO = new UserRequestDTO("name", "duplicate@example.com", "StrongPassword123#");
+    UUID uuid = UUID.randomUUID();
+    UserEntity entityToSave = new UserEntity(uuid, "name", "duplicate@example.com", "StrongPassword123#");
+
+    when(userMapper.userRequestDTOToEntity(requestDTO)).thenReturn(entityToSave);
+    when(passwordEncoder.encode("StrongPassword123#")).thenReturn("encodedPass");
+    when(userRepository.save(entityToSave)).thenThrow(new RuntimeException("Unique constraint"));
+
+    // Act & Assert
+    assertThrows(EmailAlreadyExistsException.class, () -> userService.register(requestDTO));
+    verify(userRepository).save(entityToSave);
+  }
+
+}
