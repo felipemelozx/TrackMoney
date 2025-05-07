@@ -21,7 +21,7 @@ public abstract class PasswordCheck {
   private static final String LENGTH_ERROR = "Password must be at least 8 characters long.";
   private static final String FIELD = "Password";
 
-  public static List<CustomFieldError> validatePasswordEmail(String password) {
+  public static List<CustomFieldError> validatePassword(String password) {
     List<CustomFieldError> errors = new ArrayList<>();
     if (!Pattern.compile(LOWERCASE_REGEX).matcher(password).find()) {
       errors.add(new CustomFieldError(FIELD, LOWERCASE_ERROR));

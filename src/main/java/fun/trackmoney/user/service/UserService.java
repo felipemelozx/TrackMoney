@@ -29,7 +29,7 @@ public class UserService {
 
 
   public UserResponseDTO register(UserRequestDTO userRequestDTO) {
-    List<CustomFieldError> passwordIsValid = PasswordCheck.validatePasswordEmail(userRequestDTO.password());
+    List<CustomFieldError> passwordIsValid = PasswordCheck.validatePassword(userRequestDTO.password());
     if(!passwordIsValid.isEmpty()) {
       throw new PasswordNotValid(passwordIsValid);
     }
