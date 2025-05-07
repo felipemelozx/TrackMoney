@@ -16,18 +16,21 @@
         <module name="LocalVariableName"/>
         <module name="StaticVariableName"/>
         <module name="ConstantName"/>
-        <module name="ImportOrder"/>
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
-        <module name="EmptyLineSeparator"/>
+        <module name="EmptyLineSeparator">
+            <property name="tokens" value="CLASS_DEF, INTERFACE_DEF, METHOD_DEF, CTOR_DEF"/>
+        </module>
         <module name="NeedBraces"/>
         <module name="LeftCurly"/>
         <module name="RightCurly"/>
         <module name="FinalClass"/>
-        <module name="FinalParameters"/>
         <module name="EmptyCatchBlock"/>
         <module name="EqualsHashCode"/>
-        <module name="HiddenField"/>
+        <module name="HiddenField">
+            <property name="ignoreConstructorParameter" value="true"/>
+            <property name="ignoreSetter" value="true"/>
+        </module>
         <module name="CyclomaticComplexity">
             <property name="max" value="10"/>
         </module>

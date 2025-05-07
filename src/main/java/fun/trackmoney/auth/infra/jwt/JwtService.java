@@ -16,7 +16,7 @@ public class JwtService {
   @Value("${api.secret.key}")
   private String secret;
 
-  public String generateToken(String email){
+  public String generateToken(String email) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.create()
@@ -29,7 +29,8 @@ public class JwtService {
       throw new RuntimeException("Error while generating JWT token.", e);
     }
   }
-  public String validateToken(String token){
+
+  public String validateToken(String token) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.require(algorithm)

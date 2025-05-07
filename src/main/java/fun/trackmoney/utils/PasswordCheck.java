@@ -22,9 +22,7 @@ public abstract class PasswordCheck {
   private static final String FIELD = "Password";
 
   public static List<CustomFieldError> validatePasswordEmail(String password) {
-
     List<CustomFieldError> errors = new ArrayList<>();
-
     if (!Pattern.compile(LOWERCASE_REGEX).matcher(password).find()) {
       errors.add(new CustomFieldError(FIELD, LOWERCASE_ERROR));
     }
