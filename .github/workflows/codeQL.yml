@@ -25,13 +25,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Initialize CodeQL
+      - name: Perform CodeQL Analysis
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
+      - name: Start Docker Compose
+        run: docker compose up -d
+
       - name: Build with Maven
-        run: mvn clean install -Dspring.profiles.active=test
+        run: mvn clean install -Dspring.profiles.active=dev
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose down
