@@ -25,14 +25,22 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Start Docker Compose
+        run: docker compose up -d
+
       - name: Build with Maven
         run: mvn clean install -DskipTests
 
       - name: Run tests
-        run: mvn test -Dspring.profiles.active=test
+        run: mvn test -Dspring.profiles.active=dev
 
       - name: Run Checkstyle
         run: mvn checkstyle:check
 
       - name: Build JAR file
         run: mvn package
+
+
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose down

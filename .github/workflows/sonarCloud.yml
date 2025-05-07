@@ -38,9 +38,12 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven
 
+      - name: Start Docker Compose
+        run: docker compose up -d
+
       - name: SonarCloud Scan
         run: |
-          mvn verify sonar:sonar -Dspring.profiles.active=test \
+          mvn verify sonar:sonar -Dspring.profiles.active=dev \
             -Dsonar.projectKey=felipemelozx_TrackMoney \
             -Dsonar.organization=felipemelozx-trackmoney \
             -Dsonar.host.url=https://sonarcloud.io \
@@ -48,3 +51,6 @@ jobs:
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
 
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose down
