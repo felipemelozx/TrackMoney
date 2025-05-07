@@ -1,6 +1,5 @@
 package fun.trackmoney.auth.infra.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,10 +17,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-  @Autowired
-  CustomUserDetailsService userDetailsService;
-  @Autowired
-  SecurityFilter securityFilter;
+
+  private final CustomUserDetailsService userDetailsService;
+
+  private final SecurityFilter securityFilter;
+
+  public SecurityConfig(CustomUserDetailsService userDetailsService, SecurityFilter securityFilter) {
+    this.userDetailsService = userDetailsService;
+    this.securityFilter = securityFilter;
+  }
 
 
   @Bean
@@ -46,7 +50,8 @@ public class SecurityConfig {
   }
 
   @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+  public AuthenticationManager authenticationManager(
+      AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
   }
 }
