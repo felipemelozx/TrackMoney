@@ -11,7 +11,6 @@ import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.PasswordCheck;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

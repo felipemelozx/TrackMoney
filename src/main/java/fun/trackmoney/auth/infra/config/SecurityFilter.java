@@ -7,7 +7,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,17 +17,22 @@ import java.util.Collections;
 
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
-  @Autowired
-  JwtService tokenService;
-  @Autowired
-  UserRepository userRepository;
+
+  private final JwtService tokenService;
+  private final UserRepository userRepository;
+
+  public SecurityFilter(JwtService tokenService, UserRepository userRepository) {
+    this.tokenService = tokenService;
+    this.userRepository = userRepository;
+  }
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                  FilterChain filterChain) throws ServletException, IOException {
     var token = this.recoverToken(request);
     var login = tokenService.validateToken(token);
 
-    if(login != null){
+    if ( login != null ) {
       UserEntity user = userRepository.findByEmail(login).orElseThrow(() -> new RuntimeException("User Not Found"));
       var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
       var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);

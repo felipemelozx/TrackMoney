@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public abstract class PasswordCheck {
 
-  private PasswordCheck(){}
+  private PasswordCheck() { }
 
   private static final String LOWERCASE_REGEX = "(?=.*[a-z])";
   private static final String UPPERCASE_REGEX = "(?=.*[A-Z])";
@@ -20,6 +20,7 @@ public abstract class PasswordCheck {
   private static final String SPECIAL_CHAR_ERROR = "Password must contain at least one special character.";
   private static final String LENGTH_ERROR = "Password must be at least 8 characters long.";
   private static final String FIELD = "Password";
+
   public static List<CustomFieldError> validatePasswordEmail(String password) {
 
     List<CustomFieldError> errors = new ArrayList<>();
