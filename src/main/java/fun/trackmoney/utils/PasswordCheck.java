@@ -8,11 +8,11 @@ public abstract class PasswordCheck {
 
   private PasswordCheck() { }
 
-  private static final String LOWERCASE_REGEX = "(?=.*[a-z])";
-  private static final String UPPERCASE_REGEX = "(?=.*[A-Z])";
-  private static final String DIGIT_REGEX = "(?=.*\\d)";
-  private static final String SPECIAL_CHAR_REGEX = "(?=.*[@#$%^&+=!])";
-  private static final String LENGTH_REGEX = ".{8,}";
+  private static final Pattern LOWERCASE_PATTERN = Pattern.compile(".*[a-z].*");
+  private static final Pattern UPPERCASE_PATTERN = Pattern.compile(".*[A-Z].*");
+  private static final Pattern DIGIT_PATTERN = Pattern.compile(".*\\d.*");
+  private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile(".*[@#$%^&+=!].*");
+  private static final Pattern LENGTH_PATTERN = Pattern.compile(".{8,}");
 
   private static final String LOWERCASE_ERROR = "Password must contain at least one lowercase letter.";
   private static final String UPPERCASE_ERROR = "Password must contain at least one uppercase letter.";
@@ -23,19 +23,19 @@ public abstract class PasswordCheck {
 
   public static List<CustomFieldError> validatePassword(String password) {
     List<CustomFieldError> errors = new ArrayList<>();
-    if (!Pattern.compile(LOWERCASE_REGEX).matcher(password).find()) {
+    if (!LOWERCASE_PATTERN.matcher(password).find()) {
       errors.add(new CustomFieldError(FIELD, LOWERCASE_ERROR));
     }
-    if (!Pattern.compile(UPPERCASE_REGEX).matcher(password).find()) {
+    if (!UPPERCASE_PATTERN.matcher(password).find()) {
       errors.add(new CustomFieldError(FIELD, UPPERCASE_ERROR));
     }
-    if (!Pattern.compile(DIGIT_REGEX).matcher(password).find()) {
+    if (!DIGIT_PATTERN.matcher(password).find()) {
       errors.add(new CustomFieldError(FIELD, DIGIT_ERROR));
     }
-    if (!Pattern.compile(SPECIAL_CHAR_REGEX).matcher(password).find()) {
+    if (!SPECIAL_CHAR_PATTERN.matcher(password).find()) {
       errors.add(new CustomFieldError(FIELD, SPECIAL_CHAR_ERROR));
     }
-    if (!Pattern.compile(LENGTH_REGEX).matcher(password).matches()) {
+    if (!LENGTH_PATTERN.matcher(password).matches()) {
       errors.add(new CustomFieldError(FIELD, LENGTH_ERROR));
     }
     return errors;
