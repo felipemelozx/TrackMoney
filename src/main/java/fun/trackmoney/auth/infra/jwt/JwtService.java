@@ -25,8 +25,8 @@ public class JwtService {
           .withSubject(email)
           .withExpiresAt(getExpires())
           .sign(algorithm);
-    } catch (JWTCreationException e) {
-      throw new RuntimeException("Error while generating JWT token.", e);
+    } catch (Exception e) {
+      throw new JWTCreationException("Error while generating JWT token.", e);
     }
   }
 
