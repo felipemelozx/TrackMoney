@@ -1,9 +1,11 @@
 package fun.trackmoney.user.service;
 
+import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
+import fun.trackmoney.user.exception.EmailNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.user.repository.UserRepository;
@@ -15,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,12 +72,12 @@ class UserServiceTest {
     UserRequestDTO requestDTO = new UserRequestDTO("name", "test@example.com", "123");
 
     // Força erro de validação — senhas fracas retornam lista de erros
-    when(userMapper.userRequestDTOToEntity(any())).thenReturn(null); // nunca deve ser chamado
-    when(userRepository.save(any())).thenReturn(null); // nunca deve ser chamado
+    when(userMapper.userRequestDTOToEntity(any())).thenReturn(null);
+    when(userRepository.save(any())).thenReturn(null);
 
     // Act & Assert
     PasswordNotValid exception = assertThrows(PasswordNotValid.class, () -> userService.register(requestDTO));
-    assertFalse(exception.getErrors().isEmpty()); // ou qualquer verificação nos erros
+    assertFalse(exception.getErrors().isEmpty());
     verify(userRepository, never()).save(any());
   }
 
@@ -95,4 +98,29 @@ class UserServiceTest {
     verify(userRepository).save(entityToSave);
   }
 
+  @Test
+  void findUserByEmail_EmailNotFound_ThrowsEmailNotFoundException() {
+    // Arrange
+    LoginRequestDTO requestDTO = new LoginRequestDTO("duplicate@example.com", "StrongPassword123#");
+    when(userRepository.findByEmail(requestDTO.email())).thenReturn(Optional.empty());
+    // Act & Assert
+    assertThrows(EmailNotFoundException.class, () -> userService.findUserByEmail(requestDTO));
+  }
+
+  @Test
+  void findUserByEmail_ValidUser_ReturnsUserResponseDT() {
+    // Arrange
+    LoginRequestDTO requestDTO = new LoginRequestDTO("duplicate@example.com", "StrongPassword123#");
+    UUID uuid = UUID.randomUUID();
+    UserEntity entityToSave = new UserEntity(uuid, "name", "duplicate@example.com", "StrongPassword123#");
+
+    when(userRepository.findByEmail(requestDTO.email())).thenReturn(Optional.of(entityToSave));
+    // Act
+    UserEntity responseDTO = userService.findUserByEmail(requestDTO);
+    //Assert
+    assertEquals(entityToSave.getUserId(), responseDTO.getUserId());
+    assertEquals(entityToSave.getEmail(), responseDTO.getEmail());
+    assertEquals(entityToSave.getPassword(), responseDTO.getPassword());
+    assertEquals(entityToSave.getName(), responseDTO.getName());
+  }
 }
