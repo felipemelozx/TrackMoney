@@ -1,9 +1,11 @@
 package fun.trackmoney.user.service;
 
+import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
+import fun.trackmoney.user.exception.EmailNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.user.repository.UserRepository;
@@ -40,5 +42,12 @@ public class UserService {
     } catch (RuntimeException e) {
       throw new EmailAlreadyExistsException("Email already registered.");
     }
+  }
+
+  public UserEntity findUserByEmail(LoginRequestDTO loginDto) {
+    return userRepository.findByEmail(loginDto.email())
+        .orElseThrow(() -> {
+          throw new EmailNotFoundException("User not found");
+        });
   }
 }

@@ -1,5 +1,7 @@
 package fun.trackmoney.auth.controller;
 
+import fun.trackmoney.auth.dto.LoginRequestDTO;
+import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.service.AuthService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
@@ -45,6 +47,18 @@ public class AuthController {
             true,
             "User register!",
             authService.register(userDto),
+            null
+        )
+    );
+  }
+
+  @PostMapping("login")
+  public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody LoginRequestDTO loginDto) {
+    return ResponseEntity.ok().body(
+        new ApiResponse<>(
+            true,
+            "Login successful!",
+            authService.login(loginDto),
             null
         )
     );

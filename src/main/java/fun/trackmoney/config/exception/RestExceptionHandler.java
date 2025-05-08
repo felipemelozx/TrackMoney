@@ -1,6 +1,8 @@
 package fun.trackmoney.config.exception;
 
+import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
+import fun.trackmoney.user.exception.EmailNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -18,7 +20,7 @@ public class RestExceptionHandler {
   @ExceptionHandler(PasswordNotValid.class)
   public ResponseEntity<ApiResponse<List<String>>> passwordNotValid(PasswordNotValid ex) {
     return ResponseEntity.badRequest().body(
-        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors() )
+        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
     );
   }
 
@@ -48,5 +50,19 @@ public class RestExceptionHandler {
         .status(HttpStatus.CONFLICT)
         .body(new ApiResponse<>(false, ex.getMessage(), null,
             List.of(new CustomFieldError("Email", ex.getMessage()))));
+  }
+
+  @ExceptionHandler(EmailNotFoundException.class)
+  public ResponseEntity<ApiResponse<List<String>>> emailNotFound(EmailNotFoundException ex) {
+    return ResponseEntity.badRequest().body(
+        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+    );
+  }
+
+  @ExceptionHandler(LoginException.class)
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> loginException(LoginException ex) {
+    return ResponseEntity.badRequest().body(
+        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+    );
   }
 }
