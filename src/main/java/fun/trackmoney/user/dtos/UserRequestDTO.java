@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 public record UserRequestDTO(
     @NotBlank(message = "Name is required")
     String name,
-    @Email(message = "Email inlaid")
+    @Email(message = "Email is invalid")
     @NotBlank
     String email,
     @NotBlank(message = "Password is required")

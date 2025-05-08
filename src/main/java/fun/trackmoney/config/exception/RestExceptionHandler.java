@@ -1,4 +1,4 @@
-package fun.trackmoney.exception.config;
+package fun.trackmoney.config.exception;
 
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
 import fun.trackmoney.user.exception.PasswordNotValid;
