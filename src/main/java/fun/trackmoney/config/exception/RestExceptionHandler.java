@@ -18,7 +18,7 @@ import java.util.List;
 public class RestExceptionHandler {
 
   @ExceptionHandler(PasswordNotValid.class)
-  public ResponseEntity<ApiResponse<List<String>>> passwordNotValid(PasswordNotValid ex) {
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> passwordNotValid(PasswordNotValid ex) {
     return ResponseEntity.badRequest().body(
         new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
     );
@@ -45,7 +45,7 @@ public class RestExceptionHandler {
   }
 
   @ExceptionHandler(EmailAlreadyExistsException.class)
-  public ResponseEntity<ApiResponse<Object>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
     return ResponseEntity
         .status(HttpStatus.CONFLICT)
         .body(new ApiResponse<>(false, ex.getMessage(), null,
@@ -53,7 +53,7 @@ public class RestExceptionHandler {
   }
 
   @ExceptionHandler(EmailNotFoundException.class)
-  public ResponseEntity<ApiResponse<List<String>>> emailNotFound(EmailNotFoundException ex) {
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> emailNotFound(EmailNotFoundException ex) {
     return ResponseEntity.badRequest().body(
         new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
     );
