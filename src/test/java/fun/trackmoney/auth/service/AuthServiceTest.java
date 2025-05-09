@@ -71,7 +71,7 @@ class AuthServiceTest {
     LoginResponseDTO response = authService.login(loginDto);
 
     // Assert
-    assertEquals(expectedToken, response.Token());
+    assertEquals(expectedToken, response.token());
   }
 
   @Test
