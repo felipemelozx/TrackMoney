@@ -58,6 +58,11 @@ public class ApiResponse<T> {
     this.success = success;
   }
 
+  public boolean getSuccess() {
+    return success;
+  }
+
+
   /**
    * Gets the message of the response.
    *
