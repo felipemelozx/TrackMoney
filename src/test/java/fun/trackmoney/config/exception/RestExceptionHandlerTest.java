@@ -1,6 +1,8 @@
 package fun.trackmoney.config.exception;
 
+import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
+import fun.trackmoney.user.exception.EmailNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -11,7 +13,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,10 +30,10 @@ class RestExceptionHandlerTest {
         new CustomFieldError("password", "must be at least 8 characters long")
     );
     PasswordNotValid exception = new PasswordNotValid(errors);
-    ResponseEntity<ApiResponse<List<String>>> response = restExceptionHandler.passwordNotValid(exception);
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.passwordNotValid(exception);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    ApiResponse<List<String>> apiResponse = response.getBody();
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
 
     assertNotNull(apiResponse);
     assertFalse(apiResponse.isSuccess());
@@ -48,10 +49,10 @@ class RestExceptionHandlerTest {
   @Test
   void handleEmailAlreadyExistsShouldReturnConflictWithError() {
     EmailAlreadyExistsException exception = new EmailAlreadyExistsException("This email is already in use.");
-    ResponseEntity<ApiResponse<Object>> response = restExceptionHandler.handleEmailAlreadyExists(exception);
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.handleEmailAlreadyExists(exception);
 
     assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-    ApiResponse<Object> apiResponse = response.getBody();
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
     assertNotNull(apiResponse);
     assertFalse(apiResponse.isSuccess());
     assertEquals("This email is already in use.", apiResponse.getMessage());
@@ -97,5 +98,41 @@ class RestExceptionHandlerTest {
     assertTrue(apiResponse.getErrors().stream()
             .anyMatch(error -> error.getField().equals("object") && error.getMessage().equals("Global error")),
         "Global validation error is missing or incorrect");
+  }
+
+  @Test
+  void handleEmailNotFound_shouldReturnBadRequestWithErrorMessage() {
+    List<CustomFieldError> errors = List.of(
+        new CustomFieldError("user", "Email not found!")
+    );
+    EmailNotFoundException exception = new EmailNotFoundException(errors);
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.emailNotFound(exception);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Email not found!", apiResponse.getMessage());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(errors.size(), apiResponse.getErrors().size());
+  }
+
+  @Test
+  void handleLoginException_shouldReturnBadRequestWithPasswordError() {
+    List<CustomFieldError> errors = List.of(
+        new CustomFieldError("Password", "Password is incorrect.")
+    );
+    LoginException exception = new LoginException(errors);
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.loginException(exception);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Password is incorrect.", apiResponse.getErrors().get(0).getMessage());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(errors.size(), apiResponse.getErrors().size());
   }
 }
