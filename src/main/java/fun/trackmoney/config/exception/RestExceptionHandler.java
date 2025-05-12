@@ -1,6 +1,7 @@
 package fun.trackmoney.config.exception;
 
 import fun.trackmoney.auth.exception.LoginException;
+import fun.trackmoney.category.exception.CategoryNotFoundException;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
 import fun.trackmoney.user.exception.EmailNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
@@ -64,5 +65,13 @@ public class RestExceptionHandler {
     return ResponseEntity.badRequest().body(
         new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
     );
+  }
+
+  @ExceptionHandler(CategoryNotFoundException.class)
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> categoryNotFound(CategoryNotFoundException ex) {
+    return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .body(new ApiResponse<>(false, ex.getMessage(), null,
+            List.of(new CustomFieldError("Email", ex.getMessage()))));
   }
 }
