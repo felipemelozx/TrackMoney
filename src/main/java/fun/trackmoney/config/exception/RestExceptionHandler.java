@@ -72,6 +72,6 @@ public class RestExceptionHandler {
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
         .body(new ApiResponse<>(false, ex.getMessage(), null,
-            List.of(new CustomFieldError("Email", ex.getMessage()))));
+            List.of(new CustomFieldError("Category", ex.getMessage()))));
   }
 }
