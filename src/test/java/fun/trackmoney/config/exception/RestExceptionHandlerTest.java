@@ -1,6 +1,7 @@
 package fun.trackmoney.config.exception;
 
 import fun.trackmoney.auth.exception.LoginException;
+import fun.trackmoney.category.exception.CategoryNotFoundException;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
 import fun.trackmoney.user.exception.EmailNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
@@ -134,5 +135,23 @@ class RestExceptionHandlerTest {
     assertEquals("Password is incorrect.", apiResponse.getErrors().get(0).getMessage());
     assertNotNull(apiResponse.getErrors());
     assertEquals(errors.size(), apiResponse.getErrors().size());
+  }
+
+  @Test
+  void categoryNotFound_shouldReturnNotFoundWithError() {
+    CategoryNotFoundException exception = new CategoryNotFoundException("Category with id 99 not found.");
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.categoryNotFound(exception);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Category with id 99 not found.", apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, (apiResponse.getErrors()).size());
+    CustomFieldError error = (CustomFieldError) ((List<?>) apiResponse.getErrors()).get(0);
+    assertEquals("Category", error.getField());
+    assertEquals("Category with id 99 not found.", error.getMessage());
   }
 }
