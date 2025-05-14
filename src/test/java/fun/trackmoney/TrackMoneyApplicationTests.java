@@ -1,4 +1,4 @@
-package fun.TrackMoney;
+package fun.trackmoney;
 
 import fun.trackmoney.TrackMoneyApplication;
 import org.junit.jupiter.api.Test;
