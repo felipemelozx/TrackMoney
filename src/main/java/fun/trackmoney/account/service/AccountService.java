@@ -4,6 +4,7 @@ import fun.trackmoney.account.dtos.AccountRequestDTO;
 import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
 import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.repository.AccountRepository;
 import fun.trackmoney.user.service.UserService;
@@ -39,14 +40,12 @@ public class AccountService {
 
   public AccountResponseDTO findAccountById(Integer id) {
     return accountMapper.accountEntityToAccountResponse(accountRepository.findById(id)
-        .orElseThrow(() -> {
-          throw new RuntimeException("Erro");
-        }));
+        .orElseThrow(() -> new AccountNotFoundException("Account not found!")));
   }
 
   public AccountResponseDTO updateAccountById(Integer id, AccountUpdateRequestDTO dto) {
     AccountEntity account = accountRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Account not found!"));
+        .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
 
     account.setName(dto.name());
     account.setIsAccountDefault(dto.isAccountDefault());
