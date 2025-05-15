@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -46,6 +47,13 @@ public class UserService {
 
   public UserEntity findUserByEmail(LoginRequestDTO loginDto) {
     return userRepository.findByEmail(loginDto.email())
+        .orElseThrow(() -> {
+          throw new EmailNotFoundException("User not found");
+        });
+  }
+
+  public UserEntity findUserById(UUID userId) {
+    return userRepository.findById(userId)
         .orElseThrow(() -> {
           throw new EmailNotFoundException("User not found");
         });
