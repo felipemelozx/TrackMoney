@@ -1,7 +1,6 @@
 package fun.trackmoney.account.dtos;
 
 import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
 
 import java.math.BigDecimal;
 

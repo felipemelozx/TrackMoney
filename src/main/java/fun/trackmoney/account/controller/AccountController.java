@@ -50,7 +50,8 @@ public class AccountController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<ApiResponse<AccountResponseDTO>> updateAccountById(@PathVariable Integer id, @RequestBody AccountUpdateRequestDTO dto) {
+  public ResponseEntity<ApiResponse<AccountResponseDTO>> updateAccountById(@PathVariable Integer id,
+                                                                           @RequestBody AccountUpdateRequestDTO dto) {
     AccountResponseDTO updatedAccount = accountService.updateAccountById(id, dto);
     return ResponseEntity.ok(new ApiResponse<>(
         true, "Account updated successfully.", updatedAccount, null));
