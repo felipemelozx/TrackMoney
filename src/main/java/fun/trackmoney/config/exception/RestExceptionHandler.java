@@ -78,8 +78,9 @@ public class RestExceptionHandler {
 
   @ExceptionHandler(AccountNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> accountNotFound(AccountNotFoundException ex) {
-    return ResponseEntity.badRequest().body(
-        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+    return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .body(new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
     );
   }
 }
