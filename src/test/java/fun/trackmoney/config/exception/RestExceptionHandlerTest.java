@@ -1,9 +1,10 @@
 package fun.trackmoney.config.exception;
 
+import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
-import fun.trackmoney.user.exception.EmailNotFoundException;
+import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -106,7 +107,7 @@ class RestExceptionHandlerTest {
     List<CustomFieldError> errors = List.of(
         new CustomFieldError("user", "Email not found!")
     );
-    EmailNotFoundException exception = new EmailNotFoundException(errors);
+    UserNotFoundException exception = new UserNotFoundException("Email not found!",errors);
     ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.emailNotFound(exception);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -150,8 +151,26 @@ class RestExceptionHandlerTest {
     assertNull(apiResponse.getData());
     assertNotNull(apiResponse.getErrors());
     assertEquals(1, (apiResponse.getErrors()).size());
-    CustomFieldError error = (CustomFieldError) ((List<?>) apiResponse.getErrors()).get(0);
+    CustomFieldError error = apiResponse.getErrors().get(0);
     assertEquals("Category", error.getField());
     assertEquals("Category with id 99 not found.", error.getMessage());
+  }
+
+  @Test
+  void AccountNotFound_shouldReturnNotFoundWithError() {
+    AccountNotFoundException exception = new AccountNotFoundException("Account not found.");
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.accountNotFound(exception);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Account not found.", apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, (apiResponse.getErrors()).size());
+    CustomFieldError error = apiResponse.getErrors().get(0);
+    assertEquals("Account", error.getField());
+    assertEquals("Account not found.", error.getMessage());
   }
 }

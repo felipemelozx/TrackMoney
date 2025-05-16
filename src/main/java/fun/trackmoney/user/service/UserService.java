@@ -5,7 +5,7 @@ import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
-import fun.trackmoney.user.exception.EmailNotFoundException;
+import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.user.repository.UserRepository;
@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -47,7 +48,14 @@ public class UserService {
   public UserEntity findUserByEmail(LoginRequestDTO loginDto) {
     return userRepository.findByEmail(loginDto.email())
         .orElseThrow(() -> {
-          throw new EmailNotFoundException("User not found");
+          throw new UserNotFoundException("User not found");
+        });
+  }
+
+  public UserEntity findUserById(UUID userId) {
+    return userRepository.findById(userId)
+        .orElseThrow(() -> {
+          throw new UserNotFoundException("User not found");
         });
   }
 }
