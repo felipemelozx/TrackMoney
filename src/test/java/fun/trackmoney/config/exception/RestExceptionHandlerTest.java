@@ -4,7 +4,7 @@ import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
-import fun.trackmoney.user.exception.EmailNotFoundException;
+import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -107,7 +107,7 @@ class RestExceptionHandlerTest {
     List<CustomFieldError> errors = List.of(
         new CustomFieldError("user", "Email not found!")
     );
-    EmailNotFoundException exception = new EmailNotFoundException(errors);
+    UserNotFoundException exception = new UserNotFoundException("Email not found!",errors);
     ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.emailNotFound(exception);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());

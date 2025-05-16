@@ -5,7 +5,7 @@ import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
-import fun.trackmoney.user.exception.EmailNotFoundException;
+import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.user.repository.UserRepository;
@@ -104,7 +104,7 @@ class UserServiceTest {
     LoginRequestDTO requestDTO = new LoginRequestDTO("duplicate@example.com", "StrongPassword123#");
     when(userRepository.findByEmail(requestDTO.email())).thenReturn(Optional.empty());
     // Act & Assert
-    assertThrows(EmailNotFoundException.class, () -> userService.findUserByEmail(requestDTO));
+    assertThrows(UserNotFoundException.class, () -> userService.findUserByEmail(requestDTO));
   }
 
   @Test
@@ -122,5 +122,30 @@ class UserServiceTest {
     assertEquals(entityToSave.getEmail(), responseDTO.getEmail());
     assertEquals(entityToSave.getPassword(), responseDTO.getPassword());
     assertEquals(entityToSave.getName(), responseDTO.getName());
+  }
+
+  @Test
+  void findUserById_ValidUser_ReturnsUserResponseDT() {
+    // Arrange
+    UUID uuid = UUID.randomUUID();
+    UserEntity entityToSave = new UserEntity(uuid, "name", "duplicate@example.com", "StrongPassword123#");
+
+    when(userRepository.findById(uuid)).thenReturn(Optional.of(entityToSave));
+    // Act
+    UserEntity responseDTO = userService.findUserById(uuid);
+    //Assert
+    assertEquals(entityToSave.getUserId(), responseDTO.getUserId());
+    assertEquals(entityToSave.getEmail(), responseDTO.getEmail());
+    assertEquals(entityToSave.getPassword(), responseDTO.getPassword());
+    assertEquals(entityToSave.getName(), responseDTO.getName());
+  }
+
+  @Test
+  void findUserById_EmailNotFound_ThrowsEmailNotFoundException() {
+    // Arrange
+    UUID uuid = UUID.randomUUID();
+    when(userRepository.findById(uuid)).thenReturn(Optional.empty());
+    // Act & Assert
+    assertThrows(UserNotFoundException.class, () -> userService.findUserById(uuid));
   }
 }
