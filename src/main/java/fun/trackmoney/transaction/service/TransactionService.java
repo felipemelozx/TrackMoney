@@ -9,6 +9,7 @@ import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
 import fun.trackmoney.transaction.entity.TransactionEntity;
+import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
@@ -52,12 +53,12 @@ public class TransactionService {
 
   public TransactionResponseDTO findById(Integer id) {
     return transactionMapper.toResponseDTO(transactionRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Transaction not found.")));
+        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found.")));
   }
 
   public TransactionResponseDTO update(Integer id, TransactionUpdateDTO dto) {
     TransactionEntity transaction = transactionRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Erro"));
+        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
 
     transaction.setAmount(dto.amount());
     transaction.setDescription(dto.description());
