@@ -3,6 +3,7 @@ package fun.trackmoney.config.exception;
 import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
+import fun.trackmoney.goal.exception.GoalsNotFoundException;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.user.exception.EmailAlreadyExistsException;
 import fun.trackmoney.user.exception.UserNotFoundException;
@@ -191,6 +192,24 @@ class RestExceptionHandlerTest {
     CustomFieldError error = apiResponse.getErrors().get(0);
     assertEquals("Transaction", error.getField());
     assertEquals("Transaction not found.", error.getMessage());
+  }
+
+  @Test
+  void goalsNotFound_shouldReturnNotFoundWithError() {
+    GoalsNotFoundException exception = new GoalsNotFoundException("Goals not found.");
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.goalsNotFound(exception);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Goals not found.", apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, (apiResponse.getErrors()).size());
+    CustomFieldError error = apiResponse.getErrors().get(0);
+    assertEquals("Goal", error.getField());
+    assertEquals("Goals not found.", error.getMessage());
   }
 
 }
