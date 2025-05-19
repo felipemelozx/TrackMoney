@@ -2,7 +2,6 @@ package fun.trackmoney.goal.service;
 
 import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.goal.dtos.CreateGoalsDTO;
