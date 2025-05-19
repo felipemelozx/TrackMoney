@@ -6,6 +6,7 @@ import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.goal.dtos.CreateGoalsDTO;
 import fun.trackmoney.goal.dtos.GoalsResponseDTO;
 import fun.trackmoney.goal.entity.GoalsEntity;
+import fun.trackmoney.goal.exception.GoalsNotFoundException;
 import fun.trackmoney.goal.mapper.GoalsMapper;
 import fun.trackmoney.goal.repository.GoalsRepository;
 import org.springframework.stereotype.Service;
@@ -45,12 +46,12 @@ public class GoalsService {
 
   public GoalsResponseDTO findById(Integer id) {
     return goalsMapper.toResponseDTO(goalsRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Goals not found!")));
+        .orElseThrow(() -> new GoalsNotFoundException("Goals not found!")));
   }
 
   public GoalsResponseDTO update(Integer id, CreateGoalsDTO dto) {
     GoalsEntity goals =  goalsRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Goals not found!"));
+        .orElseThrow(() -> new GoalsNotFoundException("Goals not found!"));
     goals.setGoal(dto.goal());
     goals.setCurrentAmount(dto.currentAmount());
     goals.setTargetAmount(dto.targetAmount());
