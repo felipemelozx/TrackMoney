@@ -42,14 +42,14 @@ public class GoalsController {
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<GoalsResponseDTO>> findById(@PathVariable Integer id){
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "All goals", goalsService.findById(id), null));
+        new ApiResponse<>(true, "Get goal", goalsService.findById(id), null));
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<GoalsResponseDTO>> update(@PathVariable Integer id,
                                                                 @RequestBody CreateGoalsDTO dto){
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "All goals", goalsService.update(id, dto), null));
+        new ApiResponse<>(true, "Update goals", goalsService.update(id, dto), null));
   }
 
 
@@ -57,6 +57,6 @@ public class GoalsController {
   public ResponseEntity<ApiResponse<String>> delete(@PathVariable Integer id){
     goalsService.deleteById(id);
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "All goals","Goals deleted", null));
+        new ApiResponse<>(true, "deleted goals","Goals deleted", null));
   }
 }
