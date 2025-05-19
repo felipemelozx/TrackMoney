@@ -20,7 +20,11 @@ public class GoalsService {
   private final AccountMapper accountMapper;
   private final GoalsMapper goalsMapper;
 
-  public GoalsService(GoalsRepository goalsRepository, AccountService accountService, AccountMapper accountMapper, GoalsMapper goalsMapper) {
+  public GoalsService(GoalsRepository goalsRepository,
+                      AccountService accountService,
+                      AccountMapper accountMapper,
+                      GoalsMapper goalsMapper) {
+
     this.goalsRepository = goalsRepository;
     this.accountService = accountService;
     this.accountMapper = accountMapper;
