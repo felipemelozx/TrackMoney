@@ -1,6 +1,7 @@
 package fun.trackmoney.account.entity;
 
 import fun.trackmoney.user.entity.UserEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -48,6 +49,7 @@ public class AccountEntity {
    * Indicates whether this account is the user's default account.
    * Can be {@code true} or {@code false}.
    */
+  @Column(name = "is_account_default")
   private Boolean isAccountDefault;
 
   /**
@@ -152,7 +154,7 @@ public class AccountEntity {
    *
    * @return {@code true} if this is the default account, {@code false} otherwise.
    */
-  public Boolean getAccountDefault() {
+  public Boolean getIsAccountDefault() {
     return isAccountDefault;
   }
 
@@ -161,7 +163,7 @@ public class AccountEntity {
    *
    * @param accountDefault {@code true} if this is the default account, {@code false} otherwise.
    */
-  public void setAccountDefault(Boolean accountDefault) {
+  public void setIsAccountDefault(Boolean accountDefault) {
     isAccountDefault = accountDefault;
   }
 }

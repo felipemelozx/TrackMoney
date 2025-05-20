@@ -68,16 +68,15 @@ public class GoalsEntity {
    * @param account The account associated with the goal.
    * @param targetAmount The target amount for the goal.
    * @param currentAmount The current amount towards the goal.
-   * @param progress The progress percentage towards the goal.
    */
   public GoalsEntity(Integer goalsId, String goal, AccountEntity account, BigDecimal targetAmount,
-                     BigDecimal currentAmount, Integer progress) {
+                     BigDecimal currentAmount) {
     this.goalsId = goalsId;
     this.goal = goal;
     this.account = account;
     this.targetAmount = targetAmount;
     this.currentAmount = currentAmount;
-    this.progress = progress;
+    updateProgress();
   }
 
   /**
@@ -150,6 +149,7 @@ public class GoalsEntity {
    */
   public void setTargetAmount(BigDecimal targetAmount) {
     this.targetAmount = targetAmount;
+    updateProgress();
   }
 
   /**
@@ -168,6 +168,7 @@ public class GoalsEntity {
    */
   public void setCurrentAmount(BigDecimal currentAmount) {
     this.currentAmount = currentAmount;
+    updateProgress();
   }
 
   /**
@@ -179,12 +180,14 @@ public class GoalsEntity {
     return progress;
   }
 
-  /**
-   * Sets the progress percentage toward the goal.
-   *
-   * @param progress The progress percentage to set.
-   */
-  public void setProgress(Integer progress) {
-    this.progress = progress;
+  public void updateProgress() {
+    if (targetAmount != null && currentAmount != null && targetAmount.compareTo(BigDecimal.ZERO) > 0) {
+      BigDecimal progressDecimal = currentAmount
+          .divide(targetAmount, 2, BigDecimal.ROUND_HALF_UP)
+          .multiply(BigDecimal.valueOf(100));
+      this.progress = progressDecimal.intValue();
+    } else {
+      this.progress = 0;
+    }
   }
 }
