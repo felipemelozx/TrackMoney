@@ -54,7 +54,8 @@ public class BudgetsController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<ApiResponse<BudgetResponseDTO>> updateById(@PathVariable Integer id, @RequestBody BudgetCreateDTO dto) {
+  public ResponseEntity<ApiResponse<BudgetResponseDTO>> updateById(@PathVariable Integer id,
+                                                                   @RequestBody BudgetCreateDTO dto) {
     return ResponseEntity.status(HttpStatus.OK).body(
         new ApiResponse<>(true, "Update Budget", budgetsService.update(dto,id), null));
   }

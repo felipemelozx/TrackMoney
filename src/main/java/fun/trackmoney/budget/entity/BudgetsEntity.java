@@ -46,7 +46,11 @@ public class BudgetsEntity {
 
   }
 
-  public BudgetsEntity(Integer budgetId, CategoryEntity category, UserEntity userEntity, BigDecimal targetAmount, Integer resetDay) {
+  public BudgetsEntity(Integer budgetId,
+                       CategoryEntity category,
+                       UserEntity userEntity,
+                       BigDecimal targetAmount,
+                       Integer resetDay) {
     this.budgetId = budgetId;
     this.category = category;
     this.userEntity = userEntity;

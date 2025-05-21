@@ -1,6 +1,5 @@
 package fun.trackmoney.budget.service;
 
-import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.budget.dtos.BudgetCreateDTO;
@@ -8,7 +7,6 @@ import fun.trackmoney.budget.dtos.BudgetResponseDTO;
 import fun.trackmoney.budget.entity.BudgetsEntity;
 import fun.trackmoney.budget.mapper.BudgetMapper;
 import fun.trackmoney.budget.repository.BudgetsRepository;
-import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.user.service.UserService;
 import org.springframework.stereotype.Service;
@@ -25,7 +23,12 @@ public class BudgetsService {
   private final CategoryService categoryService;
   private final UserService userService;
 
-  public BudgetsService(BudgetsRepository budgetsRepository, BudgetMapper budgetMapper, AccountService accountService, AccountMapper accountMapper, CategoryService categoryService, UserService userService) {
+  public BudgetsService(BudgetsRepository budgetsRepository,
+                        BudgetMapper budgetMapper,
+                        AccountService accountService,
+                        AccountMapper accountMapper,
+                        CategoryService categoryService,
+                        UserService userService) {
     this.budgetsRepository = budgetsRepository;
     this.budgetMapper = budgetMapper;
     this.accountService = accountService;
@@ -44,7 +47,6 @@ public class BudgetsService {
   }
 
   public List<BudgetResponseDTO> findAll() {
-    var list = budgetsRepository.findAll();
     return budgetMapper.entityListToResponseList(budgetsRepository.findAll());
   }
 
