@@ -7,6 +7,7 @@ import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.budget.dtos.BudgetCreateDTO;
 import fun.trackmoney.budget.dtos.BudgetResponseDTO;
 import fun.trackmoney.budget.entity.BudgetsEntity;
+import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.budget.mapper.BudgetMapper;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.entity.CategoryEntity;
@@ -148,7 +149,7 @@ class BudgetsServiceTest {
     int budgetId = 1;
     when(budgetsRepository.findById(budgetId)).thenReturn(Optional.empty());
 
-    RuntimeException exception = assertThrows(RuntimeException.class, () -> budgetsService.findById(budgetId));
+    BudgetsNotFoundException exception = assertThrows(BudgetsNotFoundException.class, () -> budgetsService.findById(budgetId));
     assertEquals("Budget not found", exception.getMessage());
     verify(budgetsRepository, times(1)).findById(budgetId);
     verify(budgetMapper, never()).entityToResponseDTO(any());
@@ -200,7 +201,7 @@ class BudgetsServiceTest {
 
     when(budgetsRepository.findById(budgetIdToUpdate)).thenReturn(Optional.empty());
 
-    RuntimeException exception = assertThrows(RuntimeException.class,
+    BudgetsNotFoundException exception = assertThrows(BudgetsNotFoundException.class,
         () -> budgetsService.update(updateDTO, budgetIdToUpdate));
     assertEquals("Budget not found", exception.getMessage());
     verify(budgetsRepository, times(1)).findById(budgetIdToUpdate);

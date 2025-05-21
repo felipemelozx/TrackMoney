@@ -5,6 +5,7 @@ import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.budget.dtos.BudgetCreateDTO;
 import fun.trackmoney.budget.dtos.BudgetResponseDTO;
 import fun.trackmoney.budget.entity.BudgetsEntity;
+import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.budget.mapper.BudgetMapper;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.service.CategoryService;
@@ -52,12 +53,12 @@ public class BudgetsService {
 
   public BudgetResponseDTO findById(Integer id) {
     return budgetMapper.entityToResponseDTO(budgetsRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Budget not found")));
+        .orElseThrow(() -> new BudgetsNotFoundException("Budget not found")));
   }
 
   public BudgetResponseDTO update(BudgetCreateDTO dto, Integer id) {
-    BudgetsEntity existingBudget = budgetsRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Budget not found"));
+    budgetsRepository.findById(id)
+        .orElseThrow(() -> new BudgetsNotFoundException(("Budget not found")));
 
     BudgetsEntity budgets = budgetMapper.createDtoTOEntity(dto);
     budgets.setBudgetId(id);
