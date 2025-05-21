@@ -56,6 +56,9 @@ public class BudgetsService {
   }
 
   public BudgetResponseDTO update(BudgetCreateDTO dto, Integer id) {
+    BudgetsEntity existingBudget = budgetsRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Budget not found"));
+
     BudgetsEntity budgets = budgetMapper.createDtoTOEntity(dto);
     budgets.setBudgetId(id);
     budgets.setUserEntity(userService.findUserById(dto.userId()));
