@@ -75,6 +75,13 @@ class BudgetsServiceTest {
 
   @Test
   void create_shouldReturnBudgetResponseDTO() {
+    budgetEntity.setBudgetId(99);
+    budgetEntity.setCategory(categoryEntity);
+    budgetEntity.setUserEntity(userEntity);
+    budgetEntity.setTargetAmount(BigDecimal.valueOf(1234));
+    budgetEntity.setResetDay(7);
+    budgetEntity.setAccount(accountEntity);
+
     when(budgetMapper.createDtoTOEntity(createDTO)).thenReturn(budgetEntity);
     when(userService.findUserById(userId)).thenReturn(userEntity);
     when(accountService.findAccountById(20)).thenReturn(accountResponseDTO);
@@ -86,6 +93,12 @@ class BudgetsServiceTest {
     BudgetResponseDTO result = budgetsService.create(createDTO);
 
     assertNotNull(result);
+    assertEquals(99, budgetEntity.getBudgetId());
+    assertEquals(categoryEntity, budgetEntity.getCategory());
+    assertEquals(userEntity, budgetEntity.getUserEntity());
+    assertEquals(BigDecimal.valueOf(1234), budgetEntity.getTargetAmount());
+    assertEquals(7, budgetEntity.getResetDay());
+    assertEquals(accountEntity, budgetEntity.getAccount());
     assertEquals(budgetResponseDTO, result);
     verify(budgetsRepository, times(1)).save(budgetEntity);
     verify(budgetMapper, times(1)).createDtoTOEntity(createDTO);
