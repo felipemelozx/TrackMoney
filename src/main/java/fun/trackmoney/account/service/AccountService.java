@@ -7,7 +7,8 @@ import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.repository.AccountRepository;
-import fun.trackmoney.user.service.UserService;
+import fun.trackmoney.user.exception.UserNotFoundException;
+import fun.trackmoney.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,18 +18,21 @@ public class AccountService {
 
   private final AccountRepository accountRepository;
   private final AccountMapper accountMapper;
-  private final UserService userService;
+  private final UserRepository userRepository;
 
-  public AccountService(AccountRepository accountRepository, AccountMapper accountMapper, UserService userService) {
+  public AccountService(AccountRepository accountRepository,
+                        AccountMapper accountMapper,
+                        UserRepository userRepository) {
     this.accountRepository = accountRepository;
     this.accountMapper = accountMapper;
-    this.userService = userService;
+    this.userRepository = userRepository;
   }
 
   public AccountResponseDTO createAccount(AccountRequestDTO dto) {
     AccountEntity account = accountMapper.accountRequestToAccountEntity(dto);
 
-    account.setUser(userService.findUserById(dto.userId()));
+    account.setUser(userRepository.findById(dto.userId())
+        .orElseThrow(() -> new UserNotFoundException("User not found!")));
 
     return accountMapper.accountEntityToAccountResponse(accountRepository
            .save(account));
