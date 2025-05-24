@@ -8,7 +8,7 @@ import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.repository.AccountRepository;
 import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.service.UserService;
+import fun.trackmoney.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ class AccountServiceTest {
 
   private AccountRepository accountRepository;
   private AccountMapper accountMapper;
-  private UserService userService;
+  private UserRepository userRepository;
 
   private AccountService accountService;
 
@@ -32,8 +32,8 @@ class AccountServiceTest {
   void setUp() {
     accountRepository = mock(AccountRepository.class);
     accountMapper = mock(AccountMapper.class);
-    userService = mock(UserService.class);
-    accountService = new AccountService(accountRepository, accountMapper, userService);
+    userRepository = mock(UserRepository.class);
+    accountService = new AccountService(accountRepository, accountMapper, userRepository);
   }
 
   @Test
@@ -46,7 +46,7 @@ class AccountServiceTest {
     AccountResponseDTO responseDTO = new AccountResponseDTO(1, null, "Conta Corrente", BigDecimal.valueOf(1000), true);
 
     when(accountMapper.accountRequestToAccountEntity(requestDTO)).thenReturn(accountEntity);
-    when(userService.findUserById(userId)).thenReturn(user);
+    when(userRepository.findById(userId)).thenReturn(Optional.of(user));
     when(accountRepository.save(accountEntity)).thenReturn(savedEntity);
     when(accountMapper.accountEntityToAccountResponse(savedEntity)).thenReturn(responseDTO);
 
@@ -54,7 +54,7 @@ class AccountServiceTest {
 
     assertEquals(responseDTO, result);
     verify(accountRepository).save(accountEntity);
-    verify(userService).findUserById(userId);
+    verify(userRepository).findById(userId);
     assertEquals(user, accountEntity.getUser());
   }
 

@@ -2,6 +2,7 @@ package fun.trackmoney.config.exception;
 
 import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.auth.exception.LoginException;
+import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
 import fun.trackmoney.goal.exception.GoalsNotFoundException;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
@@ -212,4 +213,21 @@ class RestExceptionHandlerTest {
     assertEquals("Goals not found.", error.getMessage());
   }
 
+  @Test
+  void budgetsNotFound_shouldReturnNotFoundWithError() {
+    BudgetsNotFoundException exception = new BudgetsNotFoundException("Budgets not found.");
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.budgetsNotFound(exception);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Budgets not found.", apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, (apiResponse.getErrors()).size());
+    CustomFieldError error = apiResponse.getErrors().get(0);
+    assertEquals("Budgets", error.getField());
+    assertEquals("Budgets not found.", error.getMessage());
+  }
 }
