@@ -60,16 +60,17 @@ class AccountServiceTest {
 
   @Test
   void testFindAllAccounts() {
+    UUID uuid = UUID.randomUUID();
     List<AccountEntity> entities = List.of(new AccountEntity(), new AccountEntity());
     List<AccountResponseDTO> responseDTOs = List.of(
         new AccountResponseDTO(1, null, "Conta 1", BigDecimal.valueOf(100), false),
         new AccountResponseDTO(2, null, "Conta 2", BigDecimal.valueOf(200), true)
     );
 
-    when(accountRepository.findAll()).thenReturn(entities);
+    when(accountRepository.findAllByUserEmail(uuid)).thenReturn(entities);
     when(accountMapper.accountEntityListToAccountResponseList(entities)).thenReturn(responseDTOs);
 
-    List<AccountResponseDTO> result = accountService.findAllAccount();
+    List<AccountResponseDTO> result = accountService.findAllAccount(uuid);
 
     assertEquals(2, result.size());
     assertEquals(responseDTOs, result);

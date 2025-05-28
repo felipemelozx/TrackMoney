@@ -12,6 +12,7 @@ import fun.trackmoney.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class AccountService {
@@ -38,8 +39,8 @@ public class AccountService {
            .save(account));
   }
 
-  public List<AccountResponseDTO> findAllAccount() {
-    return accountMapper.accountEntityListToAccountResponseList(accountRepository.findAll());
+  public List<AccountResponseDTO> findAllAccount(UUID userId) {
+    return accountMapper.accountEntityListToAccountResponseList(accountRepository.findAllByUserEmail(userId));
   }
 
   public AccountResponseDTO findAccountById(Integer id) {

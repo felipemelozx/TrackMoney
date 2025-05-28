@@ -5,6 +5,8 @@ import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,9 @@ class AccountControllerTest {
 
   @Mock
   private AccountService accountService;
+
+  @Mock
+  private AuthUtils authUtils;
 
   @InjectMocks
   private AccountController accountController;
@@ -61,8 +66,10 @@ class AccountControllerTest {
         new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000), true),
         new AccountResponseDTO(2, userResponseDTO, "Conta Poupança", BigDecimal.valueOf(500), false)
     );
-
-    when(accountService.findAllAccount()).thenReturn(accounts);
+    UUID uuid = UUID.randomUUID();
+    UserEntity user = new UserEntity(uuid, "", "", "");
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(accountService.findAllAccount(uuid)).thenReturn(accounts);
 
     ResponseEntity<ApiResponse<List<AccountResponseDTO>>> response = accountController.findAllAccounts();
 
