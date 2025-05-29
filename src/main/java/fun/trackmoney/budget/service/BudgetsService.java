@@ -12,6 +12,7 @@ import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.user.service.UserService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -47,8 +48,25 @@ public class BudgetsService {
     return budgetMapper.entityToResponseDTO(budgetsRepository.save(budgets));
   }
 
-  public List<BudgetResponseDTO> findAll() {
-    return budgetMapper.entityListToResponseList(budgetsRepository.findAll());
+  public List<BudgetResponseDTO> findAllByAccountId(Integer accountId) {
+    return budgetMapper.entityListToResponseList(
+            budgetsRepository.findAllByAccount_AccountId(accountId)
+        ).stream()
+        .map(budget -> {
+          BigDecimal currentAmount = budget.currentAmount() == null
+              ? BigDecimal.valueOf(100)
+              : budget.currentAmount();
+
+          return new BudgetResponseDTO(
+              budget.budgetId(),
+              budget.category(),
+              budget.account(),
+              budget.targetAmount(),
+              currentAmount,
+              budget.resetDay()
+          );
+        })
+        .toList();
   }
 
   public BudgetResponseDTO findById(Integer id) {

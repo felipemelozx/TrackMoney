@@ -62,9 +62,9 @@ class BudgetsControllerTest {
   @Test
   void findAll_shouldReturnOkAndListOfBudgetResponses() {
     List<BudgetResponseDTO> budgetList = Collections.singletonList(responseDTO);
-    when(budgetsService.findAll()).thenReturn(budgetList);
+    when(budgetsService.findAllByAccountId(createDTO.accountId())).thenReturn(budgetList);
 
-    ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> response = budgetsController.findAll();
+    ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> response = budgetsController.findAllByAccountId(createDTO.accountId());
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -72,7 +72,7 @@ class BudgetsControllerTest {
     assertEquals("Get all Budget", response.getBody().getMessage());
     assertEquals(budgetList, response.getBody().getData());
     assertNull(response.getBody().getErrors());
-    verify(budgetsService, times(1)).findAll();
+    verify(budgetsService, times(1)).findAllByAccountId(createDTO.accountId());
   }
 
   @Test

@@ -114,11 +114,11 @@ class BudgetsServiceTest {
     when(budgetsRepository.findAll()).thenReturn(Collections.emptyList());
     when(budgetMapper.entityListToResponseList(Collections.emptyList())).thenReturn(Collections.emptyList());
 
-    List<BudgetResponseDTO> result = budgetsService.findAll();
+    List<BudgetResponseDTO> result = budgetsService.findAllByAccountId(accountEntity.getAccountId());
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
-    verify(budgetsRepository, times(1)).findAll();
+    verify(budgetsRepository, times(1)).findAllByAccount_AccountId(accountEntity.getAccountId());
     verify(budgetMapper, times(1)).entityListToResponseList(Collections.emptyList());
   }
 
@@ -131,15 +131,15 @@ class BudgetsServiceTest {
     List<BudgetsEntity> entities = List.of(entity);
     List<BudgetResponseDTO> dtos = List.of(dto);
 
-    when(budgetsRepository.findAll()).thenReturn(entities);
+    when(budgetsRepository.findAllByAccount_AccountId(accountEntity.getAccountId())).thenReturn(entities);
     when(budgetMapper.entityListToResponseList(entities)).thenReturn(dtos);
 
-    List<BudgetResponseDTO> result = budgetsService.findAll();
+    List<BudgetResponseDTO> result = budgetsService.findAllByAccountId(accountEntity.getAccountId());
 
     assertNotNull(result);
     assertEquals(1, result.size());
     assertEquals(dtos, result);
-    verify(budgetsRepository, times(1)).findAll();
+    verify(budgetsRepository, times(1)).findAllByAccount_AccountId(accountEntity.getAccountId());
     verify(budgetMapper, times(1)).entityListToResponseList(entities);
   }
 
