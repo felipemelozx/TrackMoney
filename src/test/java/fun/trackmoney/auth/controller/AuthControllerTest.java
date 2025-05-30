@@ -55,4 +55,12 @@ class AuthControllerTest {
     assertEquals("Login successful!", response.getBody().getMessage());
     assertEquals("jwt-token", response.getBody().getData().token());
   }
+
+  @Test
+  void shouldTrueWhenJwtIsValid() {
+    var response = authController.verify();
+
+    assertTrue(response.getBody().getSuccess());
+    assertTrue(response.getBody().getData());
+  }
 }
