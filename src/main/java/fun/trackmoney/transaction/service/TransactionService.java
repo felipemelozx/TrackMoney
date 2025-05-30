@@ -48,8 +48,12 @@ public class TransactionService {
 
     transactionEntity.setAccount(account);
     transactionEntity.setCategory(category);
+    var response = transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
 
-    return transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
+    accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(),
+        TransactionType.INCOME.equals(transactionDTO.transactionType()));
+
+    return response;
   }
 
   public List<TransactionResponseDTO> findAllTransaction() {

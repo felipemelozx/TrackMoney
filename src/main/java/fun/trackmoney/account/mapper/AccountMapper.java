@@ -19,4 +19,6 @@ public interface AccountMapper {
   List<AccountResponseDTO> accountEntityListToAccountResponseList(List<AccountEntity> entities);
 
   AccountEntity accountResponseToEntity(AccountResponseDTO accountById);
+
+  AccountUpdateRequestDTO toAccountRequest(AccountEntity account);
 }

@@ -11,6 +11,7 @@ import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,5 +61,17 @@ public class AccountService {
 
   public void deleteById(Integer id) {
       accountRepository.deleteById(id);
+  }
+
+  public void updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
+    var account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found!"));
+
+    if (isCredit) {
+      account.setBalance(account.getBalance().add(balance));
+    } else{
+      account.setBalance(account.getBalance().subtract(balance));
+    }
+
+    accountRepository.save(account);
   }
 }
