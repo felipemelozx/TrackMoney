@@ -64,7 +64,8 @@ public class AccountService {
   }
 
   public void updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
-    var account = accountRepository.findById(accountId).orElseThrow(() -> new AccountNotFoundException("Account not found!"));
+    var account = accountRepository.findById(accountId)
+        .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
 
     if (isCredit) {
       account.setBalance(account.getBalance().add(balance));

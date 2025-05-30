@@ -50,7 +50,7 @@ public class BudgetsService {
 
   public List<BudgetResponseDTO> findAllByAccountId(Integer accountId) {
     return budgetMapper.entityListToResponseList(
-            budgetsRepository.findAllByAccount_AccountId(accountId)
+            budgetsRepository.findAllByAccountAccountId(accountId)
         ).stream()
         .map(budget -> {
           BigDecimal currentAmount = budget.currentAmount() == null

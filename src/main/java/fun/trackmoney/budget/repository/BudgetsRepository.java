@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface BudgetsRepository extends JpaRepository<BudgetsEntity, Integer> {
-  List<BudgetsEntity> findAllByAccount_AccountId(Integer accountId);
+  List<BudgetsEntity> findAllByAccountAccountId(Integer accountId);
 }
