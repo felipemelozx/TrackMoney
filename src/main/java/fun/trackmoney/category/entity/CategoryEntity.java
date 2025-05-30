@@ -28,6 +28,7 @@ public class CategoryEntity {
    */
   private String name;
 
+  private String color;
   /**
    * Default constructor for creating an instance of {@link CategoryEntity}.
    * This constructor is required for JPA persistence.
@@ -44,6 +45,19 @@ public class CategoryEntity {
   public CategoryEntity(Integer categoryId, String name) {
     this.categoryId = categoryId;
     this.name = name;
+  }
+
+  public CategoryEntity(Integer categoryId, String name, String color) {
+    this(categoryId,name);
+    this.color = color;
+  }
+
+  public String getColor() {
+    return color;
+  }
+
+  public void setColor(String color) {
+    this.color = color;
   }
 
   /**
