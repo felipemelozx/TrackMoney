@@ -9,6 +9,6 @@ public record BudgetResponseDTO (Integer budgetId,
                                  CategoryEntity category,
                                  AccountResponseDTO account,
                                  BigDecimal targetAmount,
-                                 BigDecimal currentAmount,
-                                 Integer resetDay) {
+                                 Integer resetDay,
+                                 BigDecimal currentAmount) {
 }

@@ -41,7 +41,7 @@ class BudgetsControllerTest {
     UUID userId = UUID.randomUUID();
     budgetId = 1;
     createDTO = new BudgetCreateDTO(10, userId, 20, BigDecimal.valueOf(1000), 5);
-    responseDTO = new BudgetResponseDTO(budgetId, null, null, BigDecimal.valueOf(1000), 5);
+    responseDTO = new BudgetResponseDTO(budgetId, null, null, BigDecimal.valueOf(1000), 5, BigDecimal.valueOf(1000));
   }
 
   @Test
@@ -107,7 +107,7 @@ class BudgetsControllerTest {
   void updateById_shouldReturnOkAndUpdatedBudgetResponse() {
     int updateId = 1;
     BudgetCreateDTO updateDTO = new BudgetCreateDTO(11, UUID.randomUUID(), 21, BigDecimal.valueOf(1500), 6);
-    BudgetResponseDTO updatedResponseDTO = new BudgetResponseDTO(updateId, null, null, BigDecimal.valueOf(1500), 6);
+    BudgetResponseDTO updatedResponseDTO = new BudgetResponseDTO(updateId, null, null, BigDecimal.valueOf(1500), 6, BigDecimal.valueOf(1500));
     when(budgetsService.update(updateDTO, updateId)).thenReturn(updatedResponseDTO);
 
     ResponseEntity<ApiResponse<BudgetResponseDTO>> response = budgetsController.updateById(updateId, updateDTO);

@@ -91,7 +91,7 @@ class TransactionControllerTest {
   @Test
   void updateTransaction_shouldReturnUpdatedTransaction() {
     // Arrange
-    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(50), 1, 2);
+    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(50), 1, 2, TransactionType.EXPENSE);
     TransactionResponseDTO updated = new TransactionResponseDTO(1, "Updated", BigDecimal.valueOf(50), null);
 
     when(transactionService.update(1, dto)).thenReturn(updated);

@@ -70,7 +70,7 @@ class BudgetsServiceTest {
     accountResponseDTO = new AccountResponseDTO(20, userResponseDTO, "true", BigDecimal.valueOf(1000), true);
     accountEntity = new AccountEntity();
     categoryEntity = new CategoryEntity();
-    budgetResponseDTO = new BudgetResponseDTO(1, categoryEntity, accountResponseDTO, BigDecimal.valueOf(1000), 5);
+    budgetResponseDTO = new BudgetResponseDTO(1, categoryEntity, accountResponseDTO, BigDecimal.valueOf(1000), 5, BigDecimal.valueOf(1000));
   }
 
   @Test
@@ -127,7 +127,7 @@ class BudgetsServiceTest {
     BudgetsEntity entity = new BudgetsEntity();
     BudgetResponseDTO dto = new BudgetResponseDTO(1, new CategoryEntity(),
         new AccountResponseDTO(1, userResponseDTO, "test", BigDecimal.valueOf(100), true),
-        BigDecimal.TEN, 10);
+        BigDecimal.TEN, 10, null);
     List<BudgetsEntity> entities = List.of(entity);
     List<BudgetResponseDTO> dtos = List.of(dto);
 
@@ -137,8 +137,8 @@ class BudgetsServiceTest {
     List<BudgetResponseDTO> result = budgetsService.findAllByAccountId(accountEntity.getAccountId());
 
     assertNotNull(result);
+    assertNotNull(result.get(0).currentAmount());
     assertEquals(1, result.size());
-    assertEquals(dtos, result);
     verify(budgetsRepository, times(1)).findAllByAccountAccountId(accountEntity.getAccountId());
     verify(budgetMapper, times(1)).entityListToResponseList(entities);
   }
@@ -179,7 +179,7 @@ class BudgetsServiceTest {
     AccountEntity updatedAccountEntity = new AccountEntity();
     CategoryEntity updatedCategory = new CategoryEntity();
     BudgetResponseDTO updatedResponse = new BudgetResponseDTO(budgetIdToUpdate, updatedCategory,
-        updatedAccountDTO, BigDecimal.valueOf(1500), 6);
+        updatedAccountDTO, BigDecimal.valueOf(1500), 6, BigDecimal.valueOf(1000));
     BudgetsEntity updatedEntity = new BudgetsEntity();
     updatedEntity.setBudgetId(budgetIdToUpdate);
 

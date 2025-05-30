@@ -62,8 +62,8 @@ public class BudgetsService {
               budget.category(),
               budget.account(),
               budget.targetAmount(),
-              currentAmount,
-              budget.resetDay()
+              budget.resetDay(),
+              currentAmount
           );
         })
         .toList();

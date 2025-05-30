@@ -119,7 +119,7 @@ class TransactionServiceTest {
     CategoryEntity categoryEntity = new CategoryEntity();
     TransactionResponseDTO dtoResponse = new TransactionResponseDTO(1, "Updated", BigDecimal.valueOf(200), null);
 
-    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2);
+    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2, TransactionType.EXPENSE);
     UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "Jane", "jane@mail.com");
 
     when(transactionRepository.findById(1)).thenReturn(Optional.of(entity));
