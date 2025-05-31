@@ -135,4 +135,26 @@ class AccountServiceTest {
 
     verify(accountRepository, times(1)).deleteById(1);
   }
+
+  @Test
+  void testUpdateAccountBalanceSum() {
+    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100), true);
+    when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+    when(accountRepository.save(account)).thenReturn(account);
+
+    accountService.updateAccountBalance(BigDecimal.valueOf(100), 1, true);
+    assertEquals(new BigDecimal("200"), account.getBalance());
+    verify(accountRepository, times(1)).save(account);
+  }
+
+  @Test
+  void testUpdateAccountBalanceSub() {
+    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100), true);
+    when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+    when(accountRepository.save(account)).thenReturn(any());
+
+    accountService.updateAccountBalance(BigDecimal.valueOf(100), 1, false);
+    assertEquals(new BigDecimal("0"), account.getBalance());
+    verify(accountRepository, times(1)).save(account);
+  }
 }
