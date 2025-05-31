@@ -5,8 +5,10 @@ import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
 import fun.trackmoney.transaction.service.TransactionService;
+import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 import java.math.BigDecimal;
@@ -116,5 +118,45 @@ class TransactionControllerTest {
     assertEquals("Transaction deleted.", response.getBody().getData());
 
     verify(transactionService).delete(1);
+  }
+
+  @Test
+  void getIncome_shouldReturnCorrectApiResponse() {
+    Integer id = 1;
+    BigDecimal income = new BigDecimal("1200.00");
+
+    when(transactionService.getIncome(id)).thenReturn(income);
+
+    var response = transactionController.getIncome(id);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    ApiResponse<BigDecimal> body = response.getBody();
+    assertNotNull(body);
+    assertTrue(body.getSuccess());
+    assertEquals("Get income", body.getMessage());
+    assertEquals(income, body.getData());
+    assertNull(body.getErrors());
+  }
+
+  @Test
+  void getExpense_shouldReturnCorrectApiResponse() {
+    Integer id = 2;
+    BigDecimal expense = new BigDecimal("800.00");
+
+    when(transactionService.getExpense(id)).thenReturn(expense);
+
+    var response = transactionController.getExpense(id);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    ApiResponse<BigDecimal> body = response.getBody();
+    assertNotNull(body);
+    assertTrue(body.getSuccess());
+    assertEquals("Get expense", body.getMessage());
+    assertEquals(expense, body.getData());
+    assertNull(body.getErrors());
   }
 }
