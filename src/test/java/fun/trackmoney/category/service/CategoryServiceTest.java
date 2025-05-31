@@ -54,6 +54,7 @@ class CategoryServiceTest {
     CategoryEntity expectedCategory = new CategoryEntity();
     expectedCategory.setCategoryId(categoryId);
     expectedCategory.setName("Food");
+    expectedCategory.setColor("#fffff");
 
     when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(expectedCategory));
 
@@ -63,6 +64,7 @@ class CategoryServiceTest {
     // Assert
     assertEquals(expectedCategory.getCategoryId(), actualCategory.getCategoryId());
     assertEquals(expectedCategory.getName(), actualCategory.getName());
+    assertEquals(expectedCategory.getColor(), actualCategory.getColor());
   }
 
   @Test
