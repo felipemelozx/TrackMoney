@@ -38,6 +38,8 @@ public class BudgetsEntity {
   @Column(name = "reset_day")
   private Integer resetDay;
 
+  private BigDecimal currentAmount;
+
   public AccountEntity getAccount() {
     return account;
   }
@@ -56,6 +58,18 @@ public class BudgetsEntity {
     this.userEntity = userEntity;
     this.targetAmount = targetAmount;
     this.resetDay = resetDay;
+  }
+
+  public BudgetsEntity(Integer budgetId,
+                       CategoryEntity category,
+                       AccountEntity account,
+                       UserEntity userEntity,
+                       BigDecimal targetAmount,
+                       Integer resetDay,
+                       BigDecimal currentAmount) {
+    this(budgetId, category, userEntity, targetAmount, resetDay);
+    this.currentAmount = currentAmount;
+    this.account = account;
   }
 
   public void setAccount(AccountEntity account) {
@@ -104,5 +118,13 @@ public class BudgetsEntity {
 
   public void setUserEntity(UserEntity userEntity) {
     this.userEntity = userEntity;
+  }
+
+  public BigDecimal getCurrentAmount() {
+    return currentAmount;
+  }
+
+  public void setCurrentAmount(BigDecimal currentAmount) {
+    this.currentAmount = currentAmount;
   }
 }

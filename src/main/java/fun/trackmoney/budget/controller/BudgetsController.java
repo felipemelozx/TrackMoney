@@ -33,9 +33,9 @@ public class BudgetsController {
         new ApiResponse<>(true, "Budget created", budgetsService.create(dto), null));
   }
 
-  @GetMapping
-  public ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> findAll() {
-    var list = budgetsService.findAll();
+  @GetMapping("/findAll/{accountId}")
+  public ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> findAllByAccountId(@PathVariable Integer accountId) {
+    var list = budgetsService.findAllByAccountId(accountId);
     return ResponseEntity.status(HttpStatus.OK).body(
         new ApiResponse<>(true, "Get all Budget",list , null));
   }

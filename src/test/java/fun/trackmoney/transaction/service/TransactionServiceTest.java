@@ -119,7 +119,7 @@ class TransactionServiceTest {
     CategoryEntity categoryEntity = new CategoryEntity();
     TransactionResponseDTO dtoResponse = new TransactionResponseDTO(1, "Updated", BigDecimal.valueOf(200), null);
 
-    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2);
+    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2, TransactionType.EXPENSE);
     UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "Jane", "jane@mail.com");
 
     when(transactionRepository.findById(1)).thenReturn(Optional.of(entity));
@@ -138,5 +138,41 @@ class TransactionServiceTest {
   void delete_shouldCallRepositoryDeleteById() {
     transactionService.delete(1);
     verify(transactionRepository).deleteById(1);
+  }
+
+  @Test
+  void getIncome_shouldReturnTotalIncome() {
+    BigDecimal totalIncome = BigDecimal.valueOf(100);
+    var tr1 = new TransactionEntity();
+    tr1.setTransactionType(TransactionType.INCOME);
+    tr1.setAmount(BigDecimal.valueOf(50));
+    var tr2 = new TransactionEntity();
+    tr2.setAmount(BigDecimal.valueOf(50));
+    tr2.setTransactionType(TransactionType.INCOME);
+
+    var accountId = 1;
+    when(transactionRepository.findAllByUserEmail(accountId)).thenReturn(List.of(tr1, tr2));
+
+    var result = transactionService.getIncome(accountId);
+
+    assertEquals(totalIncome, result);
+  }
+
+  @Test
+  void getExpense_shouldReturnTotalExpense() {
+    BigDecimal totalIncome = BigDecimal.valueOf(100);
+    var tr1 = new TransactionEntity();
+    tr1.setTransactionType(TransactionType.EXPENSE);
+    tr1.setAmount(BigDecimal.valueOf(50));
+    var tr2 = new TransactionEntity();
+    tr2.setAmount(BigDecimal.valueOf(50));
+    tr2.setTransactionType(TransactionType.EXPENSE);
+
+    var accountId = 1;
+    when(transactionRepository.findAllByUserEmail(accountId)).thenReturn(List.of(tr1, tr2));
+
+    var result = transactionService.getExpense(accountId);
+
+    assertEquals(totalIncome, result);
   }
 }

@@ -8,6 +8,7 @@ import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Provides endpoints for user registration.
  */
 @RestController
-@RequestMapping("auth/")
+@RequestMapping("auth")
 public class AuthController {
 
   private final AuthService authService;
@@ -39,7 +40,7 @@ public class AuthController {
    * @return A ResponseEntity containing an ApiResponse
    *                                    with the result of the registration operation.
    */
-  @PostMapping("register")
+  @PostMapping("/register")
   public ResponseEntity<ApiResponse<UserResponseDTO>> register(
       @RequestBody @Valid UserRequestDTO userDto) {
     return ResponseEntity.ok().body(
@@ -52,13 +53,25 @@ public class AuthController {
     );
   }
 
-  @PostMapping("login")
+  @PostMapping("/login")
   public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody LoginRequestDTO loginDto) {
     return ResponseEntity.ok().body(
         new ApiResponse<>(
             true,
             "Login successful!",
             authService.login(loginDto),
+            null
+        )
+    );
+  }
+
+  @GetMapping("/verify")
+  public ResponseEntity<ApiResponse<Boolean>> verify() {
+    return ResponseEntity.ok().body(
+        new ApiResponse<>(
+            true,
+            "Token is valid!",
+            true,
             null
         )
     );

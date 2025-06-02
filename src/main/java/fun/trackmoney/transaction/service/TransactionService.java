@@ -5,6 +5,7 @@ import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
+import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
@@ -14,7 +15,9 @@ import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TransactionService {
@@ -25,8 +28,10 @@ public class TransactionService {
   private final AccountMapper accountMapper;
   private final CategoryService categoryService;
 
-  public TransactionService(TransactionRepository transactionRepository, TransactionMapper transactionMapper,
-                            AccountService accountService, AccountMapper accountMapper,
+  public TransactionService(TransactionRepository transactionRepository,
+                            TransactionMapper transactionMapper,
+                            AccountService accountService,
+                            AccountMapper accountMapper,
                             CategoryService categoryService) {
     this.transactionRepository = transactionRepository;
     this.transactionMapper = transactionMapper;
@@ -43,8 +48,12 @@ public class TransactionService {
 
     transactionEntity.setAccount(account);
     transactionEntity.setCategory(category);
+    var response = transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
 
-    return transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
+    accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(),
+        TransactionType.INCOME.equals(transactionDTO.transactionType()));
+
+    return response;
   }
 
   public List<TransactionResponseDTO> findAllTransaction() {
@@ -70,5 +79,23 @@ public class TransactionService {
 
   public void delete(Integer id) {
     transactionRepository.deleteById(id);
+  }
+
+  public BigDecimal getIncome(Integer accountId) {
+    return transactionRepository.findAllByUserEmail(accountId)
+        .stream()
+        .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
+        .map(TransactionEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  public BigDecimal getExpense(Integer accountId) {
+    return transactionRepository.findAllByUserEmail(accountId)
+        .stream()
+        .filter(t -> TransactionType.EXPENSE.equals(t.getTransactionType()))
+        .map(TransactionEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -46,6 +47,18 @@ public class TransactionController {
   public ResponseEntity<ApiResponse<TransactionResponseDTO>> findTransactionById(@PathVariable Integer id) {
     return ResponseEntity.ok().body(
         new ApiResponse<>(true,"Get transaction by id", transactionService.findById(id),null));
+  }
+
+  @GetMapping("/income/{id}")
+  public ResponseEntity<ApiResponse<BigDecimal>> getIncome(@PathVariable Integer id) {
+    return ResponseEntity.ok().body(
+        new ApiResponse<>(true,"Get income", transactionService.getIncome(id),null));
+  }
+
+  @GetMapping("/expense/{id}")
+  public ResponseEntity<ApiResponse<BigDecimal>> getExpense(@PathVariable Integer id) {
+    return ResponseEntity.ok().body(
+        new ApiResponse<>(true,"Get expense", transactionService.getExpense(id),null));
   }
 
   @PutMapping("/{id}")

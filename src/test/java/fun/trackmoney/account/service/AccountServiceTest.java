@@ -60,16 +60,17 @@ class AccountServiceTest {
 
   @Test
   void testFindAllAccounts() {
+    UUID uuid = UUID.randomUUID();
     List<AccountEntity> entities = List.of(new AccountEntity(), new AccountEntity());
     List<AccountResponseDTO> responseDTOs = List.of(
         new AccountResponseDTO(1, null, "Conta 1", BigDecimal.valueOf(100), false),
         new AccountResponseDTO(2, null, "Conta 2", BigDecimal.valueOf(200), true)
     );
 
-    when(accountRepository.findAll()).thenReturn(entities);
+    when(accountRepository.findAllByUserEmail(uuid)).thenReturn(entities);
     when(accountMapper.accountEntityListToAccountResponseList(entities)).thenReturn(responseDTOs);
 
-    List<AccountResponseDTO> result = accountService.findAllAccount();
+    List<AccountResponseDTO> result = accountService.findAllAccount(uuid);
 
     assertEquals(2, result.size());
     assertEquals(responseDTOs, result);
@@ -133,5 +134,27 @@ class AccountServiceTest {
     accountService.deleteById(1);
 
     verify(accountRepository, times(1)).deleteById(1);
+  }
+
+  @Test
+  void testUpdateAccountBalanceSum() {
+    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100), true);
+    when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+    when(accountRepository.save(account)).thenReturn(account);
+
+    accountService.updateAccountBalance(BigDecimal.valueOf(100), 1, true);
+    assertEquals(new BigDecimal("200"), account.getBalance());
+    verify(accountRepository, times(1)).save(account);
+  }
+
+  @Test
+  void testUpdateAccountBalanceSub() {
+    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100), true);
+    when(accountRepository.findById(1)).thenReturn(Optional.of(account));
+    when(accountRepository.save(account)).thenReturn(any());
+
+    accountService.updateAccountBalance(BigDecimal.valueOf(100), 1, false);
+    assertEquals(new BigDecimal("0"), account.getBalance());
+    verify(accountRepository, times(1)).save(account);
   }
 }

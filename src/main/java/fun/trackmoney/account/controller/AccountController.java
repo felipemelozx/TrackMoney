@@ -4,6 +4,7 @@ import fun.trackmoney.account.dtos.AccountRequestDTO;
 import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
 import fun.trackmoney.account.service.AccountService;
+import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +18,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
 
   private final AccountService accountService;
+  private final AuthUtils authUtils;
 
-  public AccountController(AccountService accountService) {
+  public AccountController(AccountService accountService, AuthUtils authUtils) {
     this.accountService = accountService;
+    this.authUtils = authUtils;
   }
 
   @PostMapping
@@ -35,12 +39,15 @@ public class AccountController {
         true, "Account successfully created.", createdAccount, null), HttpStatus.CREATED);
   }
 
+
   @GetMapping
   public ResponseEntity<ApiResponse<List<AccountResponseDTO>>> findAllAccounts() {
-    List<AccountResponseDTO> accounts = accountService.findAllAccount();
+    UUID email = authUtils.getCurrentUser().getUserId();
+    List<AccountResponseDTO> accounts = accountService.findAllAccount(email);
     return ResponseEntity.ok(new ApiResponse<>(
         true, "Account list retrieved successfully.", accounts, null));
   }
+
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<AccountResponseDTO>> findAccountById(@PathVariable Integer id) {

@@ -41,7 +41,7 @@ class BudgetsControllerTest {
     UUID userId = UUID.randomUUID();
     budgetId = 1;
     createDTO = new BudgetCreateDTO(10, userId, 20, BigDecimal.valueOf(1000), 5);
-    responseDTO = new BudgetResponseDTO(budgetId, null, null, BigDecimal.valueOf(1000), 5);
+    responseDTO = new BudgetResponseDTO(budgetId, null, null, BigDecimal.valueOf(1000), 5, BigDecimal.valueOf(1000));
   }
 
   @Test
@@ -62,9 +62,9 @@ class BudgetsControllerTest {
   @Test
   void findAll_shouldReturnOkAndListOfBudgetResponses() {
     List<BudgetResponseDTO> budgetList = Collections.singletonList(responseDTO);
-    when(budgetsService.findAll()).thenReturn(budgetList);
+    when(budgetsService.findAllByAccountId(createDTO.accountId())).thenReturn(budgetList);
 
-    ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> response = budgetsController.findAll();
+    ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> response = budgetsController.findAllByAccountId(createDTO.accountId());
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -72,7 +72,7 @@ class BudgetsControllerTest {
     assertEquals("Get all Budget", response.getBody().getMessage());
     assertEquals(budgetList, response.getBody().getData());
     assertNull(response.getBody().getErrors());
-    verify(budgetsService, times(1)).findAll();
+    verify(budgetsService, times(1)).findAllByAccountId(createDTO.accountId());
   }
 
   @Test
@@ -107,7 +107,7 @@ class BudgetsControllerTest {
   void updateById_shouldReturnOkAndUpdatedBudgetResponse() {
     int updateId = 1;
     BudgetCreateDTO updateDTO = new BudgetCreateDTO(11, UUID.randomUUID(), 21, BigDecimal.valueOf(1500), 6);
-    BudgetResponseDTO updatedResponseDTO = new BudgetResponseDTO(updateId, null, null, BigDecimal.valueOf(1500), 6);
+    BudgetResponseDTO updatedResponseDTO = new BudgetResponseDTO(updateId, null, null, BigDecimal.valueOf(1500), 6, BigDecimal.valueOf(1500));
     when(budgetsService.update(updateDTO, updateId)).thenReturn(updatedResponseDTO);
 
     ResponseEntity<ApiResponse<BudgetResponseDTO>> response = budgetsController.updateById(updateId, updateDTO);
