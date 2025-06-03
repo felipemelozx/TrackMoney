@@ -6,6 +6,7 @@ import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.TransactionType;
+import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
@@ -16,6 +17,7 @@ import fun.trackmoney.transaction.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -82,7 +84,7 @@ public class TransactionService {
   }
 
   public BigDecimal getIncome(Integer accountId) {
-    return transactionRepository.findAllByUserEmail(accountId)
+    return transactionRepository.findAllByAccountId(accountId)
         .stream()
         .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
         .map(TransactionEntity::getAmount)
@@ -91,11 +93,49 @@ public class TransactionService {
   }
 
   public BigDecimal getExpense(Integer accountId) {
-    return transactionRepository.findAllByUserEmail(accountId)
+    return transactionRepository.findAllByAccountId(accountId)
         .stream()
         .filter(t -> TransactionType.EXPENSE.equals(t.getTransactionType()))
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  public BillResponseDTO getBill(Integer id) {
+    var result = transactionRepository.findAllByAccountId(id);
+
+    BigDecimal totalBillsBeforeToday = result.stream()
+        .filter(transaction ->
+            transaction.getCategory().getName().equalsIgnoreCase("bill") &&
+                transaction.getTransactionDate().toLocalDateTime().toLocalDate().isBefore(LocalDate.now())
+        )
+        .map(TransactionEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+    BigDecimal totalUpComing = result.stream()
+        .filter(transaction ->
+            transaction.getCategory().getName().equalsIgnoreCase("bill") &&
+                transaction.getTransactionDate().toLocalDateTime().toLocalDate().isAfter(LocalDate.now())
+        )
+        .map(TransactionEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal totalBueSoon = result.stream()
+        .filter(transaction -> {
+          LocalDate date = transaction.getTransactionDate().toLocalDateTime().toLocalDate();
+          return transaction.getCategory().getName().equalsIgnoreCase("bill")
+              && !date.isBefore(LocalDate.now())
+              && !date.isAfter(LocalDate.now().plusDays(7));
+        })
+
+        .map(TransactionEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+    return new BillResponseDTO(totalBillsBeforeToday, totalUpComing, totalBueSoon);
   }
 }
