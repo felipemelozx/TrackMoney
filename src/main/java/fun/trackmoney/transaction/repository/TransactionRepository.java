@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Integer> {
   @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId")
-  List<TransactionEntity> findAllByUserEmail(@Param("accountId") Integer accountId);
+  List<TransactionEntity> findAllByAccountId(@Param("accountId") Integer accountId);
 }

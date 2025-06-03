@@ -151,7 +151,7 @@ class TransactionServiceTest {
     tr2.setTransactionType(TransactionType.INCOME);
 
     var accountId = 1;
-    when(transactionRepository.findAllByUserEmail(accountId)).thenReturn(List.of(tr1, tr2));
+    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(tr1, tr2));
 
     var result = transactionService.getIncome(accountId);
 
@@ -169,7 +169,7 @@ class TransactionServiceTest {
     tr2.setTransactionType(TransactionType.EXPENSE);
 
     var accountId = 1;
-    when(transactionRepository.findAllByUserEmail(accountId)).thenReturn(List.of(tr1, tr2));
+    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(tr1, tr2));
 
     var result = transactionService.getExpense(accountId);
 
