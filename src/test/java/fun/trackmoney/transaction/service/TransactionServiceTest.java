@@ -21,6 +21,8 @@ import org.mockito.*;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -151,7 +153,7 @@ class TransactionServiceTest {
     tr2.setTransactionType(TransactionType.INCOME);
 
     var accountId = 1;
-    when(transactionRepository.findAllByUserEmail(accountId)).thenReturn(List.of(tr1, tr2));
+    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(tr1, tr2));
 
     var result = transactionService.getIncome(accountId);
 
@@ -169,10 +171,90 @@ class TransactionServiceTest {
     tr2.setTransactionType(TransactionType.EXPENSE);
 
     var accountId = 1;
-    when(transactionRepository.findAllByUserEmail(accountId)).thenReturn(List.of(tr1, tr2));
+    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(tr1, tr2));
 
     var result = transactionService.getExpense(accountId);
 
     assertEquals(totalIncome, result);
+  }
+
+  @Test
+  void getBill_shouldReturnBillResponseDTO() {
+    var accountId = 1;
+
+    var transaction1 = new TransactionEntity();
+    var transaction2 = new TransactionEntity();
+    var transaction3 = new TransactionEntity();
+
+    transaction1.setAmount(BigDecimal.valueOf(100));
+    transaction2.setAmount(BigDecimal.valueOf(100));
+    transaction3.setAmount(BigDecimal.valueOf(100));
+
+    LocalDateTime baseDate = LocalDate.now().atStartOfDay();
+
+
+    var day1 = Timestamp.valueOf(baseDate.minusDays(8));
+    transaction1.setTransactionDate(day1);
+
+    var day2 = Timestamp.valueOf(baseDate.plusDays(2));
+    transaction2.setTransactionDate(day2);
+
+    var day3 = Timestamp.valueOf(baseDate.plusDays(8));
+    transaction3.setTransactionDate(day3);
+
+    CategoryEntity category = new CategoryEntity(1, "bill", "anyColor");
+
+    transaction1.setCategory(category);
+    transaction2.setCategory(category);
+    transaction3.setCategory(category);
+
+    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(transaction1, transaction2));
+
+    var result = transactionService.getBill(accountId);
+
+    assertNotNull(result);
+    assertEquals(BigDecimal.valueOf(100), result.totalUpcoming());
+    assertEquals(BigDecimal.valueOf(100), result.bill());
+    assertEquals(BigDecimal.valueOf(100), result.bueSoon());
+  }
+
+  @Test
+  void getBill_shouldReturnEmptyBillResponseDTOWhenNoBills() {
+    var accountId = 1;
+
+    var transaction1 = new TransactionEntity();
+    var transaction2 = new TransactionEntity();
+    var transaction3 = new TransactionEntity();
+
+    transaction1.setAmount(BigDecimal.valueOf(100));
+    transaction2.setAmount(BigDecimal.valueOf(100));
+    transaction3.setAmount(BigDecimal.valueOf(100));
+
+    LocalDateTime baseDate = LocalDate.now().atStartOfDay();
+
+
+    var day1 = Timestamp.valueOf(baseDate.minusDays(8));
+    transaction1.setTransactionDate(day1);
+
+    var day2 = Timestamp.valueOf(baseDate.plusDays(2));
+    transaction2.setTransactionDate(day2);
+
+    var day3 = Timestamp.valueOf(baseDate.plusDays(8));
+    transaction3.setTransactionDate(day3);
+
+    CategoryEntity category = new CategoryEntity(1, "otherCategory", "anyColor");
+
+    transaction1.setCategory(category);
+    transaction2.setCategory(category);
+    transaction3.setCategory(category);
+
+    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(transaction1, transaction2));
+
+    var result = transactionService.getBill(accountId);
+
+    assertNotNull(result);
+    assertEquals(BigDecimal.valueOf(0), result.totalUpcoming());
+    assertEquals(BigDecimal.valueOf(0), result.bill());
+    assertEquals(BigDecimal.valueOf(0), result.bueSoon());
   }
 }

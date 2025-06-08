@@ -1,5 +1,6 @@
 package fun.trackmoney.transaction.controller;
 
+import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
@@ -59,6 +60,12 @@ public class TransactionController {
   public ResponseEntity<ApiResponse<BigDecimal>> getExpense(@PathVariable Integer id) {
     return ResponseEntity.ok().body(
         new ApiResponse<>(true,"Get expense", transactionService.getExpense(id),null));
+  }
+
+  @GetMapping("/bill/{id}")
+  public ResponseEntity<ApiResponse<BillResponseDTO>> getBill(@PathVariable Integer id) {
+    return ResponseEntity.ok().body(
+        new ApiResponse<>(true,"Get expense", transactionService.getBill(id),null));
   }
 
   @PutMapping("/{id}")
