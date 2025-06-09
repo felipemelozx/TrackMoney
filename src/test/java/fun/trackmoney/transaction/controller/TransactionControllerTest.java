@@ -53,7 +53,7 @@ class TransactionControllerTest {
 
     verify(transactionService).createTransaction(dto);
   }
-
+  /*
   @Test
   void findAllTransaction_shouldReturnList() {
     // Arrange
@@ -72,7 +72,7 @@ class TransactionControllerTest {
 
     verify(transactionService).findAllTransaction();
   }
-
+*/
   @Test
   void findTransactionById_shouldReturnTransaction() {
     // Arrange

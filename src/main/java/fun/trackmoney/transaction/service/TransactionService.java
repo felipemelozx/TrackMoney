@@ -14,6 +14,10 @@ import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -99,6 +103,11 @@ public class TransactionService {
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable) {
+    return transactionRepository.findAll(pageable)
+        .map(transactionMapper::toResponseDTO);
   }
 
   public BillResponseDTO getBill(Integer id) {
