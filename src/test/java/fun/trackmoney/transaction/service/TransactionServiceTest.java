@@ -18,6 +18,10 @@ import fun.trackmoney.user.dtos.UserResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -25,6 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -256,5 +261,25 @@ class TransactionServiceTest {
     assertEquals(BigDecimal.valueOf(0), result.totalUpcoming());
     assertEquals(BigDecimal.valueOf(0), result.bill());
     assertEquals(BigDecimal.valueOf(0), result.bueSoon());
+  }
+
+  @Test
+  void shouldReturnPaginatedTransactions() {
+    Pageable pageable = PageRequest.of(0, 5);
+
+    TransactionEntity transaction = new TransactionEntity(1, null, null, null,   BigDecimal.valueOf(100),"Some description", null );
+    TransactionResponseDTO dto = new TransactionResponseDTO(
+        1, "Some description", BigDecimal.valueOf(100), null);
+
+    Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
+
+    when(transactionRepository.findAll(pageable)).thenReturn(transactionPage);
+    when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
+
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable);
+
+    assertThat(result.getContent()).containsExactly(dto);
+    verify(transactionRepository).findAll(pageable);
+    verify(transactionMapper).toResponseDTO(transaction);
   }
 }
