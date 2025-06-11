@@ -1,19 +1,27 @@
 package fun.trackmoney.transaction.controller;
 
+import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.enums.TransactionType;
+import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
 import fun.trackmoney.transaction.service.TransactionService;
+import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -158,5 +166,47 @@ class TransactionControllerTest {
     assertEquals("Get expense", body.getMessage());
     assertEquals(expense, body.getData());
     assertNull(body.getErrors());
+  }
+
+  @Test
+  void getBill_shouldReturnBill() {
+    Integer id = 2;
+    BillResponseDTO billResponseDTO = new BillResponseDTO(
+        BigDecimal.valueOf(800), BigDecimal.valueOf(800), BigDecimal.valueOf(800));
+
+    when(transactionService.getBill(id)).thenReturn(billResponseDTO);
+
+    var response = transactionController.getBill(id);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+
+    ApiResponse<BillResponseDTO> body = response.getBody();
+    assertNotNull(body);
+    assertTrue(body.getSuccess());
+    assertEquals("Get expense", body.getMessage());
+    assertEquals(billResponseDTO, body.getData());
+    assertNull(body.getErrors());
+  }
+
+  @Test
+  void getTransactionPagination() {
+    Pageable pageable = PageRequest.of(0, 10);
+    var user = new UserResponseDTO(UUID.randomUUID(), "name", "teste");
+    AccountResponseDTO res = new AccountResponseDTO(1, user, "name", BigDecimal.TEN, false);
+    TransactionResponseDTO transaction1 = new TransactionResponseDTO(1, "T1", BigDecimal.TEN, res);
+    TransactionResponseDTO transaction2 = new TransactionResponseDTO(2, "T2", BigDecimal.ONE, res);
+    Page<TransactionResponseDTO> page = new PageImpl<>(List.of(transaction1, transaction2), pageable, 2);
+
+    when(transactionService.getPaginatedTransactions(pageable)).thenReturn(page);
+
+    var response = transactionController.getPaginatedTransactions(pageable);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertThat(response.getBody().getData()).hasSize(2);
+    assertEquals("Paginated transactions", response.getBody().getMessage());
+
+    verify(transactionService).getPaginatedTransactions(pageable);
   }
 }

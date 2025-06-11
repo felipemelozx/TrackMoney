@@ -2,10 +2,13 @@ package fun.trackmoney.transaction.controller;
 
 import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
+import fun.trackmoney.transaction.dto.TransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
 import fun.trackmoney.transaction.service.TransactionService;
 import fun.trackmoney.utils.response.ApiResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,6 +45,14 @@ public class TransactionController {
   public ResponseEntity<ApiResponse<List<TransactionResponseDTO>>> findAllTransaction() {
     return ResponseEntity.ok().body(
         new ApiResponse<>(true,"All transaction", transactionService.findAllTransaction(),null));
+  }
+
+  @GetMapping("/page")
+  public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getPaginatedTransactions(Pageable pageable) {
+    Page<TransactionResponseDTO> page = transactionService.getPaginatedTransactions(pageable);
+    Page<TransactionDTO> dtoPage = page.map(TransactionDTO::from);
+    return ResponseEntity.ok().body(new ApiResponse<>(
+        true, "Paginated transactions", dtoPage, null));
   }
 
   @GetMapping("/{id}")
