@@ -1,6 +1,7 @@
 package fun.trackmoney.pots.dtos;
 
-public record PotsResponseDTO(String name,
+public record PotsResponseDTO(Long potId,
+                              String name,
                               String description,
                               Long targetAmount,
                               Long currentAmount) {
