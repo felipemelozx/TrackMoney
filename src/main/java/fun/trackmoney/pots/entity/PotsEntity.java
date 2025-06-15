@@ -1,6 +1,7 @@
 package fun.trackmoney.pots.entity;
 
 import fun.trackmoney.account.entity.AccountEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,6 +16,7 @@ public class PotsEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "pot_id")
   private Long potId;
 
   private String name;
