@@ -1,6 +1,5 @@
 package fun.trackmoney.pots.service;
 
-import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.account.repository.AccountRepository;
 import fun.trackmoney.pots.dtos.CreatePotsDTO;
