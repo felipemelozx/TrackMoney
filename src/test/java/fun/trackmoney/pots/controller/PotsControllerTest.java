@@ -1,5 +1,6 @@
 package fun.trackmoney.pots.controller;
 
+import fun.trackmoney.pots.dtos.CreatePotsDTO;
 import fun.trackmoney.pots.dtos.PotsResponseDTO;
 import fun.trackmoney.pots.service.PotsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,5 +46,23 @@ class PotsControllerTest {
     assertEquals("Pots retrieved successfully", result.getBody().getMessage());
     assertEquals(2, result.getBody().getData().size());
     assertEquals(1L, result.getBody().getData().get(0).potId());
+  }
+
+  @Test
+  void createPots() {
+    PotsResponseDTO potsResponseDTO = new PotsResponseDTO(1L, "test name", "Test Pot", 100L, 100L);
+    CreatePotsDTO createPotsDTO = new CreatePotsDTO("test name", "Test Pot", 1, 100L, 100L);
+
+    when(potsService.create(createPotsDTO)).thenReturn(potsResponseDTO);
+
+    var result = potsController.createPots(createPotsDTO);
+
+    assertNotNull(result);
+    assertEquals(HttpStatus.OK, result.getStatusCode());
+    assertEquals("Pots register successfully", result.getBody().getMessage());
+    assertEquals("test name", result.getBody().getData().name());
+    assertEquals("Test Pot", result.getBody().getData().description());
+    assertEquals(100L, result.getBody().getData().currentAmount());
+    assertEquals(100L, result.getBody().getData().targetAmount());
   }
 }
