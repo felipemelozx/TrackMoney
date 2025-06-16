@@ -30,10 +30,8 @@ public class PotsService {
 
   public PotsResponseDTO create(CreatePotsDTO dto) {
     var entity = potsMapper.toEntity(dto);
-    var account = accountRepository.findById(dto.accountId()).orElseThrow(() -> {
-       new RuntimeException("reerer");
-      return null;
-    });
+    var account = accountRepository.findById(dto.accountId())
+        .orElseThrow(() -> new AccountNotFoundException("Account not found exception for id: " + dto.accountId()));
     entity.setAccount(account);
     return potsMapper.toResponse(potsRepository.save(entity));
   }

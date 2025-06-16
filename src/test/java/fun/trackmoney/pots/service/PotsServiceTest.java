@@ -1,6 +1,9 @@
 package fun.trackmoney.pots.service;
 
 import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.account.exception.AccountNotFoundException;
+import fun.trackmoney.account.repository.AccountRepository;
+import fun.trackmoney.pots.dtos.CreatePotsDTO;
 import fun.trackmoney.pots.dtos.PotsResponseDTO;
 import fun.trackmoney.pots.entity.PotsEntity;
 import fun.trackmoney.pots.mapper.PotsMapper;
@@ -12,9 +15,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 class PotsServiceTest {
@@ -27,6 +32,9 @@ class PotsServiceTest {
 
   @Mock
   private PotsMapper potsMapper;
+
+  @Mock
+  private AccountRepository accountRepository;
 
   @BeforeEach
   void setUp() {
@@ -54,5 +62,43 @@ class PotsServiceTest {
     assertNotNull(result);
     assertEquals(2, result.size());
     assertEquals(1L, result.get(0).potId());
+  }
+
+  @Test
+  void create_shouldReturnMappedPotsResponse() {
+    var account = new AccountEntity();
+    account.setAccountId(1);
+    PotsEntity potsEntity = new PotsEntity(1L, "test name", "Test Pot", 100L, 100L, account);
+    PotsResponseDTO potsResponseDTO = new PotsResponseDTO(1L, "test name", "Test Pot", 100L, 100L);
+    CreatePotsDTO createPotsDTO = new CreatePotsDTO("test name", "Test Pot", 1, 100L, 100L);
+
+    when(potsMapper.toEntity(createPotsDTO)).thenReturn(potsEntity);
+    when(potsMapper.toResponse(potsEntity)).thenReturn(potsResponseDTO);
+    when(potsRepository.save(potsEntity)).thenReturn(potsEntity);
+    when(accountRepository.findById(createPotsDTO.accountId())).thenReturn(Optional.of(account));
+
+    var result = potsService.create(createPotsDTO);
+
+    assertNotNull(result);
+    assertEquals("Test Pot", result.description());
+    assertEquals("test name", result.name());
+    assertEquals(100L, result.targetAmount());
+    assertEquals(100L, result.currentAmount());
+  }
+
+  @Test
+  void create_shouldThrowAccountNotFoundException_whenAccountDoesNotExist() {
+    var account = new AccountEntity();
+    account.setAccountId(1);
+    PotsEntity potsEntity = new PotsEntity(1L, "test name", "Test Pot", 100L, 100L, account);
+    PotsResponseDTO potsResponseDTO = new PotsResponseDTO(1L, "test name", "Test Pot", 100L, 100L);
+    CreatePotsDTO createPotsDTO = new CreatePotsDTO("test name", "Test Pot", 1, 100L, 100L);
+
+    when(potsMapper.toEntity(createPotsDTO)).thenReturn(potsEntity);
+    when(potsMapper.toResponse(potsEntity)).thenReturn(potsResponseDTO);
+    when(potsRepository.save(potsEntity)).thenReturn(potsEntity);
+    when(accountRepository.findById(createPotsDTO.accountId())).thenReturn(Optional.empty());
+
+    assertThrows(AccountNotFoundException.class,() -> potsService.create(createPotsDTO));
   }
 }
