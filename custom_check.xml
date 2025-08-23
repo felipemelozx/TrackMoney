@@ -27,10 +27,6 @@
         <module name="FinalClass"/>
         <module name="EmptyCatchBlock"/>
         <module name="EqualsHashCode"/>
-        <module name="HiddenField">
-            <property name="ignoreConstructorParameter" value="true"/>
-            <property name="ignoreSetter" value="true"/>
-        </module>
         <module name="CyclomaticComplexity">
             <property name="max" value="10"/>
         </module>

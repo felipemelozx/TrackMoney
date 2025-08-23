@@ -2,136 +2,92 @@ package fun.trackmoney.utils.response;
 
 import fun.trackmoney.utils.CustomFieldError;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
-/**
- * A class representing a standardized API response.
- *
- * @param <T> The type of data included in the response.
- */
-public class ApiResponse<T> {
+public final class ApiResponse<T> {
 
   private boolean success;
   private String message;
-  private T data;
-  private List<CustomFieldError> errors;
-  private LocalDateTime timestamp;
+  private final T data;
+  private final List<CustomFieldError> errors;
+  private final LocalDateTime timestamp;
 
-  /**
-   * Default constructor. Initializes the timestamp to the current time.
-   */
-  public ApiResponse() {
+  private ApiResponse(Builder<T> builder) {
+    this.success = builder.success;
+    this.message = builder.message;
+    this.data = builder.data;
+    this.errors = builder.errors;
     this.timestamp = LocalDateTime.now();
   }
 
-  /**
-   * Constructor to initialize all fields of the response.
-   *
-   * @param success  Indicates whether the operation was successful or not.
-   * @param message  A message describing the result of the operation.
-   * @param data     The data returned by the operation.
-   * @param errors   A list of errors encountered during the operation, if any.
-   */
-  public ApiResponse(boolean success, String message, T data, List<CustomFieldError> errors) {
-    this.success = success;
-    this.message = message;
-    this.data = data;
-    this.errors = errors;
-    this.timestamp = LocalDateTime.now();
-  }
-
-  /**
-   * Gets the success status of the response.
-   *
-   * @return true if the operation was successful, false otherwise.
-   */
   public boolean isSuccess() {
     return success;
   }
 
-  /**
-   * Sets the success status of the response.
-   *
-   * @param success true if the operation was successful, false otherwise.
-   */
-  public void setSuccess(boolean success) {
-    this.success = success;
-  }
-
-  public boolean getSuccess() {
-    return success;
-  }
-
-
-  /**
-   * Gets the message of the response.
-   *
-   * @return A message describing the result of the operation.
-   */
   public String getMessage() {
     return message;
   }
 
-  /**
-   * Sets the message of the response.
-   *
-   * @param message A message describing the result of the operation.
-   */
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  /**
-   * Gets the data of the response.
-   *
-   * @return The data returned by the operation.
-   */
   public T getData() {
     return data;
   }
 
-  /**
-   * Sets the data of the response.
-   *
-   * @param data The data to be included in the response.
-   */
-  public void setData(T data) {
-    this.data = data;
-  }
-
-  /**
-   * Gets the list of errors encountered during the operation, if any.
-   *
-   * @return A list of {@link CustomFieldError} objects representing the errors.
-   */
   public List<CustomFieldError> getErrors() {
     return errors;
   }
 
-  /**
-   * Sets the list of errors for the response.
-   *
-   * @param errors A list of {@link CustomFieldError} objects representing the errors.
-   */
-  public void setErrors(List<CustomFieldError> errors) {
-    this.errors = errors;
-  }
-
-  /**
-   * Gets the timestamp of when the response was created.
-   *
-   * @return The timestamp indicating when the response was generated.
-   */
   public LocalDateTime getTimestamp() {
     return timestamp;
   }
 
-  /**
-   * Sets the timestamp for the response.
-   *
-   * @param timestamp The timestamp to set.
-   */
-  public void setTimestamp(LocalDateTime timestamp) {
-    this.timestamp = timestamp;
+  public static <T> Builder<T> builder() {
+    return new Builder<>();
+  }
+
+  public static <T> Builder<T> success() {
+    return new Builder<T>().success(true).errors(Collections.emptyList());
+  }
+
+  public static <T> Builder<T> successWithNoContent() {
+    return new Builder<T>() .success(true)
+        .data(null)
+        .message("Operação realizada com sucesso.")
+        .errors(Collections.emptyList());
+  }
+
+  public static <T> Builder<T> failure() {
+    return new Builder<T>().success(false);
+  }
+
+  public static class Builder<T> {
+    private boolean success;
+    private String message;
+    private T data;
+    private List<CustomFieldError> errors;
+
+    public Builder<T> success(boolean success) {
+      this.success = success;
+      return this;
+    }
+
+    public Builder<T> message(String message) {
+      this.message = message;
+      return this;
+    }
+
+    public Builder<T> data(T data) {
+      this.data = data;
+      return this;
+    }
+
+    public Builder<T> errors(List<CustomFieldError> errors) {
+      this.errors = errors;
+      return this;
+    }
+
+    public ApiResponse<T> build() {
+      return new ApiResponse<>(this);
+    }
   }
 }
