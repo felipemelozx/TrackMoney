@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-public class ApiResponse<T> {
+public final class ApiResponse<T> {
 
   private boolean success;
   private String message;
@@ -21,11 +21,25 @@ public class ApiResponse<T> {
     this.timestamp = LocalDateTime.now();
   }
 
-  public boolean isSuccess() { return success; }
-  public String getMessage() { return message; }
-  public T getData() { return data; }
-  public List<CustomFieldError> getErrors() { return errors; }
-  public LocalDateTime getTimestamp() { return timestamp; }
+  public boolean isSuccess() {
+    return success;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  public T getData() {
+    return data;
+  }
+
+  public List<CustomFieldError> getErrors() {
+    return errors;
+  }
+
+  public LocalDateTime getTimestamp() {
+    return timestamp;
+  }
 
   public static <T> Builder<T> builder() {
     return new Builder<>();
