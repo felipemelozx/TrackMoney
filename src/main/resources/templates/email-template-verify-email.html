@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Seu código de verificação - {{userName}}</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f6f6f6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #222;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .code {
+            display: inline-block;
+            margin: 25px 0;
+            padding: 15px 30px;
+            font-size: 28px;
+            letter-spacing: 8px;
+            background-color: #f0f0f0;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Olá, <span th:text="${userName}">Usuário</span>!</h1>
+    <p>Use o código abaixo para verificar seu e-mail:</p>
+
+    <div class="code" th:text="${verificationCode}">1234</div>
+
+    <p>Este código expira em <strong>15 minutos</strong>.</p>
+    <p>Se você não solicitou este código, pode ignorar este e-mail.</p>
+
+    <p>Obrigado,<br>Equipe de Suporte</p>
+</div>
+
+<div class="footer">
+    <p>Este e-mail foi enviado automaticamente. Por favor, não responda.</p>
+</div>
+</body>
+</html>
