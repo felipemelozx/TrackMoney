@@ -34,62 +34,95 @@ public class TransactionController {
   }
   
   @PostMapping("/create")
-  public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody
-                                                                                 CreateTransactionDTO transactionDTO) {
-    TransactionResponseDTO res = transactionService.createTransaction(transactionDTO);
+  public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody CreateTransactionDTO dto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(
-        new ApiResponse<>(true,"Transfere created", res,null));
+      ApiResponse.<TransactionResponseDTO>success()
+          .message("Transfer created")
+          .data(transactionService.createTransaction(dto))
+          .build()
+    );
   }
 
   @GetMapping
   public ResponseEntity<ApiResponse<List<TransactionResponseDTO>>> findAllTransaction() {
     return ResponseEntity.ok().body(
-        new ApiResponse<>(true,"All transaction", transactionService.findAllTransaction(),null));
+      ApiResponse.<List<TransactionResponseDTO>>success()
+          .message("All transactions")
+          .data(transactionService.findAllTransaction())
+          .build()
+    );
   }
 
   @GetMapping("/page")
   public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getPaginatedTransactions(Pageable pageable) {
     Page<TransactionResponseDTO> page = transactionService.getPaginatedTransactions(pageable);
     Page<TransactionDTO> dtoPage = page.map(TransactionDTO::from);
-    return ResponseEntity.ok().body(new ApiResponse<>(
-        true, "Paginated transactions", dtoPage, null));
+    return ResponseEntity.ok().body(
+      ApiResponse.<Page<TransactionDTO>>success()
+          .message("Paginated transactions")
+          .data(dtoPage)
+          .build()
+    );
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<TransactionResponseDTO>> findTransactionById(@PathVariable Integer id) {
     return ResponseEntity.ok().body(
-        new ApiResponse<>(true,"Get transaction by id", transactionService.findById(id),null));
+        ApiResponse.<TransactionResponseDTO>success()
+            .message("Get transaction by id")
+            .data(transactionService.findById(id))
+            .build()
+    );
   }
 
   @GetMapping("/income/{id}")
   public ResponseEntity<ApiResponse<BigDecimal>> getIncome(@PathVariable Integer id) {
     return ResponseEntity.ok().body(
-        new ApiResponse<>(true,"Get income", transactionService.getIncome(id),null));
+      ApiResponse.<BigDecimal>success()
+          .message("Get income")
+          .data(transactionService.getIncome(id))
+          .build()
+    );
   }
 
   @GetMapping("/expense/{id}")
   public ResponseEntity<ApiResponse<BigDecimal>> getExpense(@PathVariable Integer id) {
     return ResponseEntity.ok().body(
-        new ApiResponse<>(true,"Get expense", transactionService.getExpense(id),null));
+      ApiResponse.<BigDecimal>success()
+          .message("Get expense")
+          .data(transactionService.getExpense(id))
+          .build()
+    );
   }
 
   @GetMapping("/bill/{id}")
   public ResponseEntity<ApiResponse<BillResponseDTO>> getBill(@PathVariable Integer id) {
     return ResponseEntity.ok().body(
-        new ApiResponse<>(true,"Get expense", transactionService.getBill(id),null));
+      ApiResponse.<BillResponseDTO>success()
+          .message("Get expense")
+          .data(transactionService.getBill(id))
+          .build()
+    );
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<TransactionResponseDTO>> updateTransaction(@PathVariable Integer id,
                                                                                @RequestBody TransactionUpdateDTO dto) {
     return ResponseEntity.ok().body(
-        new ApiResponse<>(true,"Update transaction", transactionService.update(id, dto),null));
+      ApiResponse.<TransactionResponseDTO>success()
+          .message("Update transaction")
+          .data(transactionService.update(id, dto))
+          .build()
+    );
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<String>> deleteTransaction(@PathVariable Integer id) {
+  public ResponseEntity<ApiResponse<Void>> deleteTransaction(@PathVariable Integer id) {
     transactionService.delete(id);
     return ResponseEntity.ok().body(
-        new ApiResponse<>(true,"delete transaction", "Transaction deleted.",null));
+      ApiResponse.<Void>success()
+          .message("Deleted transaction")
+          .build()
+    );
   }
 }

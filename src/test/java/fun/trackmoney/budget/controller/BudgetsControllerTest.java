@@ -55,7 +55,7 @@ class BudgetsControllerTest {
     assertTrue(response.getBody().isSuccess());
     assertEquals("Budget created", response.getBody().getMessage());
     assertEquals(responseDTO, response.getBody().getData());
-    assertNull(response.getBody().getErrors());
+    assertTrue(response.getBody().getErrors().isEmpty());
     verify(budgetsService, times(1)).create(createDTO);
   }
 
@@ -71,7 +71,7 @@ class BudgetsControllerTest {
     assertTrue(response.getBody().isSuccess());
     assertEquals("Get all Budget", response.getBody().getMessage());
     assertEquals(budgetList, response.getBody().getData());
-    assertNull(response.getBody().getErrors());
+    assertTrue(response.getBody().getErrors().isEmpty());
     verify(budgetsService, times(1)).findAllByAccountId(createDTO.accountId());
   }
 
@@ -84,22 +84,21 @@ class BudgetsControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
-    assertEquals("Get Budget by Id", response.getBody().getMessage());
+    assertEquals("Get Budget by id", response.getBody().getMessage());
     assertEquals(responseDTO, response.getBody().getData());
-    assertNull(response.getBody().getErrors());
+    assertTrue(response.getBody().getErrors().isEmpty());
     verify(budgetsService, times(1)).findById(budgetId);
   }
 
   @Test
   void deleteById_shouldReturnOkAndSuccessMessage() {
-    ResponseEntity<ApiResponse<String>> response = budgetsController.deleteById(budgetId);
+    ResponseEntity<ApiResponse<Void>> response = budgetsController.deleteById(budgetId);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals("Delete Budget by id", response.getBody().getMessage());
-    assertEquals("Budget deleted", response.getBody().getData());
-    assertNull(response.getBody().getErrors());
+    assertTrue(response.getBody().getErrors().isEmpty());
     verify(budgetsService, times(1)).findById(budgetId); // Para garantir que o findById foi chamado
   }
 
@@ -115,9 +114,9 @@ class BudgetsControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
-    assertEquals("Update Budget", response.getBody().getMessage());
+    assertEquals("Update budget", response.getBody().getMessage());
     assertEquals(updatedResponseDTO, response.getBody().getData());
-    assertNull(response.getBody().getErrors());
+    assertTrue(response.getBody().getErrors().isEmpty());
     verify(budgetsService, times(1)).update(updateDTO, updateId);
   }
 }

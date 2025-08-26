@@ -37,8 +37,8 @@ class AuthControllerTest {
 
     ResponseEntity<ApiResponse<UserResponseDTO>> response = authController.register(userRequest);
 
-    assertTrue(response.getBody().getSuccess());
-    assertEquals("User register!", response.getBody().getMessage());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals("User register with success", response.getBody().getMessage());
     assertEquals("John", response.getBody().getData().name());
   }
 
@@ -51,8 +51,8 @@ class AuthControllerTest {
 
     ResponseEntity<ApiResponse<LoginResponseDTO>> response = authController.login(loginRequest);
 
-    assertTrue(response.getBody().getSuccess());
-    assertEquals("Login successful!", response.getBody().getMessage());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals("Login successful", response.getBody().getMessage());
     assertEquals("jwt-token", response.getBody().getData().token());
   }
 
@@ -60,7 +60,7 @@ class AuthControllerTest {
   void shouldTrueWhenJwtIsValid() {
     var response = authController.verify();
 
-    assertTrue(response.getBody().getSuccess());
+    assertTrue(response.getBody().isSuccess());
     assertTrue(response.getBody().getData());
   }
 }

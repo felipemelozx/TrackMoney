@@ -23,11 +23,21 @@ public class CategoryController {
 
   @GetMapping("/findAll")
   public ResponseEntity<ApiResponse<List<CategoryEntity>>> findAll() {
-    return ResponseEntity.ok().body(new ApiResponse<>(true, "Category", categoryService.findAll(), null));
+    return ResponseEntity.ok().body(
+      ApiResponse.<List<CategoryEntity>>success()
+          .message("Categories")
+          .data(categoryService.findAll())
+          .build()
+    );
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<CategoryEntity>> findById(@PathVariable Integer id) {
-    return ResponseEntity.ok().body(new ApiResponse<>(true, "Category", categoryService.findById(id), null));
+    return ResponseEntity.ok().body(
+      ApiResponse.<CategoryEntity>success()
+          .message("Categories")
+          .data(categoryService.findById(id))
+          .build()
+    );
   }
 }

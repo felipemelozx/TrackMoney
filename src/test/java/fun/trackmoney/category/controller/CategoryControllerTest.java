@@ -49,10 +49,10 @@ class CategoryControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     ApiResponse<List<CategoryEntity>> apiResponse = response.getBody();
     assertTrue(apiResponse.isSuccess());
-    assertEquals("Category", apiResponse.getMessage());
+    assertEquals("Categories", apiResponse.getMessage());
     assertEquals(categories.size(), apiResponse.getData().size());
     assertTrue(apiResponse.getData().containsAll(categories));
-    assertEquals(null, apiResponse.getErrors());
+    assertTrue(apiResponse.getErrors().isEmpty());
   }
 
   @Test
@@ -72,10 +72,10 @@ class CategoryControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     ApiResponse<CategoryEntity> apiResponse = response.getBody();
     assertTrue(apiResponse.isSuccess());
-    assertEquals("Category", apiResponse.getMessage());
+    assertEquals("Categories", apiResponse.getMessage());
     assertEquals(category.getCategoryId(), apiResponse.getData().getCategoryId());
     assertEquals(category.getName(), apiResponse.getData().getName());
-    assertEquals(null, apiResponse.getErrors());
+    assertTrue(apiResponse.getErrors().isEmpty());
   }
 
   @Test

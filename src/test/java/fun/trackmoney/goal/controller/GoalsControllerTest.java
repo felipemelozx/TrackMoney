@@ -46,7 +46,7 @@ class GoalsControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     ApiResponse<GoalsResponseDTO> body = response.getBody();
     assertThat(body).isNotNull();
-    assertThat(body.getSuccess()).isTrue();
+    assertThat(body.isSuccess()).isTrue();
     assertThat(body.getMessage()).isEqualTo("Goals Created!");
     assertThat(body.getData().goal()).isEqualTo("Viagem");
 
@@ -62,7 +62,7 @@ class GoalsControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     ApiResponse<List<GoalsResponseDTO>> body = response.getBody();
     assertThat(body).isNotNull();
-    assertThat(body.getSuccess()).isTrue();
+    assertThat(body.isSuccess()).isTrue();
     assertThat(body.getData()).hasSize(1);
     assertThat(body.getData().get(0).goal()).isEqualTo("Viagem");
 
@@ -78,7 +78,7 @@ class GoalsControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     ApiResponse<GoalsResponseDTO> body = response.getBody();
     assertThat(body).isNotNull();
-    assertThat(body.getSuccess()).isTrue();
+    assertThat(body.isSuccess()).isTrue();
     assertThat(body.getData().goal()).isEqualTo("Viagem");
 
     verify(goalsService).findById(1);
@@ -96,7 +96,7 @@ class GoalsControllerTest {
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     ApiResponse<GoalsResponseDTO> body = response.getBody();
     assertThat(body).isNotNull();
-    assertThat(body.getSuccess()).isTrue();
+    assertThat(body.isSuccess()).isTrue();
     assertThat(body.getData().goal()).isEqualTo("Casa");
 
     verify(goalsService).update(1, dto);
@@ -109,10 +109,9 @@ class GoalsControllerTest {
     var response = controller.delete(1);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    ApiResponse<String> body = response.getBody();
+    ApiResponse<Void> body = response.getBody();
     assertThat(body).isNotNull();
-    assertThat(body.getSuccess()).isTrue();
-    assertThat(body.getData()).isEqualTo("Goals deleted");
+    assertThat(body.isSuccess()).isTrue();
 
     verify(goalsService).deleteById(1);
   }

@@ -30,34 +30,53 @@ public class BudgetsController {
   @PostMapping
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> create(@RequestBody BudgetCreateDTO dto) {
     return ResponseEntity.status(HttpStatus.CREATED).body(
-        new ApiResponse<>(true, "Budget created", budgetsService.create(dto), null));
+        ApiResponse.<BudgetResponseDTO>success()
+            .message("Budget created")
+            .data(budgetsService.create(dto))
+            .build()
+    );
   }
 
   @GetMapping("/findAll/{accountId}")
   public ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> findAllByAccountId(@PathVariable Integer accountId) {
     var list = budgetsService.findAllByAccountId(accountId);
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "Get all Budget",list , null));
+        ApiResponse.<List<BudgetResponseDTO>>success()
+            .message("Get all Budget")
+            .data(list)
+            .build()
+    );
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> findById(@PathVariable Integer id) {
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "Get Budget by Id", budgetsService.findById(id), null));
+        ApiResponse.<BudgetResponseDTO>success()
+            .message("Get Budget by id")
+            .data(budgetsService.findById(id))
+            .build()
+    );
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<String>> deleteById(@PathVariable Integer id) {
+  public ResponseEntity<ApiResponse<Void>> deleteById(@PathVariable Integer id) {
     budgetsService.findById(id);
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "Delete Budget by id", "Budget deleted", null));
+        ApiResponse.<Void>success()
+            .message("Delete Budget by id")
+            .build()
+    );
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> updateById(@PathVariable Integer id,
                                                                    @RequestBody BudgetCreateDTO dto) {
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "Update Budget", budgetsService.update(dto,id), null));
+        ApiResponse.<BudgetResponseDTO>success()
+            .message("Update budget")
+            .data(budgetsService.update(dto, id))
+            .build()
+    );
   }
 }
 

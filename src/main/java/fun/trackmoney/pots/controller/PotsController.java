@@ -26,11 +26,21 @@ public class PotsController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<List<PotsResponseDTO>>> getPots(@PathVariable Integer id) {
-    return ResponseEntity.ok(new ApiResponse<>(true, "Pots retrieved successfully", potsService.findAllPots(id), null));
+    return ResponseEntity.ok(
+        ApiResponse.<List<PotsResponseDTO>>success()
+            .message("Pots retrieved successfully")
+            .data(potsService.findAllPots(id))
+            .build()
+    );
   }
 
   @PostMapping
   public ResponseEntity<ApiResponse<PotsResponseDTO>> createPots(@RequestBody CreatePotsDTO dto) {
-    return ResponseEntity.ok(new ApiResponse<>(true, "Pots register successfully", potsService.create(dto), null));
+    return ResponseEntity.ok(
+        ApiResponse.<PotsResponseDTO>success()
+            .message("Pots register successfully")
+            .data(potsService.create(dto))
+            .build()
+    );
   }
 }

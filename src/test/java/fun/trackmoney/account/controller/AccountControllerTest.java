@@ -115,9 +115,9 @@ class AccountControllerTest {
   void testDeleteAccountById() {
     doNothing().when(accountService).deleteById(1);
 
-    ResponseEntity<Void> response = accountController.deleteAccountById(1);
+    ResponseEntity<ApiResponse<Void>> response = accountController.deleteAccountById(1);
 
-    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
     verify(accountService, times(1)).deleteById(1);
   }
 }

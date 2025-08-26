@@ -30,33 +30,52 @@ public class GoalsController {
   @PostMapping
   public ResponseEntity<ApiResponse<GoalsResponseDTO>> create(@RequestBody CreateGoalsDTO dto){
     return ResponseEntity.status(HttpStatus.CREATED).body(
-        new ApiResponse<>(true, "Goals Created!", goalsService.createGoals(dto), null));
+      ApiResponse.<GoalsResponseDTO>success()
+          .message("Goals Created!")
+          .data(goalsService.createGoals(dto))
+          .build()
+    );
   }
 
   @GetMapping
   public ResponseEntity<ApiResponse<List<GoalsResponseDTO>>> findAll(){
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "All goals", goalsService.findAllGoals(), null));
+      ApiResponse.<List<GoalsResponseDTO>>success()
+          .message("All goals")
+          .data(goalsService.findAllGoals())
+          .build()
+    );
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<GoalsResponseDTO>> findById(@PathVariable Integer id){
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "Get goal", goalsService.findById(id), null));
+      ApiResponse.<GoalsResponseDTO>success()
+          .message("Get goal")
+          .data(goalsService.findById(id))
+          .build()
+    );
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<GoalsResponseDTO>> update(@PathVariable Integer id,
                                                                 @RequestBody CreateGoalsDTO dto){
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "Update goals", goalsService.update(id, dto), null));
+      ApiResponse.<GoalsResponseDTO>success()
+          .message("Update goals")
+          .data(goalsService.update(id, dto))
+          .build()
+    );
   }
 
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<String>> delete(@PathVariable Integer id){
+  public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id){
     goalsService.deleteById(id);
     return ResponseEntity.status(HttpStatus.OK).body(
-        new ApiResponse<>(true, "deleted goals","Goals deleted", null));
+      ApiResponse.<Void>success()
+          .message("Deleted goals")
+          .build()
+    );
   }
 }
