@@ -35,8 +35,12 @@ public class AccountController {
   @PostMapping
   public ResponseEntity<ApiResponse<AccountResponseDTO>> createAccount(@RequestBody AccountRequestDTO dto) {
     AccountResponseDTO createdAccount = accountService.createAccount(dto);
-    return new ResponseEntity<>(new ApiResponse<>(
-        true, "Account successfully created.", createdAccount, null), HttpStatus.CREATED);
+    return ResponseEntity.status(HttpStatus.CREATED).body(
+        ApiResponse.<AccountResponseDTO>success()
+            .message("Account successfully created.")
+            .data(createdAccount)
+            .build()
+        );
   }
 
 
@@ -44,29 +48,45 @@ public class AccountController {
   public ResponseEntity<ApiResponse<List<AccountResponseDTO>>> findAllAccounts() {
     UUID email = authUtils.getCurrentUser().getUserId();
     List<AccountResponseDTO> accounts = accountService.findAllAccount(email);
-    return ResponseEntity.ok(new ApiResponse<>(
-        true, "Account list retrieved successfully.", accounts, null));
+    return ResponseEntity.ok(
+        ApiResponse.<List<AccountResponseDTO>>success()
+            .message("Account list retrieved successfully.")
+            .data(accounts)
+            .build()
+    );
   }
 
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<AccountResponseDTO>> findAccountById(@PathVariable Integer id) {
     AccountResponseDTO account = accountService.findAccountById(id);
-    return ResponseEntity.ok(new ApiResponse<>(
-        true, "Account retrieved successfully.", account, null));
+    return ResponseEntity.ok(
+        ApiResponse.<AccountResponseDTO>success()
+            .message("Account retrieved successfully.")
+            .data(account)
+            .build()
+    );
   }
 
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<AccountResponseDTO>> updateAccountById(@PathVariable Integer id,
                                                                            @RequestBody AccountUpdateRequestDTO dto) {
     AccountResponseDTO updatedAccount = accountService.updateAccountById(id, dto);
-    return ResponseEntity.ok(new ApiResponse<>(
-        true, "Account updated successfully.", updatedAccount, null));
+    return ResponseEntity.ok(
+        ApiResponse.<AccountResponseDTO>success()
+            .message("Account updated successfully.")
+            .data(updatedAccount)
+            .build()
+    );
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> deleteAccountById(@PathVariable Integer id) {
+  public ResponseEntity<ApiResponse<Void>> deleteAccountById(@PathVariable Integer id) {
     accountService.deleteById(id);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.ok(
+        ApiResponse.<Void>success()
+            .message("Account deleted successfully.")
+            .build()
+    );
   }
 }

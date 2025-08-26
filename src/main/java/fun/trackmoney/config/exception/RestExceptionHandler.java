@@ -25,7 +25,10 @@ public class RestExceptionHandler {
   @ExceptionHandler(PasswordNotValid.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> passwordNotValid(PasswordNotValid ex) {
     return ResponseEntity.badRequest().body(
-        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+      ApiResponse.<List<CustomFieldError>>failure()
+          .message(ex.getMessage())
+          .errors(ex.getErrors())
+          .build()
     );
   }
 
@@ -44,7 +47,10 @@ public class RestExceptionHandler {
         }).toList();
 
     return new ResponseEntity<>(
-        new ApiResponse<>(false, "Validation failed", null, errors),
+        ApiResponse.<List<CustomFieldError>>failure()
+            .message("Validation failed")
+            .errors(errors)
+            .build(),
         HttpStatus.BAD_REQUEST
     );
   }
@@ -53,21 +59,31 @@ public class RestExceptionHandler {
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
     return ResponseEntity
         .status(HttpStatus.CONFLICT)
-        .body(new ApiResponse<>(false, ex.getMessage(), null,
-            List.of(new CustomFieldError("Email", ex.getMessage()))));
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(List.of(new CustomFieldError("Email", ex.getMessage())))
+                .build()
+        );
   }
 
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> emailNotFound(UserNotFoundException ex) {
     return ResponseEntity.badRequest().body(
-        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+        ApiResponse.<List<CustomFieldError>>failure()
+            .message(ex.getMessage())
+            .errors(ex.getErrors())
+            .build()
     );
   }
 
   @ExceptionHandler(LoginException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> loginException(LoginException ex) {
     return ResponseEntity.badRequest().body(
-        new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+        ApiResponse.<List<CustomFieldError>>failure()
+            .message(ex.getMessage())
+            .errors(ex.getErrors())
+            .build()
     );
   }
 
@@ -75,23 +91,35 @@ public class RestExceptionHandler {
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> categoryNotFound(CategoryNotFoundException ex) {
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
-        .body(new ApiResponse<>(false, ex.getMessage(), null,
-            List.of(new CustomFieldError("Category", ex.getMessage()))));
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(List.of(new CustomFieldError("Category", ex.getMessage())))
+                .build()
+        );
   }
 
   @ExceptionHandler(AccountNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> accountNotFound(AccountNotFoundException ex) {
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
-        .body(new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
-    );
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(ex.getErrors())
+                .build()
+        );
   }
 
   @ExceptionHandler(TransactionNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> transactionNotFound(TransactionNotFoundException ex) {
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
-        .body(new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(ex.getErrors())
+                .build()
         );
   }
 
@@ -99,7 +127,11 @@ public class RestExceptionHandler {
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> goalsNotFound(GoalsNotFoundException ex) {
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
-        .body(new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(ex.getErrors())
+                .build()
         );
   }
 
@@ -107,7 +139,11 @@ public class RestExceptionHandler {
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> budgetsNotFound(BudgetsNotFoundException ex) {
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
-        .body(new ApiResponse<>(false, ex.getMessage(), null, ex.getErrors())
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(ex.getErrors())
+                .build()
         );
   }
 }

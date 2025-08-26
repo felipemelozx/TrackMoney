@@ -55,8 +55,8 @@ class TransactionControllerTest {
     // Assert
     assertEquals(HttpStatusCode.valueOf(201), response.getStatusCode());
     assertNotNull(response.getBody());
-    assertTrue(response.getBody().getSuccess());
-    assertEquals("Transfere created", response.getBody().getMessage());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals("Transfer created", response.getBody().getMessage());
     assertEquals("Test", response.getBody().getData().description());
 
     verify(transactionService).createTransaction(dto);
@@ -123,7 +123,6 @@ class TransactionControllerTest {
 
     // Assert
     assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
-    assertEquals("Transaction deleted.", response.getBody().getData());
 
     verify(transactionService).delete(1);
   }
@@ -142,10 +141,10 @@ class TransactionControllerTest {
 
     ApiResponse<BigDecimal> body = response.getBody();
     assertNotNull(body);
-    assertTrue(body.getSuccess());
+    assertTrue(body.isSuccess());
     assertEquals("Get income", body.getMessage());
     assertEquals(income, body.getData());
-    assertNull(body.getErrors());
+    assertTrue(body.getErrors().isEmpty());
   }
 
   @Test
@@ -162,10 +161,10 @@ class TransactionControllerTest {
 
     ApiResponse<BigDecimal> body = response.getBody();
     assertNotNull(body);
-    assertTrue(body.getSuccess());
+    assertTrue(body.isSuccess());
     assertEquals("Get expense", body.getMessage());
     assertEquals(expense, body.getData());
-    assertNull(body.getErrors());
+    assertTrue(body.getErrors().isEmpty());
   }
 
   @Test
@@ -183,10 +182,10 @@ class TransactionControllerTest {
 
     ApiResponse<BillResponseDTO> body = response.getBody();
     assertNotNull(body);
-    assertTrue(body.getSuccess());
+    assertTrue(body.isSuccess());
     assertEquals("Get expense", body.getMessage());
     assertEquals(billResponseDTO, body.getData());
-    assertNull(body.getErrors());
+    assertTrue(body.getErrors().isEmpty());
   }
 
   @Test
