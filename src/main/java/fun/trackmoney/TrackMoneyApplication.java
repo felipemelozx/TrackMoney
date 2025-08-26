@@ -2,6 +2,8 @@ package fun.trackmoney;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * The main entry point for the TrackMoney application.
@@ -9,6 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * initialize and run the application.
  */
 @SpringBootApplication
+@EnableAsync
+@EnableCaching
 public class TrackMoneyApplication {
   /**
    * The main method which serves as the entry point of the application.
