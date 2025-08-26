@@ -1,4 +1,4 @@
-name: SonarCloud
+name: SonarCloud CI
 
 on:
   push:
@@ -10,12 +10,14 @@ on:
 
 jobs:
   build:
-    name: SonarCloud Analysis
+    name: Build, Test and SonarCloud Analysis
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -33,17 +35,19 @@ jobs:
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.m2/repository
+          path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven
 
       - name: Start Docker Compose
         run: docker compose up -d
 
-      - name: SonarCloud Scan
+      - name: Build and SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn verify sonar:sonar -Dspring.profiles.active=dev \
+          mvn clean verify sonar:sonar \
+            -Dspring.profiles.active=dev \
             -Dsonar.projectKey=felipemelozx_TrackMoney \
             -Dsonar.organization=felipemelozx-trackmoney \
             -Dsonar.host.url=https://sonarcloud.io \
