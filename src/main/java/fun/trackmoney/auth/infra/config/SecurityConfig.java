@@ -20,9 +20,9 @@ public class SecurityConfig {
 
   private final CustomUserDetailsService userDetailsService;
 
-  private final SecurityFilter securityFilter;
+  private final SecurityFilterConfig securityFilter;
 
-  public SecurityConfig(CustomUserDetailsService userDetailsService, SecurityFilter securityFilter) {
+  public SecurityConfig(CustomUserDetailsService userDetailsService, SecurityFilterConfig securityFilter) {
     this.userDetailsService = userDetailsService;
     this.securityFilter = securityFilter;
   }

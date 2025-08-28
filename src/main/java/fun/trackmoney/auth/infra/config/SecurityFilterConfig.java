@@ -16,12 +16,12 @@ import java.io.IOException;
 import java.util.Collections;
 
 @Component
-public class SecurityFilter extends OncePerRequestFilter {
+public class SecurityFilterConfig extends OncePerRequestFilter {
 
   private final JwtService tokenService;
   private final UserRepository userRepository;
 
-  public SecurityFilter(JwtService tokenService, UserRepository userRepository) {
+  public SecurityFilterConfig(JwtService tokenService, UserRepository userRepository) {
     this.tokenService = tokenService;
     this.userRepository = userRepository;
   }
