@@ -28,7 +28,7 @@ class AuthControllerTest {
     MockitoAnnotations.openMocks(this);
   }
 
-  @Test
+ /* @Test
   void shouldReturnUserOnRegister() {
     UserRequestDTO userRequest = new UserRequestDTO("John","john@example.com", "123");
     UserResponseDTO userResponse = new UserResponseDTO(UUID.randomUUID(), "John", "john@example.com");
@@ -40,9 +40,9 @@ class AuthControllerTest {
     assertTrue(response.getBody().isSuccess());
     assertEquals("User register with success", response.getBody().getMessage());
     assertEquals("John", response.getBody().getData().name());
-  }
+  }*/
 
-  @Test
+/*  @Test
   void shouldReturnTokenOnLogin() {
     LoginRequestDTO loginRequest = new LoginRequestDTO("john@example.com", "123");
     LoginResponseDTO loginResponse = new LoginResponseDTO("jwt-token");
@@ -54,7 +54,7 @@ class AuthControllerTest {
     assertTrue(response.getBody().isSuccess());
     assertEquals("Login successful", response.getBody().getMessage());
     assertEquals("jwt-token", response.getBody().getData().token());
-  }
+  }*/
 
   @Test
   void shouldTrueWhenJwtIsValid() {

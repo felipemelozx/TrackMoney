@@ -2,22 +2,22 @@ package fun.trackmoney.user.service;
 
 import fun.trackmoney.account.dtos.AccountRequestDTO;
 import fun.trackmoney.account.service.AccountService;
-import fun.trackmoney.auth.dto.LoginRequestDTO;
+import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
+import fun.trackmoney.auth.dto.internal.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.exception.EmailAlreadyExistsException;
 import fun.trackmoney.user.exception.UserNotFoundException;
-import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.user.repository.UserRepository;
-import fun.trackmoney.utils.CustomFieldError;
-import fun.trackmoney.utils.PasswordCheck;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,29 +38,27 @@ public class UserService {
     this.accountService = accountService;
   }
 
-
-  public UserResponseDTO register(UserRequestDTO userRequestDTO) {
-    List<CustomFieldError> passwordIsValid = PasswordCheck.validatePassword(userRequestDTO.password());
-    if(!passwordIsValid.isEmpty()) {
-      throw new PasswordNotValid(passwordIsValid);
+  @Transactional
+  public UserRegisterResult register(UserRequestDTO userRequestDTO) {
+    Optional<UserEntity> userExist= findUserByEmail(userRequestDTO.email());
+    if(userExist.isPresent()) {
+      return new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
     }
     UserEntity user = userMapper.userRequestDTOToEntity(userRequestDTO);
     user.setPassword(encoder.encode(user.getPassword()));
-    try {
-      UserResponseDTO userResponseDTO = userMapper.userEntityToUserResponseDto(userRepository.save(user));
-      accountService.createAccount(new AccountRequestDTO(
-          userResponseDTO.userId(), "Default Account", BigDecimal.valueOf(0), true));
-      return userResponseDTO;
-    } catch (RuntimeException e) {
-      throw new EmailAlreadyExistsException("Email already registered.");
-    }
+
+    UserEntity userResponse = userRepository.save(user);
+
+    UserResponseDTO userResponseDTO = userMapper.userEntityToUserResponseDto(userResponse);
+    AccountRequestDTO account = new AccountRequestDTO(
+        userResponseDTO.userId(), "Default Account", BigDecimal.valueOf(0), true);
+    accountService.createAccount(account);
+    return new UserRegisterSuccess(userResponseDTO);
+
   }
 
-  public UserEntity findUserByEmail(LoginRequestDTO loginDto) {
-    return userRepository.findByEmail(loginDto.email())
-        .orElseThrow(() ->
-           new UserNotFoundException("User not found")
-        );
+  public Optional<UserEntity> findUserByEmail(String email) {
+    return userRepository.findByEmail(email);
   }
 
   public UserEntity findUserById(UUID userId) {

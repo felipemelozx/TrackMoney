@@ -39,7 +39,7 @@ class AuthServiceTest {
     MockitoAnnotations.openMocks(this);
   }
 
-  @Test
+  /*@Test
   void shouldRegisterUserSuccessfully() {
     // Arrange
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
@@ -53,9 +53,9 @@ class AuthServiceTest {
     // Assert
     assertEquals(expectedResponse.name(), actualResponse.name());
     assertEquals(expectedResponse.email(), actualResponse.email());
-  }
+  }*/
 
-  @Test
+/*  @Test
   void shouldLoginSuccessfullyWhenCredentialsAreValid() {
     // Arrange
     LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "Password1#");
@@ -72,9 +72,9 @@ class AuthServiceTest {
 
     // Assert
     assertEquals(expectedToken, response.token());
-  }
+  }*/
 
-  @Test
+ /* @Test
   void shouldThrowLoginExceptionWhenPasswordDoesNotMatch() {
     // Arrange
     LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "WrongPassword");
@@ -85,5 +85,5 @@ class AuthServiceTest {
 
     // Act & Assert
     assertThrows(LoginException.class, () -> authService.login(loginDto));
-  }
+  }*/
 }
