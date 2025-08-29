@@ -43,8 +43,7 @@ class UserServiceTest {
   private UserService userService;
 
   @Test
-  void register_ValidUser_ReturnsUserResponseDTO() {
-    // Arrange
+  void shouldRegisterUserSuccessfullyWhenUserRequestIsValid() {
     UserRequestDTO requestDTO = new UserRequestDTO("name", "test@example.com", "StrongPassword123#");
     UUID uuid = UUID.randomUUID();
     UserEntity entityToSave = new UserEntity(null, "name", "test@example.com", "StrongPassword123#");
@@ -53,17 +52,14 @@ class UserServiceTest {
     UserResponseDTO mockDTO = new UserResponseDTO(savedEntityReturn.getUserId(), savedEntityReturn.getName(), savedEntityReturn.getEmail());
     UserRegisterSuccess expectedResponse = new UserRegisterSuccess(mockDTO);
 
-
     when(userMapper.userRequestDTOToEntity(requestDTO)).thenReturn(entityToSave);
     when(passwordEncoder.encode("StrongPassword123#")).thenReturn("encodedPass");
     when(userRepository.save(entityToSave)).thenReturn(savedEntityReturn);
     when(userMapper.userEntityToUserResponseDto(savedEntityReturn)).thenReturn(mockDTO);
     when(accountService.createAccount(any())).thenReturn(null);
 
-    // Act
     UserRegisterResult actualResponse = userService.register(requestDTO);
 
-    // Assert
     assertNotNull(actualResponse);
     assertInstanceOf(UserRegisterSuccess.class, expectedResponse);
     verify(userRepository, times(1)).save(entityToSave);
@@ -71,18 +67,15 @@ class UserServiceTest {
 
 
   @Test
-  void register_EmailAlreadyExists_ThrowsEmailAlreadyExistsException() {
-    // Arrange
+  void shouldReturnFailureWhenEmailAlreadyExists() {
     UserRequestDTO requestDTO = new UserRequestDTO("name", "duplicate@example.com", "StrongPassword123#");
     UUID uuid = UUID.randomUUID();
     UserEntity existingEntity = new UserEntity(uuid, requestDTO.name(), requestDTO.email(), "encodedPass");
     UserRegisterFailure reponseExpected = new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
     when(userService.findUserByEmail(requestDTO.email())).thenReturn(Optional.of(existingEntity));
 
-    // Act
     UserRegisterResult result = userService.register(requestDTO);
 
-    // Assert
     assertInstanceOf(UserRegisterFailure.class, result);
     UserRegisterFailure resultCast = (UserRegisterFailure)result;
     assertEquals(reponseExpected.errorList().getMessage(), resultCast.errorList().getMessage());
