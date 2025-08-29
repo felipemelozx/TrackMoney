@@ -1,25 +1,34 @@
 package fun.trackmoney.auth.service;
 
-import fun.trackmoney.auth.dto.LoginRequestDTO;
-import fun.trackmoney.auth.dto.LoginResponseDTO;
-import fun.trackmoney.auth.exception.LoginException;
+import fun.trackmoney.auth.dto.internal.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
 import fun.trackmoney.auth.infra.jwt.JwtService;
+import fun.trackmoney.email.EmailService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
   @Mock
@@ -31,29 +40,39 @@ class AuthServiceTest {
   @Mock
   private JwtService jwtService;
 
+  @Mock
+  private EmailService emailService;
+
+  @Mock
+  private Cache cache;
+
+  @Mock
+  private Cache.ValueWrapper valueWrapper;
+
+  @Mock
+  private CacheManager cacheManager;
+
   @InjectMocks
+  @Spy
   private AuthService authService;
 
-  @BeforeEach
-  void setup() {
-    MockitoAnnotations.openMocks(this);
-  }
-
-  /*@Test
-  void shouldRegisterUserSuccessfully() {
-    // Arrange
+  @Test
+  void shouldRegisterUserSuccessfully() throws MessagingException {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
-    UserResponseDTO expectedResponse = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
+    UserResponseDTO responseDTO = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
+    UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(responseDTO);
+    Integer code = 1234;
 
-    when(userService.register(registerDto)).thenReturn(expectedResponse);
+    when(userService.register(registerDto)).thenReturn(userRegisterSuccess);
+    when(authService.generateVerificationCode()).thenReturn(code);
+    when(authService.saveCode(code, responseDTO.email())).thenReturn(true);
+    doNothing().when(emailService)
+        .sendEmailToVerifyEmail(registerDto.email(), registerDto.name(), code);
 
-    // Act
-    UserResponseDTO actualResponse = authService.register(registerDto);
+    UserRegisterResult actualResponse = authService.register(registerDto);
 
-    // Assert
-    assertEquals(expectedResponse.name(), actualResponse.name());
-    assertEquals(expectedResponse.email(), actualResponse.email());
-  }*/
+    assertInstanceOf(UserRegisterSuccess.class, actualResponse);
+  }
 
 /*  @Test
   void shouldLoginSuccessfullyWhenCredentialsAreValid() {

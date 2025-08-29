@@ -46,7 +46,7 @@ public class AuthService {
       do {
         code = generateVerificationCode();
         codeIsSaved = saveCode(code, userDto.email());
-      }while (!codeIsSaved);
+      } while (!codeIsSaved);
 
       try{
         emailService.sendEmailToVerifyEmail(userDto.email(), userDto.name(), code);
