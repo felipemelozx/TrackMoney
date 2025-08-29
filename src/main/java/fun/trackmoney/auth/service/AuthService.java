@@ -16,7 +16,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 @Service
 public class AuthService {
@@ -41,15 +41,17 @@ public class AuthService {
   public UserRegisterResult register(UserRequestDTO userDto)  {
     UserRegisterResult result = userService.register(userDto);
     if(result instanceof UserRegisterSuccess) {
-      Integer code = generateVerificationCode();
+      Integer code;
+      boolean codeIsSaved;
+      do {
+        code = generateVerificationCode();
+        codeIsSaved = saveCode(code, userDto.email());
+      }while (!codeIsSaved);
+
       try{
         emailService.sendEmailToVerifyEmail(userDto.email(), userDto.name(), code);
-        Boolean codeWasSave = saveCode(code, userDto.email());
-        while(!codeWasSave){
-          code = generateVerificationCode();
-          codeWasSave = saveCode(code, userDto.email());
-        }
       } catch (MessagingException ignored) {
+        // TODO: Implements a log system.
         System.out.println("Email not send.");
       }
     }
@@ -67,7 +69,7 @@ public class AuthService {
 
   protected Boolean saveCode(Integer code, String email) {
     Cache cache = cacheManager.getCache("EmailVerificationCodes");
-    if(recoverCode(code) != null && cache != null){
+    if(recoverCode(code) == null && cache != null){
       cache.put(code, email);
       return true;
     }
@@ -82,8 +84,8 @@ public class AuthService {
     Cache.ValueWrapper wrapper = cache.get(code);
     return wrapper != null ? (String) wrapper.get() : null;
   }
-  protected Integer generateVerificationCode(){
-    // 1000 to 10000, generate a code with 4 digits
-    return ThreadLocalRandom.current().nextInt(1000, 10000);
+
+  protected Integer generateVerificationCode() {
+    return new Random().nextInt(1000, 10000);
   }
 }
