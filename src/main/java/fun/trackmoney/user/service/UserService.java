@@ -54,7 +54,6 @@ public class UserService {
         userResponseDTO.userId(), "Default Account", BigDecimal.valueOf(0), true);
     accountService.createAccount(account);
     return new UserRegisterSuccess(userResponseDTO);
-
   }
 
   public Optional<UserEntity> findUserByEmail(String email) {
