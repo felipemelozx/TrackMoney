@@ -16,7 +16,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 @Service
 public class AuthService {
@@ -26,11 +26,13 @@ public class AuthService {
   private final JwtService jwtservice;
   private final EmailService emailService;
   private final CacheManager cacheManager;
+  private static final SecureRandom secureRandom = new SecureRandom();
 
   public AuthService(UserService userService,
                      PasswordEncoder passwordEncoder,
                      JwtService jwtservice,
-                     EmailService emailService, CacheManager cacheManager) {
+                     EmailService emailService,
+                     CacheManager cacheManager) {
     this.userService = userService;
     this.passwordEncoder = passwordEncoder;
     this.jwtservice = jwtservice;
@@ -86,6 +88,6 @@ public class AuthService {
   }
 
   protected Integer generateVerificationCode() {
-    return new Random().nextInt(1000, 10000);
+    return secureRandom.nextInt(9000) + 1000;
   }
 }
