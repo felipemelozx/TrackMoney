@@ -71,7 +71,7 @@ class AuthServiceTest {
   private AuthService authService;
 
   @Test
-  void shouldRegisterUserSuccessfullyWhenUserRequestIsValid() throws MessagingException {
+  void shouldRegisterUserAndSendVerificationEmail_whenUserRequestIsValid() throws MessagingException {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserResponseDTO responseDTO = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
     UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(responseDTO);
@@ -93,7 +93,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldEnterInloopWhenCantSaveCode() throws MessagingException {
+  void shouldRetryGeneratingVerificationCode_whenCodeSavingFails() throws MessagingException {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserResponseDTO responseDTO = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
     UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(responseDTO);
@@ -115,7 +115,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldDontSendEmailWhenOcorreUmError() throws MessagingException, IOException {
+  void shouldReturnSuccessfulRegistration_whenEmailSendingFails() throws MessagingException, IOException {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserResponseDTO responseDTO = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
     UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(responseDTO);
@@ -146,7 +146,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldDontasdsdasdendEmailWhenOcorreUmError() throws MessagingException, IOException {
+  void shouldNotProcessVerificationCode_whenRegistrationFails() throws MessagingException, IOException {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserRegisterFailure userRegisterSuccess = new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
 
@@ -163,13 +163,13 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldGenerateCodeWithinRange() {
+  void shouldGenerateCodeBetween1000And9999_whenGeneratingVerificationCode() {
     Integer code = authService.generateVerificationCode();
     assertTrue(code >= 1000 && code <= 9999);
   }
 
   @Test
-  void testCacheFalse(){
+  void shouldReturnFalse_whenCacheIsNotAvailable() {
     int code = 1234;
     when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(null);
     Boolean result = authService.saveCode(code, "someEmail@com.br");
@@ -177,7 +177,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void testCacheTrue(){
+  void shouldReturnTrue_whenCodeIsSavedInCache() {
     int code = 1234;
     String emailMock = "someEmail@com.br";
     when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
@@ -186,7 +186,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldReturnFalse_whenRecoverTokenReturnsNull() {
+  void shouldReturnNull_whenVerificationCodeNotFoundInCache() {
     int code = 1234;
     when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
     when(cache.get(code)).thenReturn(null);
@@ -195,7 +195,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldReturnFs_whenRecoverTokenReturnsNull() {
+  void shouldReturnEmail_whenVerificationCodeExistsInCache() {
     int code = 1234;
     String mockEmail = "mock@email.com";
     when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
