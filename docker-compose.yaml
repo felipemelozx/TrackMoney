@@ -7,9 +7,19 @@ services:
       POSTGRES_PASSWORD: developerDB
       POSTGRES_DB: developerDB
     ports:
-      - "5432:5432"  
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data 
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7
+    container_name: redis-trackmoney
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - app-network
 
@@ -19,4 +29,4 @@ networks:
 
 volumes:
   postgres_data:
-    driver: local
+  redis_data:

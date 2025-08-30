@@ -23,7 +23,7 @@ public class RedisConfig {
     );
 
     Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
-    cacheConfigurations.put("EmailVerificationTokens", defaultConfiguration);
+    cacheConfigurations.put("EmailVerificationCodes", defaultConfiguration);
 
     return RedisCacheManager.builder(connectionFactory)
         .cacheDefaults(defaultConfiguration)

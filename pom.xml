@@ -117,6 +117,7 @@
                 <configuration>
                     <excludes>
                         <exclude>**/*Config.class</exclude>
+                        <exclude>**/*Entity.class</exclude>
                     </excludes>
                 </configuration>
 				<version>0.8.10</version>

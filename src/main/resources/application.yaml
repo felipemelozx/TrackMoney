@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: TrackMoney
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/developerDB}
+    username: ${SPRING_DATASOURCE_USERNAME:developerDB}
+    password: ${SPRING_DATASOURCE_PASSWORD:developerDB}
+    driver-class-name: org.postgresql.Driver
+    platform: postgresql
+
+  jpa:
+    show-sql: true
+
+  security:
+    user:
+      name: ${SPRING_SECURITY_USER:admin}
+      password: ${SPRING_SECURITY_PASSWORD:admin}
+
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:seuemail@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:sua_app_password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+
+  cache:
+    type: redis
+
+server:
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/api/v1}
+
+api:
+  secret:
+    key: ${API_SECRET_KEY:test}
+
+logging:
+  level:
+    org.flywaydb.core: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

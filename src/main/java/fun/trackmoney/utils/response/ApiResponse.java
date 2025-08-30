@@ -7,8 +7,8 @@ import java.util.List;
 
 public final class ApiResponse<T> {
 
-  private boolean success;
-  private String message;
+  private final boolean success;
+  private final String message;
   private final T data;
   private final List<CustomFieldError> errors;
   private final LocalDateTime timestamp;

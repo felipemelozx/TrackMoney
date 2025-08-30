@@ -1,5 +1,6 @@
 package fun.trackmoney.user.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,6 +9,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
 import java.util.UUID;
 
 /**
@@ -48,6 +50,9 @@ public class UserEntity {
   @NotBlank
   private String password;
 
+  @Column(name = "is_active", nullable = false)
+  private boolean isActive = false;
+
   /**
    * Default constructor for the UserEntity class.
    */
@@ -67,6 +72,23 @@ public class UserEntity {
     this.name = name;
     this.email = email;
     this.password = password;
+  }
+
+  /**
+   * Constructor to initialize a user entity with the provided values.
+   *
+   * @param userId   The unique identifier for the user.
+   * @param name     The name of the user.
+   * @param email    The email address of the user.
+   * @param password The password of the user.
+   * @param isActive Whether the user account is active.
+   */
+  public UserEntity(UUID userId, String name, String email, String password, boolean isActive) {
+    this.userId = userId;
+    this.name = name;
+    this.email = email;
+    this.password = password;
+    this.isActive = isActive;
   }
 
   /**
@@ -139,5 +161,13 @@ public class UserEntity {
    */
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public boolean isActive() {
+    return isActive;
+  }
+
+  public void setActive(boolean active) {
+    isActive = active;
   }
 }
