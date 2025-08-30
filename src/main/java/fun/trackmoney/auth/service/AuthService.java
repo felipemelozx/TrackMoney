@@ -26,7 +26,7 @@ public class AuthService {
   private final JwtService jwtservice;
   private final EmailService emailService;
   private final CacheManager cacheManager;
-  private static final SecureRandom secureRandom = new SecureRandom();
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   public AuthService(UserService userService,
                      PasswordEncoder passwordEncoder,
@@ -88,6 +88,6 @@ public class AuthService {
   }
 
   protected Integer generateVerificationCode() {
-    return secureRandom.nextInt(9000) + 1000;
+    return SECURE_RANDOM.nextInt(9000) + 1000;
   }
 }
