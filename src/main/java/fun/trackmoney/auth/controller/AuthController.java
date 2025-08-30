@@ -2,9 +2,13 @@ package fun.trackmoney.auth.controller;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
+import fun.trackmoney.auth.dto.internal.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
 import fun.trackmoney.auth.service.AuthService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +17,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 
 @RestController
@@ -27,10 +33,22 @@ public class AuthController {
 
   @PostMapping("/register")
   public ResponseEntity<ApiResponse<UserResponseDTO>> register(@RequestBody @Valid UserRequestDTO userDto) {
-    return ResponseEntity.ok().body(
-        ApiResponse.<UserResponseDTO>success()
-            .data(authService.register(userDto))
-            .message("User register with success")
+    UserRegisterResult user = authService.register(userDto);
+    if(user instanceof UserRegisterSuccess registerSuccess) {
+      UserResponseDTO responseDTO = (registerSuccess).user();
+      return ResponseEntity.ok().body(
+          ApiResponse.<UserResponseDTO>success()
+              .message("User register with success")
+              .data(responseDTO)
+              .build()
+      );
+    }
+    UserRegisterFailure failure = (UserRegisterFailure) user;
+    return ResponseEntity.badRequest().body(
+        ApiResponse.<UserResponseDTO>failure()
+            .message("Unregistered user.")
+            .data(null)
+            .errors(List.of(new CustomFieldError("Email", failure.errorList().getMessage())))
             .build()
     );
   }
