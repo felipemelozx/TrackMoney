@@ -9,7 +9,6 @@ import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -60,10 +59,7 @@ public class UserService {
     return userRepository.findByEmail(email);
   }
 
-  public UserEntity findUserById(UUID userId) {
-    return userRepository.findById(userId)
-        .orElseThrow(() ->
-           new UserNotFoundException("User not found")
-        );
+  public Optional<UserEntity> findUserById(UUID userId) {
+    return userRepository.findById(userId);
   }
 }

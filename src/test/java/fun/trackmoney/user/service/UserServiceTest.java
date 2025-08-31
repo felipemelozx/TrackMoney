@@ -82,55 +82,58 @@ class UserServiceTest {
     verify(userRepository, times(0)).save(any());
   }
 
-/*x
+
   @Test
-  void findUserByEmail_EmailNotFound_ThrowsEmailNotFoundException() {
-    // Arrange
-    LoginRequestDTO requestDTO = new LoginRequestDTO("duplicate@example.com", "StrongPassword123#");
-    when(userRepository.findByEmail(requestDTO.email())).thenReturn(Optional.empty());
-    // Act & Assert
-    assertThrows(UserNotFoundException.class, () -> userService.findUserByEmail(requestDTO));
+  void shouldReturnEmptyOptionalWhenEmailNotFound() {
+    String mockEmail = "mockEmail@com.br";
+    when(userRepository.findByEmail(mockEmail)).thenReturn(Optional.empty());
+
+    Optional<UserEntity> response = userService.findUserByEmail(mockEmail);
+    assertTrue(response.isEmpty());
   }
 
   @Test
-  void findUserByEmail_ValidUser_ReturnsUserResponseDT() {
-    // Arrange
-    LoginRequestDTO requestDTO = new LoginRequestDTO("duplicate@example.com", "StrongPassword123#");
+  void shouldReturnUserWhenEmailExists() {
+    String mockEmail = "mockEmail@example.com";
     UUID uuid = UUID.randomUUID();
-    UserEntity entityToSave = new UserEntity(uuid, "name", "duplicate@example.com", "StrongPassword123#");
+    UserEntity user = new UserEntity(uuid, "name", mockEmail, "StrongPassword123#", true);
 
-    when(userRepository.findByEmail(requestDTO.email())).thenReturn(Optional.of(entityToSave));
-    // Act
-    UserEntity responseDTO = userService.findUserByEmail(requestDTO);
-    //Assert
-    assertEquals(entityToSave.getUserId(), responseDTO.getUserId());
-    assertEquals(entityToSave.getEmail(), responseDTO.getEmail());
-    assertEquals(entityToSave.getPassword(), responseDTO.getPassword());
-    assertEquals(entityToSave.getName(), responseDTO.getName());
+    when(userRepository.findByEmail(mockEmail)).thenReturn(Optional.of(user));
+
+    Optional<UserEntity> response = userService.findUserByEmail(mockEmail);
+
+    assertTrue(response.isPresent());
+    UserEntity userResponse = response.get();
+    assertEquals(user.getUserId(), userResponse.getUserId());
+    assertEquals(user.getEmail(), userResponse.getEmail());
+    assertEquals(user.getPassword(), userResponse.getPassword());
+    assertEquals(user.getName(), userResponse.getName());
   }
 
   @Test
-  void findUserById_ValidUser_ReturnsUserResponseDT() {
-    // Arrange
-    UUID uuid = UUID.randomUUID();
-    UserEntity entityToSave = new UserEntity(uuid, "name", "duplicate@example.com", "StrongPassword123#");
+  void shouldReturnEmptyOptionalWhenUserIdNotFound() {
+    UUID mockUserId = UUID.randomUUID();
+    when(userRepository.findById(mockUserId)).thenReturn(Optional.empty());
 
-    when(userRepository.findById(uuid)).thenReturn(Optional.of(entityToSave));
-    // Act
-    UserEntity responseDTO = userService.findUserById(uuid);
-    //Assert
-    assertEquals(entityToSave.getUserId(), responseDTO.getUserId());
-    assertEquals(entityToSave.getEmail(), responseDTO.getEmail());
-    assertEquals(entityToSave.getPassword(), responseDTO.getPassword());
-    assertEquals(entityToSave.getName(), responseDTO.getName());
+    Optional<UserEntity> response = userService.findUserById(mockUserId);
+    assertTrue(response.isEmpty());
   }
 
   @Test
-  void findUserById_EmailNotFound_ThrowsEmailNotFoundException() {
-    // Arrange
-    UUID uuid = UUID.randomUUID();
-    when(userRepository.findById(uuid)).thenReturn(Optional.empty());
-    // Act & Assert
-    assertThrows(UserNotFoundException.class, () -> userService.findUserById(uuid));
-  }*/
+  void shouldReturnUserWhenUserIdExists() {
+    UUID mockUserId = UUID.randomUUID();
+    UserEntity user = new UserEntity(mockUserId, "name", "mock@gmail.com", "StrongPassword123#", true);
+
+    when(userRepository.findById(mockUserId)).thenReturn(Optional.of(user));
+
+    Optional<UserEntity> response = userService.findUserById(mockUserId);
+
+    assertTrue(response.isPresent());
+    UserEntity userResponse = response.get();
+    assertEquals(user.getUserId(), userResponse.getUserId());
+    assertEquals(user.getEmail(), userResponse.getEmail());
+    assertEquals(user.getPassword(), userResponse.getPassword());
+    assertEquals(user.getName(), userResponse.getName());
+  }
+
 }

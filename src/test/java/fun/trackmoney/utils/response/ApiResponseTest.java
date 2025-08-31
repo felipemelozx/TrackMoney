@@ -91,6 +91,24 @@ class ApiResponseTest {
   }
 
   @Test
+  void shouldSetSingleCustomFieldErrorAsListInApiResponse() {
+    CustomFieldError error = new CustomFieldError("fieldName", "errorMessage");
+
+    ApiResponse<String> response = ApiResponse.<String>failure()
+        .errors(error)
+        .build();
+
+    assertNotNull(response);
+    assertFalse(response.isSuccess());
+    assertNotNull(response.getErrors());
+    assertEquals(1, response.getErrors().size());
+    assertEquals("fieldName", response.getErrors().get(0).getField());
+    assertEquals("errorMessage", response.getErrors().get(0).getMessage());
+    assertNull(response.getData());
+    assertEquals("ApiResponse", response.getClass().getSimpleName());
+  }
+
+  @Test
   void shouldCreateBasicResponse_whenUseGenericBuilder() {
     boolean success = true;
     String message = "Test message";

@@ -83,7 +83,7 @@ class BudgetsServiceTest {
     budgetEntity.setAccount(accountEntity);
 
     when(budgetMapper.createDtoTOEntity(createDTO)).thenReturn(budgetEntity);
-    when(userService.findUserById(userId)).thenReturn(userEntity);
+    when(userService.findUserById(userId)).thenReturn(Optional.ofNullable(userEntity));
     when(accountService.findAccountById(20)).thenReturn(accountResponseDTO);
     when(accountMapper.accountResponseToEntity(accountResponseDTO)).thenReturn(accountEntity);
     when(categoryService.findById(10)).thenReturn(categoryEntity);
@@ -185,7 +185,7 @@ class BudgetsServiceTest {
 
     when(budgetsRepository.findById(budgetIdToUpdate)).thenReturn(Optional.of(existingEntity));
     when(budgetMapper.createDtoTOEntity(updateDTO)).thenReturn(updatedEntity);
-    when(userService.findUserById(userId)).thenReturn(userEntity);
+    when(userService.findUserById(userId)).thenReturn(Optional.ofNullable(userEntity));
     when(accountService.findAccountById(21)).thenReturn(updatedAccountDTO);
     when(accountMapper.accountResponseToEntity(updatedAccountDTO)).thenReturn(updatedAccountEntity);
     when(categoryService.findById(11)).thenReturn(updatedCategory);

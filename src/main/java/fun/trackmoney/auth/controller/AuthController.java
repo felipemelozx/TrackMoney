@@ -2,6 +2,10 @@ package fun.trackmoney.auth.controller;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.LoginFailure;
+import fun.trackmoney.auth.dto.internal.LoginResult;
+import fun.trackmoney.auth.dto.internal.LoginSuccess;
 import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
@@ -55,10 +59,43 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody LoginRequestDTO loginDto) {
-    return ResponseEntity.ok().body(
-        ApiResponse.<LoginResponseDTO>success()
-            .message("Login successful")
-            .data(authService.login(loginDto))
+    LoginResult loginResult = authService.login(loginDto);
+    if(loginResult instanceof LoginSuccess response) {
+      return ResponseEntity.ok().body(
+          ApiResponse.<LoginResponseDTO>success()
+              .message("Login successful")
+              .data(response.tokens())
+              .build()
+      );
+    }
+
+    LoginFailure loginFailure = (LoginFailure) loginResult;
+    String message = "Login failure";
+    if(loginFailure.error().equals(AuthError.INVALID_CREDENTIALS)){
+      CustomFieldError error = new CustomFieldError("Credentials", loginFailure.error().getMessage());
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<LoginResponseDTO>failure()
+              .message(message)
+              .errors(error)
+              .build()
+      );
+    }
+
+    if(loginFailure.error().equals(AuthError.EMAIL_NOT_VERIFIED)){
+      CustomFieldError error = new CustomFieldError("User", loginFailure.error().getMessage());
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<LoginResponseDTO>failure()
+              .message(message)
+              .errors(error)
+              .build()
+      );
+    }
+
+    CustomFieldError error = new CustomFieldError("User", loginFailure.error().getMessage());
+    return ResponseEntity.badRequest().body(
+        ApiResponse.<LoginResponseDTO>failure()
+            .message(message)
+            .errors(error)
             .build()
     );
   }
