@@ -1,6 +1,11 @@
 package fun.trackmoney.auth.service;
 
+import fun.trackmoney.auth.dto.LoginRequestDTO;
+import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.LoginFailure;
+import fun.trackmoney.auth.dto.internal.LoginResult;
+import fun.trackmoney.auth.dto.internal.LoginSuccess;
 import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
@@ -8,6 +13,7 @@ import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
@@ -24,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.security.SecureRandom;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -137,7 +144,7 @@ class AuthServiceTest {
     } finally {
       System.setOut(out);
     }
-
+    assertEquals("Email not send.",outPut.trim());
     assertInstanceOf(UserRegisterSuccess.class, actualResponse);
     verify(authService, times(1)).saveCode(code, responseDTO.email());
     verify(emailService, times(1)).sendEmailToVerifyEmail(responseDTO.email(), responseDTO.name(), code);
@@ -146,7 +153,7 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldNotProcessVerificationCode_whenRegistrationFails() throws MessagingException, IOException {
+  void shouldNotProcessVerificationCode_whenRegistrationFails() throws MessagingException  {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserRegisterFailure userRegisterSuccess = new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
 
@@ -205,35 +212,79 @@ class AuthServiceTest {
     assertEquals(mockEmail, result);
   }
 
-/*  @Test
+  @Test
+  void shouldReturnFalseWhenRecoverCodeReturnCode(){
+    int code = 1234;
+
+    when(authService.recoverCode(code)).thenReturn("fakeEmail@com.br");
+    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
+
+    boolean response = authService.saveCode(code, "fake");
+    assertFalse(response);
+  }
+
+  @Test
   void shouldLoginSuccessfullyWhenCredentialsAreValid() {
-    // Arrange
     LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "Password1#");
     UUID userId = UUID.randomUUID();
-    UserEntity user = new UserEntity(userId, "John Doe", "test@example.com", "encodedPassword");
-    String expectedToken = "mocked-jwt-token";
+    UserEntity user = new UserEntity(userId, "John Doe", "test@example.com", "encodedPassword", true);
+    String expectedAccessToken = "mocked-access-jwt-token";
+    String expectedRefreshToken = "mocked-refresh-jwt-token";
+    LoginResponseDTO loginResponseDTO = new LoginResponseDTO(expectedAccessToken, expectedRefreshToken);
 
-    when(userService.findUserByEmail(loginDto)).thenReturn(user);
+    when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(loginDto.password(), user.getPassword())).thenReturn(true);
-    when(jwtService.generateToken(user.getEmail())).thenReturn(expectedToken);
+    when(jwtService.generateToken(user.getEmail())).thenReturn(expectedAccessToken, expectedRefreshToken);
 
-    // Act
-    LoginResponseDTO response = authService.login(loginDto);
+    LoginResult response = authService.login(loginDto);
 
-    // Assert
-    assertEquals(expectedToken, response.token());
-  }*/
+    assertInstanceOf(LoginSuccess.class, response);
+    LoginResponseDTO actualLoginResponse = ((LoginSuccess) response).tokens();
+    assertEquals(loginResponseDTO, actualLoginResponse);
+  }
 
- /* @Test
-  void shouldThrowLoginExceptionWhenPasswordDoesNotMatch() {
-    // Arrange
+  @Test
+  void shouldReturnLoginFailureWhenPasswordIsInvalid() {
     LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "WrongPassword");
-    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword");
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword", true);
 
-    when(userService.findUserByEmail(loginDto)).thenReturn(user);
+    when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(loginDto.password(), user.getPassword())).thenReturn(false);
 
-    // Act & Assert
-    assertThrows(LoginException.class, () -> authService.login(loginDto));
-  }*/
+    LoginResult response = authService.login(loginDto);
+
+    assertInstanceOf(LoginFailure.class, response);
+    AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
+    assertEquals(AuthError.INVALID_CREDENTIALS.getMessage(), actualAuthErrorMessage.getMessage());
+    verify(jwtService, times(0)).generateToken(any());
+  }
+
+  @Test
+  void shouldReturnLoginFailureWhenUserIsNotRegistered() {
+    LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "WrongPassword");
+
+    when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.empty());
+
+    LoginResult response = authService.login(loginDto);
+
+    assertInstanceOf(LoginFailure.class, response);
+    AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
+    assertEquals(AuthError.USER_NOT_REGISTER.getMessage(), actualAuthErrorMessage.getMessage());
+    verify(jwtService, times(0)).generateToken(any());
+  }
+
+  @Test
+  void shouldReturnLoginFailureWhenEmailIsNotVerified() {
+    LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "WrongPassword");
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword", false);
+
+    when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.of(user));
+
+    LoginResult response = authService.login(loginDto);
+
+    assertInstanceOf(LoginFailure.class, response);
+    AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
+    assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), actualAuthErrorMessage.getMessage());
+    verify(jwtService, times(0)).generateToken(any());
+  }
 }
