@@ -1,0 +1,2 @@
+ALTER TABLE tb_user
+ADD COLUMN is_active BOOLEAN DEFAULT true NOT NULL;
