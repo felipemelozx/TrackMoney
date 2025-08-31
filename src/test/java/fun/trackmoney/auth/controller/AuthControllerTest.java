@@ -3,6 +3,8 @@ package fun.trackmoney.auth.controller;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.LoginResult;
+import fun.trackmoney.auth.dto.internal.LoginSuccess;
 import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
 import fun.trackmoney.auth.service.AuthService;
@@ -69,9 +71,9 @@ class AuthControllerTest {
   @Test
   void shouldReturnJwtTokenWhenCredentialsAreValid() {
     LoginRequestDTO loginRequest = new LoginRequestDTO("john@example.com", "123");
-    LoginResponseDTO loginResponse = new LoginResponseDTO("jwt-token");
-
-    when(authService.login(loginRequest)).thenReturn(loginResponse);
+    LoginResponseDTO loginResponse = new LoginResponseDTO("accessToken-jwt", "refreshToken-jwt");
+    LoginResult loginResult = new LoginSuccess(loginResponse);
+    when(authService.login(loginRequest)).thenReturn(loginResult);
 
     ResponseEntity<ApiResponse<LoginResponseDTO>> response = authController.login(loginRequest);
 
@@ -79,7 +81,7 @@ class AuthControllerTest {
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals("Login successful", response.getBody().getMessage());
-    assertEquals("jwt-token", response.getBody().getData().token());
+    assertEquals(loginResponse, response.getBody().getData());
     assertTrue(response.getBody().getErrors().isEmpty());
   }
 
