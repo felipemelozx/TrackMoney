@@ -1,3 +1,5 @@
 package fun.trackmoney.auth.dto.internal;
 
-public record LoginSuccess(String accessToken, String refreshToken) implements LoginResult { }
+import fun.trackmoney.auth.dto.LoginResponseDTO;
+
+public record LoginSuccess(LoginResponseDTO tokens) implements LoginResult { }
