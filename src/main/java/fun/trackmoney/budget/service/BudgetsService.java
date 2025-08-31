@@ -9,11 +9,14 @@ import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.budget.mapper.BudgetMapper;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.service.CategoryService;
+import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.service.UserService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BudgetsService {
@@ -41,8 +44,12 @@ public class BudgetsService {
 
   public BudgetResponseDTO create(BudgetCreateDTO dto) {
     BudgetsEntity budgets = budgetMapper.createDtoTOEntity(dto);
-
-    budgets.setUserEntity(userService.findUserById(dto.userId()));
+    Optional<UserEntity> optionalUser = userService.findUserById(dto.userId());
+    // TODO: Improve logic to use an interface instead of throwing exceptions
+    if(optionalUser.isEmpty()) {
+      throw new UserNotFoundException("User not found.");
+    }
+    budgets.setUserEntity(optionalUser.get());
     budgets.setAccount(accountMapper.accountResponseToEntity(accountService.findAccountById(dto.accountId())));
     budgets.setCategory(categoryService.findById(dto.categoryId()));
     return budgetMapper.entityToResponseDTO(budgetsRepository.save(budgets));
@@ -80,7 +87,12 @@ public class BudgetsService {
 
     BudgetsEntity budgets = budgetMapper.createDtoTOEntity(dto);
     budgets.setBudgetId(id);
-    budgets.setUserEntity(userService.findUserById(dto.userId()));
+    Optional<UserEntity> optionalUser = userService.findUserById(dto.userId());
+    // TODO: Improve logic to use an interface instead of throwing exceptions
+    if(optionalUser.isEmpty()) {
+      throw new UserNotFoundException("User not found.");
+    }
+    budgets.setUserEntity(optionalUser.get());
     budgets.setAccount(accountMapper.accountResponseToEntity(accountService.findAccountById(dto.accountId())));
     budgets.setCategory(categoryService.findById(dto.categoryId()));
     budgets.setTargetAmount(dto.targetAmount());
