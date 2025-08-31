@@ -2,9 +2,12 @@ package fun.trackmoney.auth.service;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.LoginFailure;
+import fun.trackmoney.auth.dto.internal.LoginResult;
+import fun.trackmoney.auth.dto.internal.LoginSuccess;
 import fun.trackmoney.auth.dto.internal.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
-import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
@@ -17,13 +20,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.Optional;
 
 @Service
 public class AuthService {
 
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
-  private final JwtService jwtservice;
+  private final JwtService jwtService;
   private final EmailService emailService;
   private final CacheManager cacheManager;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -35,7 +39,7 @@ public class AuthService {
                      CacheManager cacheManager) {
     this.userService = userService;
     this.passwordEncoder = passwordEncoder;
-    this.jwtservice = jwtservice;
+    this.jwtService = jwtservice;
     this.emailService = emailService;
     this.cacheManager = cacheManager;
   }
@@ -60,12 +64,24 @@ public class AuthService {
     return result;
   }
 
-  public LoginResponseDTO login(LoginRequestDTO loginDto) {
-    UserEntity user = userService.findUserByEmail(loginDto.email()).get();
-    if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
-      throw new LoginException("Password is incorrect.");
+  public LoginResult login(LoginRequestDTO loginDto) {
+    Optional<UserEntity> optionalUser = userService.findUserByEmail(loginDto.email());
+    if(optionalUser.isEmpty()) {
+      return new LoginFailure(AuthError.USER_NOT_REGISTER);
     }
-    return new LoginResponseDTO(jwtservice.generateToken(user.getEmail()));
+    UserEntity user = optionalUser.get();
+    if(!user.isActive()){
+      return new LoginFailure(AuthError.EMAIL_NOT_VERIFIED);
+    }
+    if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
+      return new LoginFailure(AuthError.INVALID_CREDENTIALS);
+    }
+    String accessToken = jwtService.generateToken(user.getEmail());
+    String refreshToken = jwtService.generateToken(user.getEmail());
+
+    LoginResponseDTO tokens = new LoginResponseDTO(accessToken, refreshToken);
+
+    return new LoginSuccess(tokens);
   }
 
 

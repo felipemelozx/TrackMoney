@@ -1,14 +1,11 @@
 package fun.trackmoney.config.exception;
 
 import fun.trackmoney.account.exception.AccountNotFoundException;
-import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
 import fun.trackmoney.goal.exception.GoalsNotFoundException;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
-import fun.trackmoney.user.exception.EmailAlreadyExistsException;
 import fun.trackmoney.user.exception.UserNotFoundException;
-import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
@@ -26,48 +23,6 @@ class RestExceptionHandlerTest {
 
   private final RestExceptionHandler restExceptionHandler = new RestExceptionHandler();
 
-  @Test
-  void passwordNotValidShouldReturnBadRequestWithCorrectErrors() {
-    List<CustomFieldError> errors = List.of(
-        new CustomFieldError("password", "must contain at least one digit"),
-        new CustomFieldError("password", "must contain at least one lowercase letter"),
-        new CustomFieldError("password", "must contain at least one uppercase letter"),
-        new CustomFieldError("password", "must be at least 8 characters long")
-    );
-    PasswordNotValid exception = new PasswordNotValid(errors);
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.passwordNotValid(exception);
-
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
-
-    assertNotNull(apiResponse);
-    assertFalse(apiResponse.isSuccess());
-    assertEquals("Password is invalid", apiResponse.getMessage());
-    assertNotNull(apiResponse.getErrors());
-    assertEquals(errors.size(), apiResponse.getErrors().size());
-
-    for (int i = 0; i < errors.size(); i++) {
-      assertEquals(errors.get(i).getMessage(), apiResponse.getErrors().get(i).getMessage());
-    }
-  }
-
-  @Test
-  void handleEmailAlreadyExistsShouldReturnConflictWithError() {
-    EmailAlreadyExistsException exception = new EmailAlreadyExistsException("This email is already in use.");
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.handleEmailAlreadyExists(exception);
-
-    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
-    assertNotNull(apiResponse);
-    assertFalse(apiResponse.isSuccess());
-    assertEquals("This email is already in use.", apiResponse.getMessage());
-    assertNull(apiResponse.getData());
-    assertNotNull(apiResponse.getErrors());
-    assertEquals(1, (apiResponse.getErrors()).size());
-    CustomFieldError error = (CustomFieldError) ((List<?>) apiResponse.getErrors()).get(0);
-    assertEquals("Email", error.getField());
-    assertEquals("This email is already in use.", error.getMessage());
-  }
 
   @Test
   void handleValidationExceptions_shouldReturnBadRequestWithDetailedFieldErrors() {
@@ -123,23 +78,6 @@ class RestExceptionHandlerTest {
     assertEquals(errors.size(), apiResponse.getErrors().size());
   }
 
-  @Test
-  void handleLoginException_shouldReturnBadRequestWithPasswordError() {
-    List<CustomFieldError> errors = List.of(
-        new CustomFieldError("Password", "Password is incorrect.")
-    );
-    LoginException exception = new LoginException(errors);
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.loginException(exception);
-
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
-
-    assertNotNull(apiResponse);
-    assertFalse(apiResponse.isSuccess());
-    assertEquals("Password is incorrect.", apiResponse.getErrors().get(0).getMessage());
-    assertNotNull(apiResponse.getErrors());
-    assertEquals(errors.size(), apiResponse.getErrors().size());
-  }
 
   @Test
   void categoryNotFound_shouldReturnNotFoundWithError() {

@@ -1,14 +1,11 @@
 package fun.trackmoney.config.exception;
 
 import fun.trackmoney.account.exception.AccountNotFoundException;
-import fun.trackmoney.auth.exception.LoginException;
 import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
 import fun.trackmoney.goal.exception.GoalsNotFoundException;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
-import fun.trackmoney.user.exception.EmailAlreadyExistsException;
 import fun.trackmoney.user.exception.UserNotFoundException;
-import fun.trackmoney.user.exception.PasswordNotValid;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -21,16 +18,6 @@ import java.util.List;
 
 @ControllerAdvice
 public class RestExceptionHandler {
-
-  @ExceptionHandler(PasswordNotValid.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> passwordNotValid(PasswordNotValid ex) {
-    return ResponseEntity.badRequest().body(
-      ApiResponse.<List<CustomFieldError>>failure()
-          .message(ex.getMessage())
-          .errors(ex.getErrors())
-          .build()
-    );
-  }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> handleValidationExceptions(
@@ -55,30 +42,9 @@ public class RestExceptionHandler {
     );
   }
 
-  @ExceptionHandler(EmailAlreadyExistsException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-    return ResponseEntity
-        .status(HttpStatus.CONFLICT)
-        .body(
-            ApiResponse.<List<CustomFieldError>>failure()
-                .message(ex.getMessage())
-                .errors(List.of(new CustomFieldError("Email", ex.getMessage())))
-                .build()
-        );
-  }
 
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> emailNotFound(UserNotFoundException ex) {
-    return ResponseEntity.badRequest().body(
-        ApiResponse.<List<CustomFieldError>>failure()
-            .message(ex.getMessage())
-            .errors(ex.getErrors())
-            .build()
-    );
-  }
-
-  @ExceptionHandler(LoginException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> loginException(LoginException ex) {
     return ResponseEntity.badRequest().body(
         ApiResponse.<List<CustomFieldError>>failure()
             .message(ex.getMessage())

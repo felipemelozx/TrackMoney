@@ -86,6 +86,11 @@ public final class ApiResponse<T> {
       return this;
     }
 
+    public Builder<T> errors(CustomFieldError errors) {
+      this.errors = List.of(errors);
+      return this;
+    }
+
     public ApiResponse<T> build() {
       return new ApiResponse<>(this);
     }
