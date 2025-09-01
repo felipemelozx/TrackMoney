@@ -16,14 +16,30 @@ public class JwtService {
   @Value("${api.secret.key}")
   private String secret;
 
-  public String generateToken(String email) {
+  public String generateAccessToken(String email) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.create()
           .withIssuer("API-AUTH")
           .withClaim("roles", "USER_ROLES")
+          .withClaim("token_type", "ACCESS")
           .withSubject(email)
-          .withExpiresAt(getExpires())
+          .withExpiresAt(getAccessTokenExpiry())
+          .sign(algorithm);
+    } catch (Exception e) {
+      throw new JWTCreationException("Error while generating JWT token.", e);
+    }
+  }
+
+  public String generateRefreshToken(String email) {
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(secret);
+      return JWT.create()
+          .withIssuer("API-AUTH")
+          .withClaim("roles", "USER_ROLES")
+          .withClaim("token_type", "REFRESH")
+          .withSubject(email)
+          .withExpiresAt(getRefreshTokenExpiry())
           .sign(algorithm);
     } catch (Exception e) {
       throw new JWTCreationException("Error while generating JWT token.", e);
@@ -43,9 +59,30 @@ public class JwtService {
     }
   }
 
-  private Instant getExpires() {
+  private Instant getAccessTokenExpiry() {
     return LocalDateTime.now()
-        .plusHours(3)
+        .plusMinutes(15)
         .toInstant(ZoneOffset.ofHours(-3));
+  }
+
+  private Instant getRefreshTokenExpiry() {
+    return LocalDateTime.now()
+        .plusDays(7)
+        .toInstant(ZoneOffset.ofHours(-3));
+  }
+
+  public String generateVerificationToken(String email) {
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(secret);
+      return JWT.create()
+          .withIssuer("API-AUTH")
+          .withClaim("roles", "USER_UNVERIFIED")
+          .withSubject(email)
+          .withClaim("IsVerify", false)
+          .withExpiresAt(getAccessTokenExpiry())
+          .sign(algorithm);
+    } catch (Exception e) {
+      throw new JWTCreationException("Error while generating JWT token.", e);
+    }
   }
 }
