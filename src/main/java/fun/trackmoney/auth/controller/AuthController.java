@@ -81,16 +81,6 @@ public class AuthController {
       );
     }
 
-    if(loginFailure.error().equals(AuthError.EMAIL_NOT_VERIFIED)){
-      CustomFieldError error = new CustomFieldError("User", loginFailure.error().getMessage());
-      return ResponseEntity.badRequest().body(
-          ApiResponse.<LoginResponseDTO>failure()
-              .message(message)
-              .errors(error)
-              .build()
-      );
-    }
-
     CustomFieldError error = new CustomFieldError("User", loginFailure.error().getMessage());
     return ResponseEntity.badRequest().body(
         ApiResponse.<LoginResponseDTO>failure()
