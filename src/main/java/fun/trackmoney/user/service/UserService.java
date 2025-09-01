@@ -55,6 +55,18 @@ public class UserService {
     return new UserRegisterSuccess(userResponseDTO);
   }
 
+  public Boolean activateUser(String email) {
+    UserEntity user = findUserByEmail(email).orElse(null);
+
+    if(user == null) {
+      return false;
+    }
+
+    user.activate();
+    userRepository.save(user);
+    return true;
+  }
+
   public Optional<UserEntity> findUserByEmail(String email) {
     return userRepository.findByEmail(email);
   }

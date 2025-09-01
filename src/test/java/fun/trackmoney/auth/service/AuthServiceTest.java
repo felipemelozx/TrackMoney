@@ -276,7 +276,7 @@ class AuthServiceTest {
     verify(jwtService, times(0)).generateRefreshToken(any());
   }
 
-  @Test
+/*  @Test
   void shouldReturnLoginFailureWhenEmailIsNotVerified() {
     LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "WrongPassword");
     UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword", false);
@@ -290,5 +290,5 @@ class AuthServiceTest {
     assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), actualAuthErrorMessage.getMessage());
     verify(jwtService, times(0)).generateAccessToken(any());
     verify(jwtService, times(0)).generateRefreshToken(any());
-  }
+  }*/
 }

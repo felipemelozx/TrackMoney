@@ -71,7 +71,9 @@ public class AuthService {
     }
     UserEntity user = optionalUser.get();
     if(!user.isActive()){
-      return new LoginFailure(AuthError.EMAIL_NOT_VERIFIED);
+      String verificationToken = jwtService.generateVerificationToken(user.getEmail());
+      LoginResponseDTO tokens = new LoginResponseDTO(verificationToken, null);
+      return new LoginSuccess(tokens);
     }
     if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
       return new LoginFailure(AuthError.INVALID_CREDENTIALS);
@@ -84,6 +86,16 @@ public class AuthService {
     return new LoginSuccess(tokens);
   }
 
+  public Boolean activateUser(Integer code, String email) {
+    String recoverEmail = recoverCode(code);
+    if(recoverEmail == null) {
+      return false;
+    }
+    if(!recoverEmail.equals(email)) {
+      return false;
+    }
+    return userService.activateUser(email);
+  }
 
   protected Boolean saveCode(Integer code, String email) {
     Cache cache = cacheManager.getCache("EmailVerificationCodes");

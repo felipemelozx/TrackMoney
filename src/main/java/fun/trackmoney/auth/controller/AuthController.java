@@ -12,11 +12,17 @@ import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
 import fun.trackmoney.auth.service.AuthService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -86,6 +92,30 @@ public class AuthController {
         ApiResponse.<LoginResponseDTO>failure()
             .message(message)
             .errors(error)
+            .build()
+    );
+  }
+
+  @GetMapping("/verify-email/{code}")
+  public ResponseEntity<ApiResponse<Void>> verifyEmail(@PathVariable
+                                                         @Min(value = 1000, message = "O código deve ter exatamente 4 dígitos")
+                                                         @Max(value = 9999, message = "O código deve ter exatamente 4 dígitos")
+                                                         Integer code) {
+    UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    boolean isActivete = authService.activateUser(code, user.getEmail());
+
+    if(isActivete) {
+      return ResponseEntity.ok().body(
+          ApiResponse.<Void>success()
+              .message("User verification with success")
+              .build()
+      );
+    }
+
+    return ResponseEntity.ok().body(
+        ApiResponse.<Void>failure()
+            .message("User not verification")
+            .errors(new CustomFieldError("Code", "Code is invalid or experited"))
             .build()
     );
   }
