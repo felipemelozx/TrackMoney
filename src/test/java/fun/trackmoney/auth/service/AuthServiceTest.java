@@ -234,7 +234,8 @@ class AuthServiceTest {
 
     when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(loginDto.password(), user.getPassword())).thenReturn(true);
-    when(jwtService.generateToken(user.getEmail())).thenReturn(expectedAccessToken, expectedRefreshToken);
+    when(jwtService.generateAccessToken(user.getEmail())).thenReturn(expectedAccessToken);
+    when(jwtService.generateRefreshToken(user.getEmail())).thenReturn(expectedRefreshToken);
 
     LoginResult response = authService.login(loginDto);
 
@@ -256,7 +257,8 @@ class AuthServiceTest {
     assertInstanceOf(LoginFailure.class, response);
     AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
     assertEquals(AuthError.INVALID_CREDENTIALS.getMessage(), actualAuthErrorMessage.getMessage());
-    verify(jwtService, times(0)).generateToken(any());
+    verify(jwtService, times(0)).generateAccessToken(any());
+    verify(jwtService, times(0)).generateRefreshToken(any());
   }
 
   @Test
@@ -270,7 +272,8 @@ class AuthServiceTest {
     assertInstanceOf(LoginFailure.class, response);
     AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
     assertEquals(AuthError.USER_NOT_REGISTER.getMessage(), actualAuthErrorMessage.getMessage());
-    verify(jwtService, times(0)).generateToken(any());
+    verify(jwtService, times(0)).generateAccessToken(any());
+    verify(jwtService, times(0)).generateRefreshToken(any());
   }
 
   @Test
@@ -285,6 +288,7 @@ class AuthServiceTest {
     assertInstanceOf(LoginFailure.class, response);
     AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
     assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), actualAuthErrorMessage.getMessage());
-    verify(jwtService, times(0)).generateToken(any());
+    verify(jwtService, times(0)).generateAccessToken(any());
+    verify(jwtService, times(0)).generateRefreshToken(any());
   }
 }

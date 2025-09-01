@@ -76,8 +76,8 @@ public class AuthService {
     if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
       return new LoginFailure(AuthError.INVALID_CREDENTIALS);
     }
-    String accessToken = jwtService.generateToken(user.getEmail());
-    String refreshToken = jwtService.generateToken(user.getEmail());
+    String accessToken = jwtService.generateAccessToken(user.getEmail());
+    String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
     LoginResponseDTO tokens = new LoginResponseDTO(accessToken, refreshToken);
 

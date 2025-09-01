@@ -32,14 +32,14 @@ class JwtServiceTest {
   @Test
   void generateTokenShouldReturnAValidJWT() {
     String email = "test@example.com";
-    String token = jwtService.generateToken(email);
+    String token = jwtService.generateAccessToken(email);
     assertNotNull(token);
   }
 
   @Test
   void validateTokenShouldReturnSubjectForAValidToken() {
     String email = "test@example.com";
-    String token = jwtService.generateToken(email);
+    String token = jwtService.generateAccessToken(email);
     String subject = jwtService.validateToken(token);
     assertEquals(email, subject);
   }
@@ -75,14 +75,14 @@ class JwtServiceTest {
   void generateTokenShouldThrowJWTCreationExceptionWhenSecretIsNull() {
     ReflectionTestUtils.setField(jwtService, "secret", null);
     String email = "test@example.com";
-    assertThrows(JWTCreationException.class, () -> jwtService.generateToken(email), "Error while generating JWT token.");
+    assertThrows(JWTCreationException.class, () -> jwtService.generateAccessToken(email), "Error while generating JWT token.");
   }
 
   @Test
   void generateTokenShouldThrowJWTCreationExceptionWhenSecretIsInvalid() {
     ReflectionTestUtils.setField(jwtService, "secret", "");
     String email = "test@example.com";
-    assertThrows(JWTCreationException.class, () -> jwtService.generateToken(email), "Error while generating JWT token.");
+    assertThrows(JWTCreationException.class, () -> jwtService.generateAccessToken(email), "Error while generating JWT token.");
     ReflectionTestUtils.setField(jwtService, "secret", "testesecretkey123"); // Restore for other tests if needed
   }
 }
