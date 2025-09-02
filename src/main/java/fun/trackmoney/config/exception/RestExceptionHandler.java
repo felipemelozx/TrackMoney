@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
-import java.util.Arrays;
 import java.util.List;
 
 @ControllerAdvice
@@ -51,12 +50,11 @@ public class RestExceptionHandler {
 
     List<CustomFieldError> errors = ex.getAllErrors()
         .stream()
-        .flatMap(result -> Arrays.stream(result.getArguments()))
         .map(error -> {
           if (error instanceof FieldError fieldError) {
             return new CustomFieldError(fieldError.getField(), fieldError.getDefaultMessage());
           } else {
-            return new CustomFieldError("parameter", error.toString());
+            return new CustomFieldError("Code", error.getDefaultMessage());
           }
         })
         .toList();
@@ -69,6 +67,7 @@ public class RestExceptionHandler {
         HttpStatus.BAD_REQUEST
     );
   }
+
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> emailNotFound(UserNotFoundException ex) {
     return ResponseEntity.badRequest().body(

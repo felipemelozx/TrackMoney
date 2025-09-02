@@ -18,7 +18,6 @@ import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -98,13 +97,15 @@ public class AuthController {
 
   @GetMapping("/verify-email/{code}")
   public ResponseEntity<ApiResponse<Void>> verifyEmail(@PathVariable
-                                                         @Min(value = 1000, message = "O código deve ter exatamente 4 dígitos")
-                                                         @Max(value = 9999, message = "O código deve ter exatamente 4 dígitos")
-                                                         Integer code) {
+                                                       @Min(value = 1000,
+                                                           message = "he code must be exactly 4 digits long.")
+                                                       @Max(value = 9999,
+                                                           message = "he code must be exactly 4 digits long.")
+                                                       Integer code) {
     UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    boolean isActivete = authService.activateUser(code, user.getEmail());
+    boolean isActive = authService.activateUser(code, user.getEmail());
 
-    if(isActivete) {
+    if(isActive) {
       return ResponseEntity.ok().body(
           ApiResponse.<Void>success()
               .message("User verification with success")
@@ -115,7 +116,7 @@ public class AuthController {
     return ResponseEntity.ok().body(
         ApiResponse.<Void>failure()
             .message("User not verification")
-            .errors(new CustomFieldError("Code", "Code is invalid or experited"))
+            .errors(new CustomFieldError("Code", "Code is invalid or expired"))
             .build()
     );
   }
