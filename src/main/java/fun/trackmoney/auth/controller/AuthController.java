@@ -113,7 +113,7 @@ public class AuthController {
       );
     }
 
-    return ResponseEntity.ok().body(
+    return ResponseEntity.badRequest().body(
         ApiResponse.<Void>failure()
             .message("User not verification")
             .errors(new CustomFieldError("Code", "Code is invalid or expired"))
