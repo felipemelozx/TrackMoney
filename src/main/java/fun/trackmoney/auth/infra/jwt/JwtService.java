@@ -7,6 +7,8 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,36 +18,96 @@ public class JwtService {
   @Value("${api.secret.key}")
   private String secret;
 
-  public String generateToken(String email) {
+  private static final String CLAIM_ROLES = "roles";
+  private static final String CLAIM_TOKEN_TYPE = "token_type";
+  private static final String ISSUER = "trackmoney";
+  
+  public String generateAccessToken(String email) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.create()
-          .withIssuer("API-AUTH")
-          .withClaim("roles", "USER_ROLES")
+          .withIssuer(ISSUER)
+          .withClaim(CLAIM_ROLES, "USER_ROLES")
+          .withClaim(CLAIM_TOKEN_TYPE, "ACCESS")
           .withSubject(email)
-          .withExpiresAt(getExpires())
+          .withExpiresAt(getAccessTokenExpiry())
           .sign(algorithm);
     } catch (Exception e) {
       throw new JWTCreationException("Error while generating JWT token.", e);
     }
   }
 
-  public String validateToken(String token) {
+  public String generateRefreshToken(String email) {
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(secret);
+      return JWT.create()
+          .withIssuer(ISSUER)
+          .withClaim(CLAIM_ROLES, "USER_ROLES")
+          .withClaim(CLAIM_TOKEN_TYPE, "REFRESH")
+          .withSubject(email)
+          .withExpiresAt(getRefreshTokenExpiry())
+          .sign(algorithm);
+    } catch (Exception e) {
+      throw new JWTCreationException("Error while generating JWT token.", e);
+    }
+  }
+
+  protected DecodedJWT validateToken(String token) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.require(algorithm)
-          .withIssuer("API-AUTH")
+          .withIssuer(ISSUER)
           .build()
-          .verify(token)
-          .getSubject();
+          .verify(token);
     } catch (JWTVerificationException e) {
       return null;
     }
   }
 
-  private Instant getExpires() {
+  private Instant getAccessTokenExpiry() {
     return LocalDateTime.now()
-        .plusHours(3)
+        .plusMinutes(15)
         .toInstant(ZoneOffset.ofHours(-3));
+  }
+
+  private Instant getRefreshTokenExpiry() {
+    return LocalDateTime.now()
+        .plusDays(7)
+        .toInstant(ZoneOffset.ofHours(-3));
+  }
+
+  public String generateVerificationToken(String email) {
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(secret);
+      return JWT.create()
+          .withIssuer(ISSUER)
+          .withClaim(CLAIM_ROLES, "USER_UNVERIFIED")
+          .withSubject(email)
+          .withClaim("IsVerify", false)
+          .withExpiresAt(getAccessTokenExpiry())
+          .sign(algorithm);
+    } catch (Exception e) {
+      throw new JWTCreationException("Error while generating JWT token.", e);
+    }
+  }
+
+  public String extractEmail(String token) {
+    DecodedJWT jwt = validateToken(token);
+    return jwt != null ? jwt.getSubject() : null;
+  }
+
+  public String extractRole(String token) {
+    DecodedJWT jwt = validateToken(token);
+    return jwt != null ? jwt.getClaim(CLAIM_ROLES).asString() : null;
+  }
+
+  public boolean isAccessToken(String token) {
+    DecodedJWT jwt = validateToken(token);
+    return jwt != null && "ACCESS".equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
+  }
+
+  public boolean isRefreshToken(String token) {
+    DecodedJWT jwt = validateToken(token);
+    return jwt != null && "REFRESH".equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
   }
 }

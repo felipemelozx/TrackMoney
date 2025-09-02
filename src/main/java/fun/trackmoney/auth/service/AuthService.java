@@ -71,30 +71,42 @@ public class AuthService {
     }
     UserEntity user = optionalUser.get();
     if(!user.isActive()){
-      return new LoginFailure(AuthError.EMAIL_NOT_VERIFIED);
+      String verificationToken = jwtService.generateVerificationToken(user.getEmail());
+      LoginResponseDTO tokens = new LoginResponseDTO(verificationToken, null);
+      return new LoginSuccess(tokens);
     }
     if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
       return new LoginFailure(AuthError.INVALID_CREDENTIALS);
     }
-    String accessToken = jwtService.generateToken(user.getEmail());
-    String refreshToken = jwtService.generateToken(user.getEmail());
+    String accessToken = jwtService.generateAccessToken(user.getEmail());
+    String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
     LoginResponseDTO tokens = new LoginResponseDTO(accessToken, refreshToken);
 
     return new LoginSuccess(tokens);
   }
 
+  public Boolean activateUser(Integer code, String email) {
+    String recoverEmail = recoverEmail(code);
+    if(recoverEmail == null) {
+      return false;
+    }
+    if(!recoverEmail.equals(email)) {
+      return false;
+    }
+    return userService.activateUser(email);
+  }
 
   protected Boolean saveCode(Integer code, String email) {
     Cache cache = cacheManager.getCache("EmailVerificationCodes");
-    if(recoverCode(code) == null && cache != null){
+    if(recoverEmail(code) == null && cache != null){
       cache.put(code, email);
       return true;
     }
     return false;
   }
 
-  protected String recoverCode(Integer code) {
+  protected String recoverEmail(Integer code) {
     Cache cache = cacheManager.getCache("EmailVerificationCodes");
     if (cache == null) {
       return null;

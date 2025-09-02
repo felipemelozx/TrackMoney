@@ -11,6 +11,7 @@ import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
 import fun.trackmoney.auth.service.AuthService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -31,6 +36,10 @@ class AuthControllerTest {
   AuthService authService;
   @InjectMocks
   AuthController authController;
+  @Mock
+  Authentication authentication;
+  @Mock
+  SecurityContext securityContext;
 
   @Test
   void shouldRegisterUserSuccessfullyWhenUserRequestIsValid() {
@@ -142,5 +151,43 @@ class AuthControllerTest {
     assertEquals("Login failure", response.getBody().getMessage());
     assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
+  }
+
+  @Test
+  void shouldReturnSuccessWhenCodeIsValid() {
+    int mockCode = 1234;
+    UserEntity user = new UserEntity(null, "test", "mock@email.com", "mockPass", false);
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getPrincipal()).thenReturn(user);
+
+    SecurityContextHolder.setContext(securityContext);
+
+    when(authService.activateUser(mockCode, user.getEmail())).thenReturn(true);
+
+    ResponseEntity<ApiResponse<Void>> response = authController.verifyEmail(mockCode);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertEquals("User verification with success", body.getMessage());
+  }
+
+  @Test
+  void shouldReturnFailureWhenCodeIsInvalid() {
+    int mockCode = 1234;
+    UserEntity user = new UserEntity(null, "test", "mock@email.com", "mockPass", false);
+    when(securityContext.getAuthentication()).thenReturn(authentication);
+    when(authentication.getPrincipal()).thenReturn(user);
+
+    SecurityContextHolder.setContext(securityContext);
+
+    when(authService.activateUser(mockCode, user.getEmail())).thenReturn(false);
+
+    ResponseEntity<ApiResponse<Void>> response = authController.verifyEmail(mockCode);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertEquals("User not verification", body.getMessage());
   }
 }

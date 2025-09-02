@@ -136,4 +136,30 @@ class UserServiceTest {
     assertEquals(user.getName(), userResponse.getName());
   }
 
+  @Test
+  void shouldReturnTrueWhenUserIsAbleToActive() {
+    String mockEmail = "mock@email.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "test", mockEmail, "mockPass", false);
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.of(user));
+
+    boolean response = userService.activateUser(mockEmail);
+
+    assertTrue(response);
+    assertTrue(user.isActive());
+    verify(userRepository, times(1)).save(user);
+  }
+
+  @Test
+  void shouldReturnFalseWhenUserIsNull() {
+    String mockEmail = "mock@email.com";
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.empty());
+
+    boolean response = userService.activateUser(mockEmail);
+
+    assertFalse(response);
+    verify(userRepository, times(0)).save(any());
+  }
+
 }
