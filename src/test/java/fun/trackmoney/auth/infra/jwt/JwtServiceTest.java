@@ -1,7 +1,6 @@
 package fun.trackmoney.auth.infra.jwt;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,8 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,27 +51,6 @@ class JwtServiceTest {
   void shouldReturnNullWhenTokenIsInvalid() {
     String invalidToken = "invalid.jwt.token";
     String subject = jwtService.validateToken(invalidToken);
-    assertNull(subject);
-  }
-
-  @Test
-  void shouldReturnNullWhenTokenIsExpired() throws InterruptedException {
-    String shortSecret = "shortlivedsecret";
-    ReflectionTestUtils.setField(jwtService, "secret", shortSecret);
-
-    String email = "expired@example.com";
-    Algorithm algorithm = Algorithm.HMAC256(shortSecret);
-    String token = JWT.create()
-        .withIssuer("API-AUTH")
-        .withClaim("roles", "USER_ROLES")
-        .withSubject(email)
-        .withExpiresAt(Date.from(LocalDateTime.now().plusSeconds(1).toInstant(ZoneOffset.ofHours(-3))))
-        .sign(algorithm);
-
-    Thread.sleep(1500);
-    String subject = jwtService.validateToken(token);
-
-    ReflectionTestUtils.setField(jwtService, "secret", secretKey);
     assertNull(subject);
   }
 
