@@ -197,7 +197,7 @@ class AuthServiceTest {
     int code = 1234;
     when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
     when(cache.get(code)).thenReturn(null);
-    String result = authService.recoverCode(code);
+    String result = authService.recoverEmail(code);
     assertNull(result);
   }
 
@@ -208,15 +208,15 @@ class AuthServiceTest {
     when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
     when(cache.get(code)).thenReturn(valueWrapper);
     when(valueWrapper.get()).thenReturn(mockEmail);
-    String result = authService.recoverCode(code);
+    String result = authService.recoverEmail(code);
     assertEquals(mockEmail, result);
   }
 
   @Test
-  void shouldReturnFalseWhenRecoverCodeReturnCode(){
+  void shouldReturnFalseWhenRecoverCodeReturnEmail(){
     int code = 1234;
 
-    when(authService.recoverCode(code)).thenReturn("fakeEmail@com.br");
+    when(authService.recoverEmail(code)).thenReturn("fakeEmail@com.br");
     when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
 
     boolean response = authService.saveCode(code, "fake");
@@ -276,19 +276,62 @@ class AuthServiceTest {
     verify(jwtService, times(0)).generateRefreshToken(any());
   }
 
-/*  @Test
-  void shouldReturnLoginFailureWhenEmailIsNotVerified() {
-    LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "WrongPassword");
-    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword", false);
+  @Test
+  void shouldReturnLoginSuccessWithVerificationTokenWhenEmailIsNotVerified() {
+    LoginRequestDTO loginRequest = new LoginRequestDTO("test@example.com", "WrongPassword");
+    UserEntity unverifiedUser = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword", false);
+    String verificationToken = "mockCode";
 
-    when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.of(user));
+    when(jwtService.generateVerificationToken(unverifiedUser.getEmail())).thenReturn(verificationToken);
+    when(userService.findUserByEmail(loginRequest.email())).thenReturn(Optional.of(unverifiedUser));
 
-    LoginResult response = authService.login(loginDto);
+    LoginResult result = authService.login(loginRequest);
 
-    assertInstanceOf(LoginFailure.class, response);
-    AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
-    assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), actualAuthErrorMessage.getMessage());
-    verify(jwtService, times(0)).generateAccessToken(any());
-    verify(jwtService, times(0)).generateRefreshToken(any());
-  }*/
+    assertInstanceOf(LoginSuccess.class, result);
+    LoginResponseDTO loginResponse = ((LoginSuccess) result).tokens();
+    assertEquals(verificationToken, loginResponse.accessToken());
+    assertNull(loginResponse.refreshToken());
+  }
+
+  @Test
+  void shouldReturnFalseWhenActivatingUserIfRecoveredEmailIsNull() {
+    int code = 1234;
+    String email = "mock@email.com";
+
+    when(authService.recoverEmail(code)).thenReturn(null);
+
+    boolean result = authService.activateUser(code, email);
+
+    assertFalse(result);
+    verify(authService, times(1)).recoverEmail(code);
+  }
+
+  @Test
+  void shouldReturnFalseWhenActivatingUserIfRecoveredEmailIsDifferent() {
+    int code = 1234;
+    String requestedEmail = "mock@email.com";
+    String recoveredEmail = "other@email.com";
+
+    when(authService.recoverEmail(code)).thenReturn(recoveredEmail);
+
+    boolean result = authService.activateUser(code, requestedEmail);
+
+    assertFalse(result);
+    verify(authService, times(1)).recoverEmail(code);
+  }
+
+  @Test
+  void shouldReturnTrueWhenActivatingUserIfEmailAndCodeAreValid() {
+    int code = 1234;
+    String email = "mock@email.com";
+
+    when(authService.recoverEmail(code)).thenReturn(email);
+    when(userService.activateUser(email)).thenReturn(true);
+
+    boolean result = authService.activateUser(code, email);
+
+    assertTrue(result);
+    verify(authService, times(1)).recoverEmail(code);
+    verify(userService, times(1)).activateUser(email);
+  }
 }

@@ -87,7 +87,7 @@ public class AuthService {
   }
 
   public Boolean activateUser(Integer code, String email) {
-    String recoverEmail = recoverCode(code);
+    String recoverEmail = recoverEmail(code);
     if(recoverEmail == null) {
       return false;
     }
@@ -99,14 +99,14 @@ public class AuthService {
 
   protected Boolean saveCode(Integer code, String email) {
     Cache cache = cacheManager.getCache("EmailVerificationCodes");
-    if(recoverCode(code) == null && cache != null){
+    if(recoverEmail(code) == null && cache != null){
       cache.put(code, email);
       return true;
     }
     return false;
   }
 
-  protected String recoverCode(Integer code) {
+  protected String recoverEmail(Integer code) {
     Cache cache = cacheManager.getCache("EmailVerificationCodes");
     if (cache == null) {
       return null;
