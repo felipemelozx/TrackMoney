@@ -9,18 +9,24 @@ import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
+import org.mockito.Spy;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class RestExceptionHandlerTest {
-
+  @Spy
   private final RestExceptionHandler restExceptionHandler = new RestExceptionHandler();
 
 
@@ -167,5 +173,33 @@ class RestExceptionHandlerTest {
     CustomFieldError error = apiResponse.getErrors().get(0);
     assertEquals("Budgets", error.getField());
     assertEquals("Budgets not found.", error.getMessage());
+  }
+
+  @Test
+  void shouldReturnBadRequestResponseWithErrors() {
+    HandlerMethodValidationException ex = mock(HandlerMethodValidationException.class);
+
+    FieldError fieldError = new FieldError("user", "email", "must not be null");
+    ObjectError globalError = new ObjectError("user", "invalid user data");
+    List<? extends MessageSourceResolvable> mocklist = List.of(fieldError, globalError);
+    doReturn(mocklist).when(ex).getAllErrors();
+    // when
+    ResponseEntity<ApiResponse<List<CustomFieldError>>> response =
+        restExceptionHandler.handlePathVariableValidationExceptions(ex);
+
+    // then
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+
+    List<CustomFieldError> errors = response.getBody().getErrors();
+    assertEquals(2, errors.size());
+
+    CustomFieldError firstError = errors.get(0);
+    assertEquals("email", firstError.getField());
+    assertEquals("must not be null", firstError.getMessage());
+
+    CustomFieldError secondError = errors.get(1);
+    assertEquals("Code", secondError.getField());
+    assertEquals("invalid user data", secondError.getMessage());
   }
 }
