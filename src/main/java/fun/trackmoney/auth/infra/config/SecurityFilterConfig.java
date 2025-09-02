@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 public class SecurityFilterConfig extends OncePerRequestFilter {
@@ -29,15 +29,27 @@ public class SecurityFilterConfig extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
-    var token = this.recoverToken(request);
-    var login = tokenService.validateToken(token);
 
-    if ( login != null ) {
-      UserEntity user = userRepository.findByEmail(login).orElseThrow(() -> new RuntimeException("User Not Found"));
-      var authorities = Collections.singletonList(new SimpleGrantedAuthority("USER_UNVERIFIED"));
+    String token = this.recoverToken(request);
+    if (token == null) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
+    String email = tokenService.extractEmail(token);
+    String role = tokenService.extractRole(token);
+
+    if (email != null) {
+      UserEntity user = userRepository.findByEmail(email)
+          .orElseThrow(() -> new RuntimeException("User Not Found"));
+
+
+      List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
+
       var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
       SecurityContextHolder.getContext().setAuthentication(authentication);
     }
+
     filterChain.doFilter(request, response);
   }
 

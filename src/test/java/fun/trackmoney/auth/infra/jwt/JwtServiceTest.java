@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Date;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class JwtServiceTest {
 
   @InjectMocks
+  @Spy
   private JwtService jwtService;
 
   private final String secretKey = "testesecretkey123";
@@ -43,14 +45,14 @@ class JwtServiceTest {
   void shouldReturnSubjectWhenTokenIsValid() {
     String email = "test@example.com";
     String token = jwtService.generateAccessToken(email);
-    String subject = jwtService.validateToken(token);
+    String subject = jwtService.extractEmail(token);
     assertEquals(email, subject);
   }
 
   @Test
   void shouldReturnNullWhenTokenIsInvalid() {
     String invalidToken = "invalid.jwt.token";
-    String subject = jwtService.validateToken(invalidToken);
+    String subject = jwtService.extractEmail(invalidToken);
     assertNull(subject);
   }
 
@@ -107,5 +109,51 @@ class JwtServiceTest {
     ReflectionTestUtils.setField(jwtService, "secret", null);
     String email = "fail@example.com";
     assertThrows(JWTCreationException.class, () -> jwtService.generateVerificationToken(email));
+  }
+
+  @Test
+  void shouldReturnRolesWhenTokenIsValid() {
+    String email = "roles@example.com";
+    String token = jwtService.generateAccessToken(email);
+    String role = jwtService.extractRole(token);
+    assertNotNull(role);
+    assertEquals("USER_ROLES", role);
+  }
+
+  @Test
+  void shouldReturnNullWhenExtractRolesWithInvalidToken() {
+    String invalidToken = "invalid.token.here";
+    String roles = jwtService.extractRole(invalidToken);
+    assertNull(roles);
+  }
+
+  @Test
+  void shouldReturnTrueForAccessToken() {
+    String email = "access@example.com";
+    String token = jwtService.generateAccessToken(email);
+    assertTrue(jwtService.isAccessToken(token));
+    assertFalse(jwtService.isRefreshToken(token));
+  }
+
+  @Test
+  void shouldReturnTrueForRefreshToken() {
+    String email = "refresh@example.com";
+    String token = jwtService.generateRefreshToken(email);
+    assertTrue(jwtService.isRefreshToken(token));
+    assertFalse(jwtService.isAccessToken(token));
+  }
+
+  @Test
+  void shouldReturnFalseForInvalidTokenTypes() {
+    String invalidToken = "invalid.jwt.token";
+    assertFalse(jwtService.isAccessToken(invalidToken));
+    assertFalse(jwtService.isRefreshToken(invalidToken));
+  }
+
+  @Test
+  void validateTokenShouldReturnNullForInvalidToken() {
+    String invalidToken = "this.is.not.a.jwt";
+    String decoded = ReflectionTestUtils.invokeMethod(jwtService, "validateToken", invalidToken);
+    assertNull(decoded);
   }
 }
