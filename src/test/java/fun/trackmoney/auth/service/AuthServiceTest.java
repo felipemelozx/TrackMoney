@@ -3,6 +3,9 @@ package fun.trackmoney.auth.service;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
 import fun.trackmoney.auth.dto.internal.login.LoginFailure;
 import fun.trackmoney.auth.dto.internal.login.LoginResult;
 import fun.trackmoney.auth.dto.internal.login.LoginSuccess;
@@ -39,6 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -333,5 +338,63 @@ class AuthServiceTest {
     assertTrue(result);
     verify(authService, times(1)).recoverEmail(code);
     verify(userService, times(1)).activateUser(email);
+  }
+
+  @Test
+  void shouldReturnFailureWhenUserIsAlreadyActive() {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", true);
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailFailure.class, result);
+    VerificationEmailFailure failure = (VerificationEmailFailure) result;
+    assertEquals(AuthError.USER_IS_VERIFIED, failure.error());
+  }
+
+  @Test
+  void shouldReturnFailureWhenEmailSendingThrowsException() throws Exception {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
+    int code = 1234;
+    doReturn(true).when(authService).saveCode(code, user.getEmail());
+    doReturn(code).when(authService).generateVerificationCode();
+    doThrow(new MessagingException("fail")).when(emailService)
+        .sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailFailure.class, result);
+    VerificationEmailFailure failure = (VerificationEmailFailure) result;
+    assertEquals(AuthError.ERROR_SENDING_EMAIL, failure.error());
+  }
+
+  @Test
+  void shouldResendVerificationEmailSuccessfully() throws Exception {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
+
+    doReturn(true).when(authService).saveCode(anyInt(), eq(user.getEmail()));
+    doNothing().when(emailService)
+        .sendEmailToVerifyEmail(eq(user.getEmail()), eq(user.getName()), anyInt());
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailSuccess.class, result);
+  }
+
+  @Test
+  void shouldRetryUntilCodeIsSavedSuccessfully() throws Exception {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
+
+    when(authService.saveCode(anyInt(), eq(user.getEmail())))
+        .thenReturn(false)
+        .thenReturn(true);
+
+    doNothing().when(emailService)
+        .sendEmailToVerifyEmail(eq(user.getEmail()), eq(user.getName()), anyInt());
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailSuccess.class, result);
+
+    verify(authService, times(2)).saveCode(anyInt(), eq(user.getEmail()));
   }
 }
