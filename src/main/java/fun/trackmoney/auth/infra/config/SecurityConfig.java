@@ -18,12 +18,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 
-  private final CustomUserDetailsService userDetailsService;
-
   private final SecurityFilterConfig securityFilter;
 
-  public SecurityConfig(CustomUserDetailsService userDetailsService, SecurityFilterConfig securityFilter) {
-    this.userDetailsService = userDetailsService;
+  public SecurityConfig(SecurityFilterConfig securityFilter) {
     this.securityFilter = securityFilter;
   }
 
