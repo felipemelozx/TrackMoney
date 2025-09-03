@@ -3,6 +3,8 @@ package fun.trackmoney.auth.controller;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
 import fun.trackmoney.auth.dto.internal.login.LoginFailure;
 import fun.trackmoney.auth.dto.internal.login.LoginResult;
 import fun.trackmoney.auth.dto.internal.login.LoginSuccess;
@@ -12,6 +14,7 @@ import fun.trackmoney.auth.service.AuthService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
@@ -40,6 +43,8 @@ class AuthControllerTest {
   Authentication authentication;
   @Mock
   SecurityContext securityContext;
+  @Mock
+  AuthUtils authUtils;
 
   @Test
   void shouldRegisterUserSuccessfullyWhenUserRequestIsValid() {
@@ -189,5 +194,58 @@ class AuthControllerTest {
     ApiResponse<Void> body = response.getBody();
     assertNotNull(body);
     assertEquals("User not verification", body.getMessage());
+  }
+
+  @Test
+  void shouldResendVerificationEmailSuccessfully() {
+    UserEntity user = new UserEntity(null, "test", "mock@email.com", "mockPass", false);
+
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(authService.resendVerificationEmail(user)).thenReturn(new VerificationEmailSuccess());
+
+    ResponseEntity<ApiResponse<Void>> response = authController.resendVerificationEmail();
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertTrue(body.isSuccess());
+    assertEquals("Email resend to " + user.getEmail(), body.getMessage());
+    assertTrue(body.getErrors().isEmpty());
+  }
+
+  @Test
+  void shouldReturnErrorWhenUserIsAlreadyVerified() {
+    UserEntity user = new UserEntity(null, "test", "mock@email.com", "mockPass", true);
+
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(authService.resendVerificationEmail(user))
+        .thenReturn(new VerificationEmailFailure(AuthError.USER_IS_VERIFIED));
+
+    ResponseEntity<ApiResponse<Void>> response = authController.resendVerificationEmail();
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertFalse(body.isSuccess());
+    assertEquals("Email not send", body.getMessage());
+    assertEquals(AuthError.USER_IS_VERIFIED.getMessage(), body.getErrors().get(0).getMessage());
+  }
+
+  @Test
+  void shouldReturnGenericErrorWhenResendFails() {
+    UserEntity user = new UserEntity(null, "test", "mock@email.com", "mockPass", false);
+
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(authService.resendVerificationEmail(user))
+        .thenReturn(new VerificationEmailFailure(AuthError.EMAIL_NOT_VERIFIED));
+
+    ResponseEntity<ApiResponse<Void>> response = authController.resendVerificationEmail();
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertFalse(body.isSuccess());
+    assertEquals("Error sending email", body.getMessage());
+    assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), body.getErrors().get(0).getMessage());
   }
 }
