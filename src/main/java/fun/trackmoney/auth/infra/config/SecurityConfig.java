@@ -18,12 +18,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 
-  private final CustomUserDetailsService userDetailsService;
-
   private final SecurityFilterConfig securityFilter;
 
-  public SecurityConfig(CustomUserDetailsService userDetailsService, SecurityFilterConfig securityFilter) {
-    this.userDetailsService = userDetailsService;
+  public SecurityConfig(SecurityFilterConfig securityFilter) {
     this.securityFilter = securityFilter;
   }
 
@@ -38,7 +35,8 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
             .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/verify-email/**").hasRole("USER_UNVERIFIED")
+            .requestMatchers(HttpMethod.POST, "/verify-email/**").hasRole("USER_UNVERIFIED")
+            .requestMatchers(HttpMethod.POST, "/resend-verification-email").hasRole("USER_UNVERIFIED")
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .anyRequest().authenticated()
         )

@@ -1,4 +1,4 @@
-package fun.trackmoney.auth.dto.internal;
+package fun.trackmoney.auth.dto.internal.register;
 
 import fun.trackmoney.user.dtos.UserResponseDTO;
 
