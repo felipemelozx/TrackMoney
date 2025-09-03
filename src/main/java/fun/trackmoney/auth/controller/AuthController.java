@@ -3,16 +3,20 @@ package fun.trackmoney.auth.controller;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.LoginFailure;
-import fun.trackmoney.auth.dto.internal.LoginResult;
-import fun.trackmoney.auth.dto.internal.LoginSuccess;
-import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
-import fun.trackmoney.auth.dto.internal.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
+import fun.trackmoney.auth.dto.internal.login.LoginFailure;
+import fun.trackmoney.auth.dto.internal.login.LoginResult;
+import fun.trackmoney.auth.dto.internal.login.LoginSuccess;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.auth.service.AuthService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -35,9 +39,11 @@ import java.util.List;
 public class AuthController {
 
   private final AuthService authService;
+  private final AuthUtils authUtils;
 
-  public AuthController(AuthService authService) {
+  public AuthController(AuthService authService, AuthUtils authUtils) {
     this.authService = authService;
+    this.authUtils = authUtils;
   }
 
   @PostMapping("/register")
@@ -95,7 +101,7 @@ public class AuthController {
     );
   }
 
-  @GetMapping("/verify-email/{code}")
+  @PostMapping("/verify-email/{code}")
   public ResponseEntity<ApiResponse<Void>> verifyEmail(@PathVariable
                                                        @Min(value = 1000,
                                                            message = "he code must be exactly 4 digits long.")
@@ -117,6 +123,36 @@ public class AuthController {
         ApiResponse.<Void>failure()
             .message("User not verification")
             .errors(new CustomFieldError("Code", "Code is invalid or expired"))
+            .build()
+    );
+  }
+
+  @PostMapping("/resend-verification-email")
+  public ResponseEntity<ApiResponse<Void>> resendVerificationEmail(){
+    UserEntity user = authUtils.getCurrentUser();
+    VerificationEmailResult response = authService.resendVerificationEmail(user);
+
+    if(response instanceof VerificationEmailSuccess) {
+      return ResponseEntity.ok().body(
+          ApiResponse.<Void>successWithNoContent()
+              .message("Email resend to " + user.getEmail())
+              .build()
+      );
+    }
+    VerificationEmailFailure failure = (VerificationEmailFailure) response;
+    if(failure.error().getMessage().equals(AuthError.USER_IS_VERIFIED.getMessage())) {
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<Void>failure()
+              .message("Email not send")
+              .errors(new CustomFieldError("Email", failure.error().getMessage()))
+              .build()
+      );
+    }
+
+    return ResponseEntity.badRequest().body(
+        ApiResponse.<Void>failure()
+            .message("Error sending email")
+            .errors(new CustomFieldError("Email", failure.error().getMessage()))
             .build()
     );
   }

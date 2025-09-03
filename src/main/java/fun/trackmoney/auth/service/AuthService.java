@@ -3,11 +3,14 @@ package fun.trackmoney.auth.service;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.LoginFailure;
-import fun.trackmoney.auth.dto.internal.LoginResult;
-import fun.trackmoney.auth.dto.internal.LoginSuccess;
-import fun.trackmoney.auth.dto.internal.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
+import fun.trackmoney.auth.dto.internal.login.LoginFailure;
+import fun.trackmoney.auth.dto.internal.login.LoginResult;
+import fun.trackmoney.auth.dto.internal.login.LoginSuccess;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
@@ -95,6 +98,26 @@ public class AuthService {
       return false;
     }
     return userService.activateUser(email);
+  }
+
+  public VerificationEmailResult resendVerificationEmail(UserEntity user) {
+    if(user.isActive()) {
+      return new VerificationEmailFailure(AuthError.USER_IS_VERIFIED);
+    }
+    int code;
+    boolean codeIsSaved;
+    do {
+      code = generateVerificationCode();
+      codeIsSaved = saveCode(code, user.getEmail());
+    } while (!codeIsSaved);
+    try{
+      emailService.sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
+    } catch (MessagingException ignored) {
+      // TODO: Implements a log system.
+      System.out.println("Email not send.");
+      return new VerificationEmailFailure(AuthError.ERROR_SENDING_EMAIL);
+    }
+    return new VerificationEmailSuccess();
   }
 
   protected Boolean saveCode(Integer code, String email) {
