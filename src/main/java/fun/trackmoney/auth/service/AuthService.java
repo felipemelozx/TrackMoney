@@ -73,14 +73,19 @@ public class AuthService {
       return new LoginFailure(AuthError.USER_NOT_REGISTER);
     }
     UserEntity user = optionalUser.get();
-    if(!user.isActive()){
-      String verificationToken = jwtService.generateVerificationToken(user.getEmail());
-      LoginResponseDTO tokens = new LoginResponseDTO(verificationToken, null);
-      return new LoginSuccess(tokens);
-    }
+
     if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
       return new LoginFailure(AuthError.INVALID_CREDENTIALS);
     }
+
+    if(!user.isActive()){
+      String verificationToken = jwtService.generateVerificationToken(user.getEmail());
+      String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+
+      LoginResponseDTO tokens = new LoginResponseDTO(verificationToken, refreshToken);
+      return new LoginSuccess(tokens);
+    }
+
     String accessToken = jwtService.generateAccessToken(user.getEmail());
     String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
