@@ -289,7 +289,7 @@ class AuthServiceTest {
 
     when(jwtService.generateVerificationToken(unverifiedUser.getEmail())).thenReturn(verificationToken);
     when(userService.findUserByEmail(loginRequest.email())).thenReturn(Optional.of(unverifiedUser));
-
+    when(passwordEncoder.matches(loginRequest.password(), unverifiedUser.getPassword())).thenReturn(true);
     LoginResult result = authService.login(loginRequest);
 
     assertInstanceOf(LoginSuccess.class, result);
