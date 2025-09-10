@@ -1,4 +1,4 @@
-package fun.trackmoney.config.redis;
+package fun.trackmoney.redis;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

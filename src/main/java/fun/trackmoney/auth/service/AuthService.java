@@ -13,12 +13,11 @@ import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
+import fun.trackmoney.redis.CacheManagerService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,19 +31,18 @@ public class AuthService {
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final EmailService emailService;
-  private final CacheManager cacheManager;
+  private final CacheManagerService cacheManagerService;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   public AuthService(UserService userService,
                      PasswordEncoder passwordEncoder,
                      JwtService jwtservice,
-                     EmailService emailService,
-                     CacheManager cacheManager) {
+                     EmailService emailService, CacheManagerService cacheManagerService) {
     this.userService = userService;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtservice;
     this.emailService = emailService;
-    this.cacheManager = cacheManager;
+    this.cacheManagerService = cacheManagerService;
   }
 
   public UserRegisterResult register(UserRequestDTO userDto)  {
@@ -95,13 +93,14 @@ public class AuthService {
   }
 
   public Boolean activateUser(Integer code, String email) {
-    String recoverEmail = recoverEmail(code);
+    String recoverEmail = getEmailByCode(code);
     if(recoverEmail == null) {
       return false;
     }
     if(!recoverEmail.equals(email)) {
       return false;
     }
+    removeCode(code);
     return userService.activateUser(email);
   }
 
@@ -126,21 +125,15 @@ public class AuthService {
   }
 
   protected Boolean saveCode(Integer code, String email) {
-    Cache cache = cacheManager.getCache("EmailVerificationCodes");
-    if(recoverEmail(code) == null && cache != null){
-      cache.put(code, email);
-      return true;
-    }
-    return false;
+    return cacheManagerService.put("EmailVerificationCodes", code, email);
   }
 
-  protected String recoverEmail(Integer code) {
-    Cache cache = cacheManager.getCache("EmailVerificationCodes");
-    if (cache == null) {
-      return null;
-    }
-    Cache.ValueWrapper wrapper = cache.get(code);
-    return wrapper != null ? (String) wrapper.get() : null;
+  protected String getEmailByCode(Integer code) {
+    return cacheManagerService.get("EmailVerificationCodes", code, String.class);
+  }
+
+  protected void removeCode(Integer code) {
+    cacheManagerService.evict("EmailVerificationCodes", code);
   }
 
   protected Integer generateVerificationCode() {
