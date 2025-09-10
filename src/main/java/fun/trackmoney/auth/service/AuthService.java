@@ -37,7 +37,8 @@ public class AuthService {
   public AuthService(UserService userService,
                      PasswordEncoder passwordEncoder,
                      JwtService jwtservice,
-                     EmailService emailService, CacheManagerService cacheManagerService) {
+                     EmailService emailService,
+                     CacheManagerService cacheManagerService) {
     this.userService = userService;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtservice;
