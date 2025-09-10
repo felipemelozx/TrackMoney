@@ -14,6 +14,7 @@ import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
+import fun.trackmoney.redis.CacheManagerService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
@@ -25,8 +26,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.ByteArrayOutputStream;
@@ -70,17 +69,13 @@ class AuthServiceTest {
   private EmailService emailService;
 
   @Mock
-  private Cache cache;
-
-  @Mock
-  private Cache.ValueWrapper valueWrapper;
-
-  @Mock
-  private CacheManager cacheManager;
+  private CacheManagerService cacheManagerService;
 
   @InjectMocks
   @Spy
   private AuthService authService;
+
+  private static final String CACHE_NAME = "EmailVerificationCodes";
 
   @Test
   void shouldRegisterUserAndSendVerificationEmail_whenUserRequestIsValid() throws MessagingException {
@@ -181,28 +176,10 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldReturnFalse_whenCacheIsNotAvailable() {
-    int code = 1234;
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(null);
-    Boolean result = authService.saveCode(code, "someEmail@com.br");
-    assertFalse(result);
-  }
-
-  @Test
-  void shouldReturnTrue_whenCodeIsSavedInCache() {
-    int code = 1234;
-    String emailMock = "someEmail@com.br";
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-    Boolean result = authService.saveCode(code, emailMock);
-    assertTrue(result);
-  }
-
-  @Test
   void shouldReturnNull_whenVerificationCodeNotFoundInCache() {
     int code = 1234;
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-    when(cache.get(code)).thenReturn(null);
-    String result = authService.recoverEmail(code);
+    when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(null);
+    String result = authService.getEmailByCode(code);
     assertNull(result);
   }
 
@@ -210,22 +187,9 @@ class AuthServiceTest {
   void shouldReturnEmail_whenVerificationCodeExistsInCache() {
     int code = 1234;
     String mockEmail = "mock@email.com";
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-    when(cache.get(code)).thenReturn(valueWrapper);
-    when(valueWrapper.get()).thenReturn(mockEmail);
-    String result = authService.recoverEmail(code);
+    when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(mockEmail);
+    String result = authService.getEmailByCode(code);
     assertEquals(mockEmail, result);
-  }
-
-  @Test
-  void shouldReturnFalseWhenRecoverCodeReturnEmail(){
-    int code = 1234;
-
-    when(authService.recoverEmail(code)).thenReturn("fakeEmail@com.br");
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-
-    boolean response = authService.saveCode(code, "fake");
-    assertFalse(response);
   }
 
   @Test
@@ -303,12 +267,12 @@ class AuthServiceTest {
     int code = 1234;
     String email = "mock@email.com";
 
-    when(authService.recoverEmail(code)).thenReturn(null);
+    when(authService.getEmailByCode(code)).thenReturn(null);
 
     boolean result = authService.activateUser(code, email);
 
     assertFalse(result);
-    verify(authService, times(1)).recoverEmail(code);
+    verify(authService, times(1)).getEmailByCode(code);
   }
 
   @Test
@@ -317,12 +281,12 @@ class AuthServiceTest {
     String requestedEmail = "mock@email.com";
     String recoveredEmail = "other@email.com";
 
-    when(authService.recoverEmail(code)).thenReturn(recoveredEmail);
+    when(authService.getEmailByCode(code)).thenReturn(recoveredEmail);
 
     boolean result = authService.activateUser(code, requestedEmail);
 
     assertFalse(result);
-    verify(authService, times(1)).recoverEmail(code);
+    verify(authService, times(1)).getEmailByCode(code);
   }
 
   @Test
@@ -330,13 +294,13 @@ class AuthServiceTest {
     int code = 1234;
     String email = "mock@email.com";
 
-    when(authService.recoverEmail(code)).thenReturn(email);
+    when(authService.getEmailByCode(code)).thenReturn(email);
     when(userService.activateUser(email)).thenReturn(true);
 
     boolean result = authService.activateUser(code, email);
 
     assertTrue(result);
-    verify(authService, times(1)).recoverEmail(code);
+    verify(authService, times(1)).getEmailByCode(code);
     verify(userService, times(1)).activateUser(email);
   }
 
