@@ -38,4 +38,22 @@ public class EmailService {
 
     javaMailSender.send(mimeMessage);
   }
+
+  @Async
+  public void sendEmailToResetPassword(String to, String name, String link) throws MessagingException {
+    MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+    MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true);
+
+    messageHelper.setTo(to);
+    messageHelper.setSubject("Confirm your e-mail");
+
+    Context context = new Context();
+    context.setVariable("resetLink", link);
+    context.setVariable("userName", name);
+
+    String htmlContent = templateEngine.process("email-template-reset-password", context);
+    messageHelper.setText(htmlContent, true);
+
+    javaMailSender.send(mimeMessage);
+  }
 }
