@@ -37,6 +37,8 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/verify-email/**").hasRole("USER_UNVERIFIED")
             .requestMatchers(HttpMethod.POST, "/resend-verification-email").hasRole("USER_UNVERIFIED")
+            .requestMatchers(HttpMethod.POST, "/forgot-password/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/reset-password").hasRole("RESET_PASSWORD")
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .anyRequest().authenticated()
         )
