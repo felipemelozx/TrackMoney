@@ -3,6 +3,9 @@ package fun.trackmoney.auth.service;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordSuccess;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
@@ -18,6 +21,7 @@ import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +31,8 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
+  @Value("${front.url}")
+  private String frontUrl;
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
@@ -123,6 +129,22 @@ public class AuthService {
       return new VerificationEmailFailure(AuthError.ERROR_SENDING_EMAIL);
     }
     return new VerificationEmailSuccess();
+  }
+
+  public ForgotPasswordResult forgotPassword(String email) {
+    UserEntity optionalUser = userService.findUserByEmail(email).orElse(null);
+    if(optionalUser == null) {
+      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    }
+    String jwtCode = jwtService.generateResetPasswordToken(email);
+    String link = frontUrl + "/reset-password/" +  jwtCode;
+    try {
+      emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
+    } catch (MessagingException exception) {
+      //TODO: logger
+      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    }
+    return new ForgotPasswordSuccess();
   }
 
   protected Boolean saveCode(Integer code, String email) {

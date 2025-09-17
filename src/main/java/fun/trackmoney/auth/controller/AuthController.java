@@ -3,6 +3,9 @@ package fun.trackmoney.auth.controller;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordSuccess;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
@@ -19,6 +22,7 @@ import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -155,6 +159,35 @@ public class AuthController {
             .errors(new CustomFieldError("Email", failure.error().getMessage()))
             .build()
     );
+  }
+
+  @PostMapping("reset-password")
+  public ResponseEntity<ApiResponse<?>> resetPassword(@RequestBody String newPassword) {
+    return ResponseEntity.ok().build();
+  }
+
+  @PostMapping("forgot-password/{email}")
+  public ResponseEntity<ApiResponse<Void>> forgotPassword(@PathVariable String email) throws MessagingException {
+    ForgotPasswordResult result = authService.forgotPassword(email);
+    if(result instanceof ForgotPasswordSuccess){
+      return ResponseEntity.ok().body(
+          ApiResponse.<Void>successWithNoContent().build()
+      );
+    }
+    ForgotPasswordFailure failure = (ForgotPasswordFailure) result;
+
+    if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<Void>failure()
+              .errors(new CustomFieldError("Email", "This email: " + email + " is not register"))
+              .build());
+    }
+
+    return ResponseEntity.internalServerError()
+        .body(
+            ApiResponse.<Void>failure()
+                .errors(new CustomFieldError("Email", "Error sending email"))
+                .build());
   }
 
   @GetMapping("/verify")
