@@ -3,6 +3,9 @@ package fun.trackmoney.auth.service;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordSuccess;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
@@ -20,6 +23,7 @@ import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,6 +31,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -74,6 +79,11 @@ class AuthServiceTest {
   @InjectMocks
   @Spy
   private AuthService authService;
+
+  @BeforeEach
+  void setupFrontUrl() {
+    ReflectionTestUtils.setField(authService, "frontUrl", "http://localhost");
+  }
 
   private static final String CACHE_NAME = "EmailVerificationCodes";
 
@@ -360,5 +370,57 @@ class AuthServiceTest {
     assertInstanceOf(VerificationEmailSuccess.class, result);
 
     verify(authService, times(2)).saveCode(anyInt(), eq(user.getEmail()));
+  }
+
+  @Test
+  void shouldReturnFailure_whenUserIsNotRegistered() throws MessagingException {
+    String email = "notfound@example.com";
+    when(userService.findUserByEmail(email)).thenReturn(Optional.empty());
+
+    ForgotPasswordResult result = authService.forgotPassword(email);
+
+    assertInstanceOf(ForgotPasswordFailure.class, result);
+    ForgotPasswordFailure failure = (ForgotPasswordFailure) result;
+    assertEquals(AuthError.USER_NOT_REGISTER, failure.error());
+    verify(jwtService, times(0)).generateResetPasswordToken(any());
+    verify(emailService, times(0)).sendEmailToResetPassword(any(), any(), any());
+  }
+
+  @Test
+  void shouldReturnFailure_whenEmailSendingThrowsException() throws Exception {
+    String email = "test@example.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
+    String jwtCode = "mock-reset-token";
+    String expectedLink = "http://localhost/reset-password/" + jwtCode;
+
+    when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
+    when(jwtService.generateResetPasswordToken(email)).thenReturn(jwtCode);
+    doThrow(new MessagingException("fail"))
+        .when(emailService).sendEmailToResetPassword(email, user.getName(), expectedLink);
+
+    ForgotPasswordResult result = authService.forgotPassword(email);
+
+    assertInstanceOf(ForgotPasswordFailure.class, result);
+    ForgotPasswordFailure failure = (ForgotPasswordFailure) result;
+    assertEquals(AuthError.ERROR_SENDING_EMAIL, failure.error());
+    verify(emailService, times(1)).sendEmailToResetPassword(email, user.getName(), expectedLink);
+  }
+
+  @Test
+  void shouldReturnSuccess_whenEmailIsSentSuccessfully() throws Exception {
+    String email = "test@example.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
+    String jwtCode = "mock-reset-token";
+    String expectedLink = "http://localhost/reset-password/" + jwtCode;
+
+    when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
+    when(jwtService.generateResetPasswordToken(email)).thenReturn(jwtCode);
+    doNothing().when(emailService).sendEmailToResetPassword(email, user.getName(), expectedLink);
+
+    ForgotPasswordResult result = authService.forgotPassword(email);
+
+    assertInstanceOf(ForgotPasswordSuccess.class, result);
+    verify(emailService, times(1)).sendEmailToResetPassword(email, user.getName(), expectedLink);
+    verify(jwtService, times(1)).generateResetPasswordToken(email);
   }
 }
