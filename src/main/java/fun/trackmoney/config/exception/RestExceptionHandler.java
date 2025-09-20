@@ -54,7 +54,7 @@ public class RestExceptionHandler {
           if (error instanceof FieldError fieldError) {
             return new CustomFieldError(fieldError.getField(), fieldError.getDefaultMessage());
           } else {
-            return new CustomFieldError("Code", error.getDefaultMessage());
+            return new CustomFieldError("param", error.getDefaultMessage());
           }
         })
         .toList();
