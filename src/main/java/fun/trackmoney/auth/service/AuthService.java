@@ -22,6 +22,8 @@ import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -140,10 +142,24 @@ public class AuthService {
     String link = frontUrl + "/reset-password/" +  jwtCode;
     try {
       emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
-    } catch (MessagingException exception) {
-      //TODO: logger
+    } catch (MailAuthenticationException authEx) {
+      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    } catch (MailException mailEx) {
+      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    } catch (Exception ex) {
       return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
     }
+    return new ForgotPasswordSuccess();
+  }
+
+  public ForgotPasswordResult resetPassword(String email, String newPassword) {
+    UserEntity user = userService.findUserByEmail(email).orElse(null);
+    if(user == null) {
+      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    }
+    String password = passwordEncoder.encode(newPassword);
+    user.setPassword(password);
+    userService.update(user);
     return new ForgotPasswordSuccess();
   }
 

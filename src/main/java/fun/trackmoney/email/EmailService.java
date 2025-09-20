@@ -39,7 +39,6 @@ public class EmailService {
     javaMailSender.send(mimeMessage);
   }
 
-  @Async
   public void sendEmailToResetPassword(String to, String name, String link) throws MessagingException {
     MimeMessage mimeMessage = javaMailSender.createMimeMessage();
     MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true);

@@ -2,6 +2,7 @@ package fun.trackmoney.auth.controller;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.PasswordResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
@@ -21,8 +22,8 @@ import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
+import fun.trackmoney.utils.ValidPassword;
 import fun.trackmoney.utils.response.ApiResponse;
-import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -161,13 +162,34 @@ public class AuthController {
     );
   }
 
-  @PostMapping("reset-password")
-  public ResponseEntity<ApiResponse<?>> resetPassword(@RequestBody String newPassword) {
-    return ResponseEntity.ok().build();
+  @PostMapping("/reset-password/{newPassword}")
+  public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@PathVariable @ValidPassword String newPassword) {
+    UserEntity user = authUtils.getCurrentUser();
+    ForgotPasswordResult response = authService.resetPassword(user.getEmail(), newPassword);
+    if(response instanceof ForgotPasswordSuccess) {
+      return ResponseEntity.ok().body(
+          ApiResponse.<PasswordResponse>success()
+              .message("Password reset was successful")
+              .data(new PasswordResponse(user.getEmail()))
+              .build()
+      );
+    }
+    ForgotPasswordFailure failure = (ForgotPasswordFailure) response;
+    if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<PasswordResponse>failure()
+              .errors(new CustomFieldError("Email", "This email: " + user.getEmail() + " is not register"))
+              .build());
+    }
+
+    return ResponseEntity.badRequest().body(
+        ApiResponse.<PasswordResponse>failure()
+            .errors(new CustomFieldError("Internal", "Error sending email. Please try again later."))
+            .build());
   }
 
-  @PostMapping("forgot-password/{email}")
-  public ResponseEntity<ApiResponse<Void>> forgotPassword(@PathVariable String email) throws MessagingException {
+  @PostMapping("/forgot-password/{email}")
+  public ResponseEntity<ApiResponse<Void>> forgotPassword(@PathVariable String email) {
     ForgotPasswordResult result = authService.forgotPassword(email);
     if(result instanceof ForgotPasswordSuccess){
       return ResponseEntity.ok().body(
