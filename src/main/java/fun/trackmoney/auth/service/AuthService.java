@@ -22,8 +22,6 @@ import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailAuthenticationException;
-import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
