@@ -142,11 +142,7 @@ public class AuthService {
     String link = frontUrl + "/reset-password/" +  jwtCode;
     try {
       emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
-    } catch (MailAuthenticationException authEx) {
-      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
-    } catch (MailException mailEx) {
-      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
-    } catch (Exception ex) {
+    } catch (RuntimeException | MessagingException ex) {
       return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
     }
     return new ForgotPasswordSuccess();

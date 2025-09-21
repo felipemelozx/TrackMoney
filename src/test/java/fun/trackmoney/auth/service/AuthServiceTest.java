@@ -423,4 +423,34 @@ class AuthServiceTest {
     verify(emailService, times(1)).sendEmailToResetPassword(email, user.getName(), expectedLink);
     verify(jwtService, times(1)).generateResetPasswordToken(email);
   }
+
+  @Test
+  void shouldReturnSuccessWhenUpdatePassword() {
+    String mockEmail = "someEmail@email.com";
+    String newPassword = "somePassword";
+    UserEntity mockUser = new UserEntity(UUID.randomUUID(), "soma name", mockEmail, "oldPassword", true);
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.of(mockUser));
+    when(passwordEncoder.encode(newPassword)).thenReturn(newPassword);
+    doNothing().when(userService).update(any());
+
+    ForgotPasswordResult response = authService.resetPassword(mockEmail, newPassword);
+
+    assertInstanceOf(ForgotPasswordSuccess.class, response);
+    verify(userService, times(1)).update(any());
+    verify(userService, times(1)).findUserByEmail(mockEmail);
+  }
+
+  @Test
+  void shouldReturnFailureWhenUserNotFound() {
+    String mockEmail = "someEmail@email.com";
+    String newPassword = "somePassword";
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.empty());
+
+    ForgotPasswordResult response = authService.resetPassword(mockEmail, newPassword);
+    assertInstanceOf(ForgotPasswordFailure.class, response);
+    verify(userService, times(0)).update(any());
+    verify(userService, times(1)).findUserByEmail(mockEmail);
+  }
 }
