@@ -2,6 +2,7 @@ package fun.trackmoney.auth.controller;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.PasswordResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
@@ -20,7 +21,6 @@ import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
-import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -254,7 +254,7 @@ class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnOk_whenForgotPasswordSucceeds() throws MessagingException {
+  void shouldReturnOk_whenForgotPasswordSucceeds()   {
     String email = "test@email.com";
     ForgotPasswordResult result = new ForgotPasswordSuccess();
     when(authService.forgotPassword(email)).thenReturn(result);
@@ -269,7 +269,7 @@ class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnBadRequest_whenUserIsNotRegistered() throws MessagingException {
+  void shouldReturnBadRequest_whenUserIsNotRegistered()  {
     String email = "teste@email.com";
     ForgotPasswordResult failure = new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
     when(authService.forgotPassword(email)).thenReturn(failure);
@@ -285,7 +285,7 @@ class AuthControllerTest {
   }
 
   @Test
-  void shouldReturnInternalServerError_whenEmailSendingFails() throws MessagingException {
+  void shouldReturnInternalServerError_whenEmailSendingFails()  {
     String email = "teste@email.com";
     ForgotPasswordResult failure = new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
     when(authService.forgotPassword(email)).thenReturn(failure);
@@ -298,5 +298,71 @@ class AuthControllerTest {
     assertFalse(body.getErrors().isEmpty());
     assertTrue(body.getErrors().stream()
         .anyMatch(e -> e.getMessage().equals("Error sending email")));
+  }
+
+  @Test
+  void shouldReturnSuccessfullyWhenNewPasswordIsValid() {
+    UUID uuid = UUID.randomUUID();
+    String newPassword = "newPassword";
+    UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
+    ForgotPasswordResult result = new ForgotPasswordSuccess();
+    when(authUtils.getCurrentUser()).thenReturn(mockUser);
+    when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
+
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    ApiResponse<PasswordResponse> body = response.getBody();
+    assertEquals("Password reset was successful", body.getMessage());
+    assertTrue(body.isSuccess());
+    assertEquals(body.getData().email(), mockUser.getEmail());
+    assertTrue(body.getErrors().isEmpty());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenUserIsNotRegistered() {
+    UUID uuid = UUID.randomUUID();
+    String newPassword = "newPassword";
+    UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
+
+    ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    when(authUtils.getCurrentUser()).thenReturn(mockUser);
+    when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
+
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    ApiResponse<PasswordResponse> body = response.getBody();
+    assertFalse(body.isSuccess());
+    assertNull(body.getData());
+    assertEquals(1, body.getErrors().size());
+    CustomFieldError error = body.getErrors().get(0);
+    assertEquals("Email", error.getField());
+    assertEquals("This email: " + mockUser.getEmail() + " is not register", error.getMessage());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenInternalErrorOccurs() {
+    UUID uuid = UUID.randomUUID();
+    String newPassword = "newPassword";
+    UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
+
+    ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    when(authUtils.getCurrentUser()).thenReturn(mockUser);
+    when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
+
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    ApiResponse<PasswordResponse> body = response.getBody();
+    assertFalse(body.isSuccess());
+    assertNull(body.getData());
+    assertEquals(1, body.getErrors().size());
+    CustomFieldError error = body.getErrors().get(0);
+    assertEquals("Internal", error.getField());
+    assertEquals("Error sending email. Please try again later.", error.getMessage());
   }
 }
