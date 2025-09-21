@@ -156,4 +156,31 @@ class JwtServiceTest {
     String decoded = ReflectionTestUtils.invokeMethod(jwtService, "validateToken", invalidToken);
     assertNull(decoded);
   }
+  @Test
+  void shouldGenerateResetPasswordTokenWhenEmailIsValid() {
+    String email = "reset@example.com";
+    String token = jwtService.generateResetPasswordToken(email);
+    assertNotNull(token);
+
+    DecodedJWT decoded = JWT.decode(token);
+    assertEquals(email, decoded.getSubject());
+    assertEquals("RESET_PASSWORD", decoded.getClaim("roles").asString());
+    assertEquals("ACCESS", decoded.getClaim("token_type").asString());
+    assertTrue(decoded.getExpiresAt().after(new Date()));
+  }
+
+  @Test
+  void shouldThrowJWTCreationExceptionWhenGeneratingResetPasswordTokenAndSecretIsNull() {
+    ReflectionTestUtils.setField(jwtService, "secret", null);
+    String email = "fail@example.com";
+    assertThrows(JWTCreationException.class, () -> jwtService.generateResetPasswordToken(email));
+  }
+
+  @Test
+  void shouldThrowJWTCreationExceptionWhenGeneratingResetPasswordTokenAndSecretIsEmpty() {
+    ReflectionTestUtils.setField(jwtService, "secret", "");
+    String email = "fail@example.com";
+    assertThrows(JWTCreationException.class, () -> jwtService.generateResetPasswordToken(email));
+    ReflectionTestUtils.setField(jwtService, "secret", secretKey);
+  }
 }

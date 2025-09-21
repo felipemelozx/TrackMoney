@@ -74,4 +74,8 @@ public class UserService {
   public Optional<UserEntity> findUserById(UUID userId) {
     return userRepository.findById(userId);
   }
+
+  public void update(UserEntity user) {
+    userRepository.save(user);
+  }
 }

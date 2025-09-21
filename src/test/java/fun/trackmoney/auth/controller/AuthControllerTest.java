@@ -2,7 +2,11 @@ package fun.trackmoney.auth.controller;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.PasswordResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordSuccess;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
 import fun.trackmoney.auth.dto.internal.login.LoginFailure;
@@ -48,7 +52,7 @@ class AuthControllerTest {
 
   @Test
   void shouldRegisterUserSuccessfullyWhenUserRequestIsValid() {
-    UserRequestDTO userRequest = new UserRequestDTO("John","john@example.com", "123");
+    UserRequestDTO userRequest = new UserRequestDTO("John", "john@example.com", "123");
     UserResponseDTO userResponse = new UserResponseDTO(UUID.randomUUID(), "John", "john@example.com");
     UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(userResponse);
 
@@ -247,5 +251,118 @@ class AuthControllerTest {
     assertFalse(body.isSuccess());
     assertEquals("Error sending email", body.getMessage());
     assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), body.getErrors().get(0).getMessage());
+  }
+
+  @Test
+  void shouldReturnOk_whenForgotPasswordSucceeds()   {
+    String email = "test@email.com";
+    ForgotPasswordResult result = new ForgotPasswordSuccess();
+    when(authService.forgotPassword(email)).thenReturn(result);
+
+    ResponseEntity<ApiResponse<Void>> response = authController.forgotPassword(email);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertTrue(body.getErrors().isEmpty());
+    assertEquals("Operação realizada com sucesso.", body.getMessage());
+  }
+
+  @Test
+  void shouldReturnBadRequest_whenUserIsNotRegistered()  {
+    String email = "teste@email.com";
+    ForgotPasswordResult failure = new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    when(authService.forgotPassword(email)).thenReturn(failure);
+
+    ResponseEntity<ApiResponse<Void>> response = authController.forgotPassword(email);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertFalse(body.getErrors().isEmpty());
+    assertTrue(body.getErrors().stream()
+        .anyMatch(e -> e.getMessage().equals("This email: " + email + " is not register")));
+  }
+
+  @Test
+  void shouldReturnInternalServerError_whenEmailSendingFails()  {
+    String email = "teste@email.com";
+    ForgotPasswordResult failure = new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    when(authService.forgotPassword(email)).thenReturn(failure);
+
+    ResponseEntity<ApiResponse<Void>> response = authController.forgotPassword(email);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body);
+    assertFalse(body.getErrors().isEmpty());
+    assertTrue(body.getErrors().stream()
+        .anyMatch(e -> e.getMessage().equals("Error sending email")));
+  }
+
+  @Test
+  void shouldReturnSuccessfullyWhenNewPasswordIsValid() {
+    UUID uuid = UUID.randomUUID();
+    String newPassword = "newPassword";
+    UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
+    ForgotPasswordResult result = new ForgotPasswordSuccess();
+    when(authUtils.getCurrentUser()).thenReturn(mockUser);
+    when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
+
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    ApiResponse<PasswordResponse> body = response.getBody();
+    assertEquals("Password reset was successful", body.getMessage());
+    assertTrue(body.isSuccess());
+    assertEquals(body.getData().email(), mockUser.getEmail());
+    assertTrue(body.getErrors().isEmpty());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenUserIsNotRegistered() {
+    UUID uuid = UUID.randomUUID();
+    String newPassword = "newPassword";
+    UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
+
+    ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    when(authUtils.getCurrentUser()).thenReturn(mockUser);
+    when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
+
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    ApiResponse<PasswordResponse> body = response.getBody();
+    assertFalse(body.isSuccess());
+    assertNull(body.getData());
+    assertEquals(1, body.getErrors().size());
+    CustomFieldError error = body.getErrors().get(0);
+    assertEquals("Email", error.getField());
+    assertEquals("This email: " + mockUser.getEmail() + " is not register", error.getMessage());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenInternalErrorOccurs() {
+    UUID uuid = UUID.randomUUID();
+    String newPassword = "newPassword";
+    UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
+
+    ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    when(authUtils.getCurrentUser()).thenReturn(mockUser);
+    when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
+
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    ApiResponse<PasswordResponse> body = response.getBody();
+    assertFalse(body.isSuccess());
+    assertNull(body.getData());
+    assertEquals(1, body.getErrors().size());
+    CustomFieldError error = body.getErrors().get(0);
+    assertEquals("Internal", error.getField());
+    assertEquals("Error sending email. Please try again later.", error.getMessage());
   }
 }

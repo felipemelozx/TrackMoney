@@ -199,7 +199,7 @@ class RestExceptionHandlerTest {
     assertEquals("must not be null", firstError.getMessage());
 
     CustomFieldError secondError = errors.get(1);
-    assertEquals("Code", secondError.getField());
+    assertEquals("param", secondError.getField());
     assertEquals("invalid user data", secondError.getMessage());
   }
 }

@@ -8,8 +8,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+
 
 class EmailServiceTest {
 
@@ -24,14 +25,19 @@ class EmailServiceTest {
     emailService = new EmailService(mailSender, templateEngine);
   }
 
+  private MimeMessage mockMimeMessage() {
+    MimeMessage mimeMessage = mock(MimeMessage.class);
+    when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+    return mimeMessage;
+  }
+
   @Test
-  void testSendEmailSuccess() throws MessagingException {
+  void shouldSendVerifyEmailSuccessfully() throws MessagingException {
     String to = "test@example.com";
     String name = "Test User";
     Integer code = 1234;
-    MimeMessage mimeMessage = mock(MimeMessage.class);
 
-    when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+    MimeMessage mimeMessage = mockMimeMessage();
     when(templateEngine.process(eq("email-template-verify-email"), any(Context.class)))
         .thenReturn("<html>Email Content</html>");
 
@@ -43,12 +49,43 @@ class EmailServiceTest {
   }
 
   @Test
-  void testSendEmailThrowsMessagingException() {
+  void shouldThrowExceptionWhenVerifyEmailFails() {
     String to = "test@example.com";
     String name = "Test User";
     Integer code = 1234;
+
     when(mailSender.createMimeMessage()).thenThrow(new RuntimeException("Mail error"));
 
-    assertThrows(RuntimeException.class, () -> emailService.sendEmailToVerifyEmail(to, name, code));
+    assertThrows(RuntimeException.class, () ->
+        emailService.sendEmailToVerifyEmail(to, name, code));
+  }
+
+  @Test
+  void shouldSendResetPasswordEmailSuccessfully() throws MessagingException {
+    String to = "test@example.com";
+    String name = "Test User";
+    String link = "http://reset-link.com";
+
+    MimeMessage mimeMessage = mockMimeMessage();
+    when(templateEngine.process(eq("email-template-reset-password"), any(Context.class)))
+        .thenReturn("<html>Reset Content</html>");
+
+    emailService.sendEmailToResetPassword(to, name, link);
+
+    verify(mailSender).createMimeMessage();
+    verify(templateEngine).process(eq("email-template-reset-password"), any(Context.class));
+    verify(mailSender).send(mimeMessage);
+  }
+
+  @Test
+  void shouldThrowExceptionWhenResetPasswordEmailFails()  {
+    String to = "test@example.com";
+    String name = "Test User";
+    String link = "http://reset-link.com";
+
+    when(mailSender.createMimeMessage()).thenThrow(new RuntimeException("Mail error"));
+
+    assertThrows(RuntimeException.class, () ->
+        emailService.sendEmailToResetPassword(to, name, link));
   }
 }

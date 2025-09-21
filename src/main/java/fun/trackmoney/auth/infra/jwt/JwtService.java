@@ -52,6 +52,21 @@ public class JwtService {
     }
   }
 
+  public String generateResetPasswordToken(String email) {
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(secret);
+      return JWT.create()
+          .withIssuer(ISSUER)
+          .withClaim(CLAIM_ROLES, "RESET_PASSWORD")
+          .withClaim(CLAIM_TOKEN_TYPE, "ACCESS")
+          .withSubject(email)
+          .withExpiresAt(getRestPasswordExpiry())
+          .sign(algorithm);
+    } catch (Exception e) {
+      throw new JWTCreationException("Error while generating JWT token.", e);
+    }
+  }
+
   protected DecodedJWT validateToken(String token) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -67,6 +82,12 @@ public class JwtService {
   private Instant getAccessTokenExpiry() {
     return LocalDateTime.now()
         .plusMinutes(15)
+        .toInstant(ZoneOffset.ofHours(-3));
+  }
+
+  private Instant getRestPasswordExpiry() {
+    return LocalDateTime.now()
+        .plusMinutes(5)
         .toInstant(ZoneOffset.ofHours(-3));
   }
 

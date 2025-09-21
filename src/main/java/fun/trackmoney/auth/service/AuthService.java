@@ -3,6 +3,9 @@ package fun.trackmoney.auth.service;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordSuccess;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
 import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
@@ -13,12 +16,12 @@ import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
+import fun.trackmoney.redis.CacheManagerService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,23 +31,25 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
+  @Value("${front.url}")
+  private String frontUrl;
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final EmailService emailService;
-  private final CacheManager cacheManager;
+  private final CacheManagerService cacheManagerService;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   public AuthService(UserService userService,
                      PasswordEncoder passwordEncoder,
                      JwtService jwtservice,
                      EmailService emailService,
-                     CacheManager cacheManager) {
+                     CacheManagerService cacheManagerService) {
     this.userService = userService;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtservice;
     this.emailService = emailService;
-    this.cacheManager = cacheManager;
+    this.cacheManagerService = cacheManagerService;
   }
 
   public UserRegisterResult register(UserRequestDTO userDto)  {
@@ -95,13 +100,14 @@ public class AuthService {
   }
 
   public Boolean activateUser(Integer code, String email) {
-    String recoverEmail = recoverEmail(code);
+    String recoverEmail = getEmailByCode(code);
     if(recoverEmail == null) {
       return false;
     }
     if(!recoverEmail.equals(email)) {
       return false;
     }
+    removeCode(code);
     return userService.activateUser(email);
   }
 
@@ -125,22 +131,42 @@ public class AuthService {
     return new VerificationEmailSuccess();
   }
 
-  protected Boolean saveCode(Integer code, String email) {
-    Cache cache = cacheManager.getCache("EmailVerificationCodes");
-    if(recoverEmail(code) == null && cache != null){
-      cache.put(code, email);
-      return true;
+  public ForgotPasswordResult forgotPassword(String email) {
+    UserEntity optionalUser = userService.findUserByEmail(email).orElse(null);
+    if(optionalUser == null) {
+      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
     }
-    return false;
+    String jwtCode = jwtService.generateResetPasswordToken(email);
+    String link = frontUrl + "/reset-password/" +  jwtCode;
+    try {
+      emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
+    } catch (RuntimeException | MessagingException ex) {
+      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    }
+    return new ForgotPasswordSuccess();
   }
 
-  protected String recoverEmail(Integer code) {
-    Cache cache = cacheManager.getCache("EmailVerificationCodes");
-    if (cache == null) {
-      return null;
+  public ForgotPasswordResult resetPassword(String email, String newPassword) {
+    UserEntity user = userService.findUserByEmail(email).orElse(null);
+    if(user == null) {
+      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
     }
-    Cache.ValueWrapper wrapper = cache.get(code);
-    return wrapper != null ? (String) wrapper.get() : null;
+    String password = passwordEncoder.encode(newPassword);
+    user.setPassword(password);
+    userService.update(user);
+    return new ForgotPasswordSuccess();
+  }
+
+  protected Boolean saveCode(Integer code, String email) {
+    return cacheManagerService.put("EmailVerificationCodes", code, email);
+  }
+
+  protected String getEmailByCode(Integer code) {
+    return cacheManagerService.get("EmailVerificationCodes", code, String.class);
+  }
+
+  protected void removeCode(Integer code) {
+    cacheManagerService.evict("EmailVerificationCodes", code);
   }
 
   protected Integer generateVerificationCode() {
