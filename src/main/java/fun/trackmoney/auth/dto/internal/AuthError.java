@@ -6,7 +6,8 @@ public enum AuthError {
   REFRESH_TOKEN_INVALID("The refresh token is invalid or has expired."),
   USER_NOT_REGISTER("User is not registered in the system."),
   EMAIL_ALREADY_EXISTS("The provided email is already registered."),
-  USER_IS_VERIFIED("The user has already been verified.");
+  USER_IS_VERIFIED("The user has already been verified."),
+  ERROR_SENDING_EMAIL("Some error ao enviar email");
 
   private final String message;
 

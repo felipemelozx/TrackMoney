@@ -3,9 +3,9 @@ package fun.trackmoney.user.service;
 import fun.trackmoney.account.dtos.AccountRequestDTO;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
-import fun.trackmoney.auth.dto.internal.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
@@ -55,11 +55,27 @@ public class UserService {
     return new UserRegisterSuccess(userResponseDTO);
   }
 
+  public Boolean activateUser(String email) {
+    UserEntity user = findUserByEmail(email).orElse(null);
+
+    if(user == null) {
+      return false;
+    }
+
+    user.activate();
+    userRepository.save(user);
+    return true;
+  }
+
   public Optional<UserEntity> findUserByEmail(String email) {
     return userRepository.findByEmail(email);
   }
 
   public Optional<UserEntity> findUserById(UUID userId) {
     return userRepository.findById(userId);
+  }
+
+  public void update(UserEntity user) {
+    userRepository.save(user);
   }
 }

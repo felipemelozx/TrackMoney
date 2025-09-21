@@ -18,12 +18,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 
-  private final CustomUserDetailsService userDetailsService;
-
   private final SecurityFilterConfig securityFilter;
 
-  public SecurityConfig(CustomUserDetailsService userDetailsService, SecurityFilterConfig securityFilter) {
-    this.userDetailsService = userDetailsService;
+  public SecurityConfig(SecurityFilterConfig securityFilter) {
     this.securityFilter = securityFilter;
   }
 
@@ -36,8 +33,12 @@ public class SecurityConfig {
         .authorizeHttpRequests(authorize -> authorize
             .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+            .requestMatchers(HttpMethod.POST, "/auth/forgot-password/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/auth/reset-password/**").hasRole("RESET_PASSWORD")
+            .requestMatchers(HttpMethod.POST, "/auth/resend-verification-email").hasRole("USER_UNVERIFIED")
+            .requestMatchers(HttpMethod.POST, "/auth/verify-email/**").hasRole("USER_UNVERIFIED")
             .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
-            .requestMatchers(HttpMethod.GET, "/actuator/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .anyRequest().authenticated()
         )

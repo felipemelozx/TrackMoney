@@ -3,28 +3,35 @@ package fun.trackmoney.auth.service;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.LoginFailure;
-import fun.trackmoney.auth.dto.internal.LoginResult;
-import fun.trackmoney.auth.dto.internal.LoginSuccess;
-import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
-import fun.trackmoney.auth.dto.internal.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
+import fun.trackmoney.auth.dto.internal.ForgotPasswordSuccess;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
+import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
+import fun.trackmoney.auth.dto.internal.login.LoginFailure;
+import fun.trackmoney.auth.dto.internal.login.LoginResult;
+import fun.trackmoney.auth.dto.internal.login.LoginSuccess;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
+import fun.trackmoney.redis.CacheManagerService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,6 +46,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -65,17 +74,18 @@ class AuthServiceTest {
   private EmailService emailService;
 
   @Mock
-  private Cache cache;
-
-  @Mock
-  private Cache.ValueWrapper valueWrapper;
-
-  @Mock
-  private CacheManager cacheManager;
+  private CacheManagerService cacheManagerService;
 
   @InjectMocks
   @Spy
   private AuthService authService;
+
+  @BeforeEach
+  void setupFrontUrl() {
+    ReflectionTestUtils.setField(authService, "frontUrl", "http://localhost");
+  }
+
+  private static final String CACHE_NAME = "EmailVerificationCodes";
 
   @Test
   void shouldRegisterUserAndSendVerificationEmail_whenUserRequestIsValid() throws MessagingException {
@@ -176,28 +186,10 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldReturnFalse_whenCacheIsNotAvailable() {
-    int code = 1234;
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(null);
-    Boolean result = authService.saveCode(code, "someEmail@com.br");
-    assertFalse(result);
-  }
-
-  @Test
-  void shouldReturnTrue_whenCodeIsSavedInCache() {
-    int code = 1234;
-    String emailMock = "someEmail@com.br";
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-    Boolean result = authService.saveCode(code, emailMock);
-    assertTrue(result);
-  }
-
-  @Test
   void shouldReturnNull_whenVerificationCodeNotFoundInCache() {
     int code = 1234;
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-    when(cache.get(code)).thenReturn(null);
-    String result = authService.recoverCode(code);
+    when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(null);
+    String result = authService.getEmailByCode(code);
     assertNull(result);
   }
 
@@ -205,22 +197,9 @@ class AuthServiceTest {
   void shouldReturnEmail_whenVerificationCodeExistsInCache() {
     int code = 1234;
     String mockEmail = "mock@email.com";
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-    when(cache.get(code)).thenReturn(valueWrapper);
-    when(valueWrapper.get()).thenReturn(mockEmail);
-    String result = authService.recoverCode(code);
+    when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(mockEmail);
+    String result = authService.getEmailByCode(code);
     assertEquals(mockEmail, result);
-  }
-
-  @Test
-  void shouldReturnFalseWhenRecoverCodeReturnCode(){
-    int code = 1234;
-
-    when(authService.recoverCode(code)).thenReturn("fakeEmail@com.br");
-    when(cacheManager.getCache("EmailVerificationCodes")).thenReturn(cache);
-
-    boolean response = authService.saveCode(code, "fake");
-    assertFalse(response);
   }
 
   @Test
@@ -234,7 +213,8 @@ class AuthServiceTest {
 
     when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(loginDto.password(), user.getPassword())).thenReturn(true);
-    when(jwtService.generateToken(user.getEmail())).thenReturn(expectedAccessToken, expectedRefreshToken);
+    when(jwtService.generateAccessToken(user.getEmail())).thenReturn(expectedAccessToken);
+    when(jwtService.generateRefreshToken(user.getEmail())).thenReturn(expectedRefreshToken);
 
     LoginResult response = authService.login(loginDto);
 
@@ -256,7 +236,8 @@ class AuthServiceTest {
     assertInstanceOf(LoginFailure.class, response);
     AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
     assertEquals(AuthError.INVALID_CREDENTIALS.getMessage(), actualAuthErrorMessage.getMessage());
-    verify(jwtService, times(0)).generateToken(any());
+    verify(jwtService, times(0)).generateAccessToken(any());
+    verify(jwtService, times(0)).generateRefreshToken(any());
   }
 
   @Test
@@ -270,21 +251,206 @@ class AuthServiceTest {
     assertInstanceOf(LoginFailure.class, response);
     AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
     assertEquals(AuthError.USER_NOT_REGISTER.getMessage(), actualAuthErrorMessage.getMessage());
-    verify(jwtService, times(0)).generateToken(any());
+    verify(jwtService, times(0)).generateAccessToken(any());
+    verify(jwtService, times(0)).generateRefreshToken(any());
   }
 
   @Test
-  void shouldReturnLoginFailureWhenEmailIsNotVerified() {
-    LoginRequestDTO loginDto = new LoginRequestDTO("test@example.com", "WrongPassword");
-    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword", false);
+  void shouldReturnLoginSuccessWithVerificationTokenWhenEmailIsNotVerified() {
+    LoginRequestDTO loginRequest = new LoginRequestDTO("test@example.com", "WrongPassword");
+    UserEntity unverifiedUser = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "encodedPassword", false);
+    String verificationToken = "mockCode";
 
-    when(userService.findUserByEmail(loginDto.email())).thenReturn(Optional.of(user));
+    when(jwtService.generateVerificationToken(unverifiedUser.getEmail())).thenReturn(verificationToken);
+    when(userService.findUserByEmail(loginRequest.email())).thenReturn(Optional.of(unverifiedUser));
+    when(passwordEncoder.matches(loginRequest.password(), unverifiedUser.getPassword())).thenReturn(true);
+    LoginResult result = authService.login(loginRequest);
 
-    LoginResult response = authService.login(loginDto);
+    assertInstanceOf(LoginSuccess.class, result);
+    LoginResponseDTO loginResponse = ((LoginSuccess) result).tokens();
+    assertEquals(verificationToken, loginResponse.accessToken());
+    assertNull(loginResponse.refreshToken());
+  }
 
-    assertInstanceOf(LoginFailure.class, response);
-    AuthError actualAuthErrorMessage = ((LoginFailure) response).error();
-    assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), actualAuthErrorMessage.getMessage());
-    verify(jwtService, times(0)).generateToken(any());
+  @Test
+  void shouldReturnFalseWhenActivatingUserIfRecoveredEmailIsNull() {
+    int code = 1234;
+    String email = "mock@email.com";
+
+    when(authService.getEmailByCode(code)).thenReturn(null);
+
+    boolean result = authService.activateUser(code, email);
+
+    assertFalse(result);
+    verify(authService, times(1)).getEmailByCode(code);
+  }
+
+  @Test
+  void shouldReturnFalseWhenActivatingUserIfRecoveredEmailIsDifferent() {
+    int code = 1234;
+    String requestedEmail = "mock@email.com";
+    String recoveredEmail = "other@email.com";
+
+    when(authService.getEmailByCode(code)).thenReturn(recoveredEmail);
+
+    boolean result = authService.activateUser(code, requestedEmail);
+
+    assertFalse(result);
+    verify(authService, times(1)).getEmailByCode(code);
+  }
+
+  @Test
+  void shouldReturnTrueWhenActivatingUserIfEmailAndCodeAreValid() {
+    int code = 1234;
+    String email = "mock@email.com";
+
+    when(authService.getEmailByCode(code)).thenReturn(email);
+    when(userService.activateUser(email)).thenReturn(true);
+
+    boolean result = authService.activateUser(code, email);
+
+    assertTrue(result);
+    verify(authService, times(1)).getEmailByCode(code);
+    verify(userService, times(1)).activateUser(email);
+  }
+
+  @Test
+  void shouldReturnFailureWhenUserIsAlreadyActive() {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", true);
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailFailure.class, result);
+    VerificationEmailFailure failure = (VerificationEmailFailure) result;
+    assertEquals(AuthError.USER_IS_VERIFIED, failure.error());
+  }
+
+  @Test
+  void shouldReturnFailureWhenEmailSendingThrowsException() throws Exception {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
+    int code = 1234;
+    doReturn(true).when(authService).saveCode(code, user.getEmail());
+    doReturn(code).when(authService).generateVerificationCode();
+    doThrow(new MessagingException("fail")).when(emailService)
+        .sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailFailure.class, result);
+    VerificationEmailFailure failure = (VerificationEmailFailure) result;
+    assertEquals(AuthError.ERROR_SENDING_EMAIL, failure.error());
+  }
+
+  @Test
+  void shouldResendVerificationEmailSuccessfully() throws Exception {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
+
+    doReturn(true).when(authService).saveCode(anyInt(), eq(user.getEmail()));
+    doNothing().when(emailService)
+        .sendEmailToVerifyEmail(eq(user.getEmail()), eq(user.getName()), anyInt());
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailSuccess.class, result);
+  }
+
+  @Test
+  void shouldRetryUntilCodeIsSavedSuccessfully() throws Exception {
+    UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
+
+    when(authService.saveCode(anyInt(), eq(user.getEmail())))
+        .thenReturn(false)
+        .thenReturn(true);
+
+    doNothing().when(emailService)
+        .sendEmailToVerifyEmail(eq(user.getEmail()), eq(user.getName()), anyInt());
+
+    VerificationEmailResult result = authService.resendVerificationEmail(user);
+
+    assertInstanceOf(VerificationEmailSuccess.class, result);
+
+    verify(authService, times(2)).saveCode(anyInt(), eq(user.getEmail()));
+  }
+
+  @Test
+  void shouldReturnFailure_whenUserIsNotRegistered() throws MessagingException {
+    String email = "notfound@example.com";
+    when(userService.findUserByEmail(email)).thenReturn(Optional.empty());
+
+    ForgotPasswordResult result = authService.forgotPassword(email);
+
+    assertInstanceOf(ForgotPasswordFailure.class, result);
+    ForgotPasswordFailure failure = (ForgotPasswordFailure) result;
+    assertEquals(AuthError.USER_NOT_REGISTER, failure.error());
+    verify(jwtService, times(0)).generateResetPasswordToken(any());
+    verify(emailService, times(0)).sendEmailToResetPassword(any(), any(), any());
+  }
+
+  @Test
+  void shouldReturnFailure_whenEmailSendingThrowsException() throws Exception {
+    String email = "test@example.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
+    String jwtCode = "mock-reset-token";
+    String expectedLink = "http://localhost/reset-password/" + jwtCode;
+
+    when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
+    when(jwtService.generateResetPasswordToken(email)).thenReturn(jwtCode);
+    doThrow(new MessagingException("fail"))
+        .when(emailService).sendEmailToResetPassword(email, user.getName(), expectedLink);
+
+    ForgotPasswordResult result = authService.forgotPassword(email);
+
+    assertInstanceOf(ForgotPasswordFailure.class, result);
+    ForgotPasswordFailure failure = (ForgotPasswordFailure) result;
+    assertEquals(AuthError.ERROR_SENDING_EMAIL, failure.error());
+    verify(emailService, times(1)).sendEmailToResetPassword(email, user.getName(), expectedLink);
+  }
+
+  @Test
+  void shouldReturnSuccess_whenEmailIsSentSuccessfully() throws Exception {
+    String email = "test@example.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
+    String jwtCode = "mock-reset-token";
+    String expectedLink = "http://localhost/reset-password/" + jwtCode;
+
+    when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
+    when(jwtService.generateResetPasswordToken(email)).thenReturn(jwtCode);
+    doNothing().when(emailService).sendEmailToResetPassword(email, user.getName(), expectedLink);
+
+    ForgotPasswordResult result = authService.forgotPassword(email);
+
+    assertInstanceOf(ForgotPasswordSuccess.class, result);
+    verify(emailService, times(1)).sendEmailToResetPassword(email, user.getName(), expectedLink);
+    verify(jwtService, times(1)).generateResetPasswordToken(email);
+  }
+
+  @Test
+  void shouldReturnSuccessWhenUpdatePassword() {
+    String mockEmail = "someEmail@email.com";
+    String newPassword = "somePassword";
+    UserEntity mockUser = new UserEntity(UUID.randomUUID(), "soma name", mockEmail, "oldPassword", true);
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.of(mockUser));
+    when(passwordEncoder.encode(newPassword)).thenReturn(newPassword);
+    doNothing().when(userService).update(any());
+
+    ForgotPasswordResult response = authService.resetPassword(mockEmail, newPassword);
+
+    assertInstanceOf(ForgotPasswordSuccess.class, response);
+    verify(userService, times(1)).update(any());
+    verify(userService, times(1)).findUserByEmail(mockEmail);
+  }
+
+  @Test
+  void shouldReturnFailureWhenUserNotFound() {
+    String mockEmail = "someEmail@email.com";
+    String newPassword = "somePassword";
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.empty());
+
+    ForgotPasswordResult response = authService.resetPassword(mockEmail, newPassword);
+    assertInstanceOf(ForgotPasswordFailure.class, response);
+    verify(userService, times(0)).update(any());
+    verify(userService, times(1)).findUserByEmail(mockEmail);
   }
 }

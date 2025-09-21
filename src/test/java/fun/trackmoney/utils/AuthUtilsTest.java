@@ -23,7 +23,6 @@ class AuthUtilsTest {
 
   @Test
   void getCurrentUser_shouldReturnUserEntity() {
-    // Arrange
     UserEntity mockUser = new UserEntity();
     mockUser.setUserId(UUID.randomUUID());
     mockUser.setName("John Doe");
@@ -36,10 +35,8 @@ class AuthUtilsTest {
     Mockito.when(context.getAuthentication()).thenReturn(authentication);
     SecurityContextHolder.setContext(context);
 
-    // Act
     UserEntity result = authUtils.getCurrentUser();
 
-    // Assert
     assertNotNull(result);
     assertEquals(mockUser.getUserId(), result.getUserId());
     assertEquals(mockUser.getEmail(), result.getEmail());

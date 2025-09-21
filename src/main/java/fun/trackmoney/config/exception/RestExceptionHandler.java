@@ -14,6 +14,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
 import java.util.List;
 
 @ControllerAdvice
@@ -42,6 +44,29 @@ public class RestExceptionHandler {
     );
   }
 
+  @ExceptionHandler(HandlerMethodValidationException.class)
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> handlePathVariableValidationExceptions(
+      HandlerMethodValidationException ex) {
+
+    List<CustomFieldError> errors = ex.getAllErrors()
+        .stream()
+        .map(error -> {
+          if (error instanceof FieldError fieldError) {
+            return new CustomFieldError(fieldError.getField(), fieldError.getDefaultMessage());
+          } else {
+            return new CustomFieldError("param", error.getDefaultMessage());
+          }
+        })
+        .toList();
+
+    return new ResponseEntity<>(
+        ApiResponse.<List<CustomFieldError>>failure()
+            .message("Validation failed")
+            .errors(errors)
+            .build(),
+        HttpStatus.BAD_REQUEST
+    );
+  }
 
   @ExceptionHandler(UserNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> emailNotFound(UserNotFoundException ex) {

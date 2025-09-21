@@ -2,9 +2,9 @@ package fun.trackmoney.user.service;
 
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.UserRegisterFailure;
-import fun.trackmoney.auth.dto.internal.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.UserRegisterSuccess;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
+import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
@@ -134,6 +134,32 @@ class UserServiceTest {
     assertEquals(user.getEmail(), userResponse.getEmail());
     assertEquals(user.getPassword(), userResponse.getPassword());
     assertEquals(user.getName(), userResponse.getName());
+  }
+
+  @Test
+  void shouldReturnTrueWhenUserIsAbleToActive() {
+    String mockEmail = "mock@email.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "test", mockEmail, "mockPass", false);
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.of(user));
+
+    boolean response = userService.activateUser(mockEmail);
+
+    assertTrue(response);
+    assertTrue(user.isActive());
+    verify(userRepository, times(1)).save(user);
+  }
+
+  @Test
+  void shouldReturnFalseWhenUserIsNull() {
+    String mockEmail = "mock@email.com";
+
+    when(userService.findUserByEmail(mockEmail)).thenReturn(Optional.empty());
+
+    boolean response = userService.activateUser(mockEmail);
+
+    assertFalse(response);
+    verify(userRepository, times(0)).save(any());
   }
 
 }

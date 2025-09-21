@@ -57,3 +57,5 @@ management:
   endpoint:
     health:
       show-details: always
+front:
+  url: ${FRONT_URL:http://localhost:3000}
