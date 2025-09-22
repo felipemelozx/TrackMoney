@@ -137,7 +137,7 @@ public class AuthService {
       return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
     }
     String jwtCode = jwtService.generateResetPasswordToken(email);
-    String link = frontUrl + "/reset-password/" +  jwtCode;
+    String link = frontUrl + "/reset-password?token=" +  jwtCode;
     try {
       emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
     } catch (RuntimeException | MessagingException ex) {
