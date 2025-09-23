@@ -21,7 +21,7 @@ public class JwtService {
   private static final String CLAIM_ROLES = "roles";
   private static final String CLAIM_TOKEN_TYPE = "token_type";
   private static final String ISSUER = "trackmoney";
-  
+
   public String generateAccessToken(String email) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
@@ -79,19 +79,19 @@ public class JwtService {
     }
   }
 
-  private Instant getAccessTokenExpiry() {
+  protected Instant getAccessTokenExpiry() {
     return LocalDateTime.now()
         .plusMinutes(15)
         .toInstant(ZoneOffset.ofHours(-3));
   }
 
-  private Instant getRestPasswordExpiry() {
+  protected Instant getRestPasswordExpiry() {
     return LocalDateTime.now()
-        .plusMinutes(5)
+        .plusMinutes(30)
         .toInstant(ZoneOffset.ofHours(-3));
   }
 
-  private Instant getRefreshTokenExpiry() {
+  protected Instant getRefreshTokenExpiry() {
     return LocalDateTime.now()
         .plusDays(7)
         .toInstant(ZoneOffset.ofHours(-3));
