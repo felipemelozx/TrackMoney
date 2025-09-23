@@ -391,7 +391,7 @@ class AuthServiceTest {
     String email = "test@example.com";
     UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
     String jwtCode = "mock-reset-token";
-    String expectedLink = "http://localhost/reset-password/" + jwtCode;
+    String expectedLink = "http://localhost/reset-password?token=" + jwtCode;
 
     when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
     when(jwtService.generateResetPasswordToken(email)).thenReturn(jwtCode);
@@ -411,7 +411,7 @@ class AuthServiceTest {
     String email = "test@example.com";
     UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
     String jwtCode = "mock-reset-token";
-    String expectedLink = "http://localhost/reset-password/" + jwtCode;
+    String expectedLink = "http://localhost/reset-password?token=" + jwtCode;
 
     when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
     when(jwtService.generateResetPasswordToken(email)).thenReturn(jwtCode);
