@@ -44,32 +44,6 @@ class JwtServiceTest {
   }
 
   @Test
-  void shouldReturnSubjectWhenTokenIsValid() {
-    String email = "test@example.com";
-    String token = jwtService.generateAccessToken(email);
-    String subject = jwtService.extractEmail(token);
-    assertEquals(email, subject);
-  }
-
-  @Test
-  void shouldReturnNullWhenTokenIsInvalid() {
-    String invalidToken = "invalid.jwt.token";
-    assertNull(jwtService.extractEmail(invalidToken));
-  }
-
-  @Test
-  void shouldThrowJWTCreationExceptionWhenSecretIsNull() {
-    ReflectionTestUtils.setField(jwtService, "secret", null);
-    assertThrows(JWTCreationException.class, () -> jwtService.generateAccessToken("test@example.com"));
-  }
-
-  @Test
-  void shouldThrowJWTCreationExceptionWhenSecretIsEmpty() {
-    ReflectionTestUtils.setField(jwtService, "secret", "");
-    assertThrows(JWTCreationException.class, () -> jwtService.generateAccessToken("test@example.com"));
-  }
-
-  @Test
   void shouldGenerateRefreshTokenWhenEmailIsValid() {
     String email = "refresh@example.com";
     String token = jwtService.generateRefreshToken(email);
@@ -79,6 +53,20 @@ class JwtServiceTest {
     assertEquals(email, decoded.getSubject());
     assertEquals("REFRESH", decoded.getClaim("token_type").asString());
     assertEquals("USER_ROLES", decoded.getClaim("roles").asString());
+    assertEquals("trackmoney", decoded.getIssuer());
+    assertTrue(decoded.getExpiresAt().after(new Date()));
+  }
+
+  @Test
+  void shouldGenerateResetPasswordTokenWhenEmailIsValid() {
+    String email = "reset@example.com";
+    String token = jwtService.generateResetPasswordToken(email);
+    assertNotNull(token);
+
+    DecodedJWT decoded = JWT.decode(token);
+    assertEquals(email, decoded.getSubject());
+    assertEquals("RESET_PASSWORD", decoded.getClaim("roles").asString());
+    assertEquals("ACCESS", decoded.getClaim("token_type").asString());
     assertEquals("trackmoney", decoded.getIssuer());
     assertTrue(decoded.getExpiresAt().after(new Date()));
   }
@@ -95,6 +83,57 @@ class JwtServiceTest {
     assertFalse(decoded.getClaim("IsVerify").asBoolean());
     assertEquals("trackmoney", decoded.getIssuer());
     assertTrue(decoded.getExpiresAt().after(new Date()));
+  }
+
+  @Test
+  void verificationTokenShouldNotContainTokenType() {
+    String email = "verify2@example.com";
+    String token = jwtService.generateVerificationToken(email);
+    DecodedJWT decoded = JWT.decode(token);
+    assertNull(decoded.getClaim("token_type").asString());
+  }
+
+  @Test
+  void shouldThrowJWTCreationExceptionWhenSecretIsNull() {
+    ReflectionTestUtils.setField(jwtService, "secret", null);
+    assertThrows(JWTCreationException.class, () -> jwtService.generateAccessToken("fail@example.com"));
+  }
+
+  @Test
+  void shouldThrowJWTCreationExceptionWhenSecretIsEmpty() {
+    ReflectionTestUtils.setField(jwtService, "secret", "");
+    assertThrows(JWTCreationException.class, () -> jwtService.generateAccessToken("fail@example.com"));
+  }
+
+  @Test
+  void shouldThrowJWTCreationExceptionWhenGeneratingResetPasswordTokenAndSecretInvalid() {
+    ReflectionTestUtils.setField(jwtService, "secret", null);
+    assertThrows(JWTCreationException.class, () -> jwtService.generateResetPasswordToken("fail@example.com"));
+  }
+
+  @Test
+  void shouldThrowJWTCreationExceptionWhenGeneratingRefreshTokenAndSecretInvalid() {
+    ReflectionTestUtils.setField(jwtService, "secret", null);
+    assertThrows(JWTCreationException.class, () -> jwtService.generateRefreshToken("fail@example.com"));
+  }
+
+  @Test
+  void shouldThrowJWTCreationExceptionWhenGeneratingVerificationTokenAndSecretInvalid() {
+    ReflectionTestUtils.setField(jwtService, "secret", null);
+    assertThrows(JWTCreationException.class, () -> jwtService.generateVerificationToken("fail@example.com"));
+  }
+
+  @Test
+  void shouldReturnSubjectWhenTokenIsValid() {
+    String email = "subject@example.com";
+    String token = jwtService.generateAccessToken(email);
+    String subject = jwtService.extractEmail(token);
+    assertEquals(email, subject);
+  }
+
+  @Test
+  void shouldReturnNullWhenTokenIsInvalid() {
+    assertNull(jwtService.extractEmail("invalid.jwt.token"));
   }
 
   @Test
@@ -131,100 +170,45 @@ class JwtServiceTest {
     assertFalse(jwtService.isRefreshToken(invalidToken));
   }
 
-  @Test
-  void validateTokenShouldReturnNullForInvalidToken() {
-    assertNull(ReflectionTestUtils.invokeMethod(jwtService, "validateToken", "this.is.not.a.jwt"));
-  }
-
-  @Test
-  void shouldGenerateResetPasswordTokenWhenEmailIsValid() {
-    String email = "reset@example.com";
-    String token = jwtService.generateResetPasswordToken(email);
-    assertNotNull(token);
-
-    DecodedJWT decoded = JWT.decode(token);
-    assertEquals(email, decoded.getSubject());
-    assertEquals("RESET_PASSWORD", decoded.getClaim("roles").asString());
-    assertEquals("ACCESS", decoded.getClaim("token_type").asString());
-    assertEquals("trackmoney", decoded.getIssuer());
-    assertTrue(decoded.getExpiresAt().after(new Date()));
-  }
-
-  @Test
-  void shouldThrowJWTCreationExceptionWhenGeneratingResetPasswordTokenAndSecretIsNull() {
-    ReflectionTestUtils.setField(jwtService, "secret", null);
-    assertThrows(JWTCreationException.class, () -> jwtService.generateResetPasswordToken("fail@example.com"));
-  }
-
-  @Test
-  void shouldThrowJWTCreationExceptionWhenGeneratingResetPasswordTokenAndSecretIsEmpty() {
-    ReflectionTestUtils.setField(jwtService, "secret", "");
-    assertThrows(JWTCreationException.class, () -> jwtService.generateResetPasswordToken("fail@example.com"));
-  }
 
   @Test
   void validateTokenShouldReturnDecodedJWTWhenTokenIsValid() {
     String email = "valid@example.com";
     String token = jwtService.generateAccessToken(email);
-
     DecodedJWT decoded = ReflectionTestUtils.invokeMethod(jwtService, "validateToken", token);
-
     assertNotNull(decoded);
     assertEquals(email, decoded.getSubject());
-    assertEquals("trackmoney", decoded.getIssuer());
     assertEquals("ACCESS", decoded.getClaim("token_type").asString());
     assertEquals("USER_ROLES", decoded.getClaim("roles").asString());
+    assertEquals("trackmoney", decoded.getIssuer());
   }
 
   @Test
   void validateTokenShouldReturnNullWhenTokenIsInvalid() {
-    String invalidToken = "not.a.valid.jwt";
-    DecodedJWT decoded = ReflectionTestUtils.invokeMethod(jwtService, "validateToken", invalidToken);
-    assertNull(decoded);
+    assertNull(ReflectionTestUtils.invokeMethod(jwtService, "validateToken", "not.a.valid.jwt"));
   }
 
   @Test
   void getAccessTokenExpiryShouldReturnInstant15MinutesAhead() {
-    Instant before = Instant.now().plusSeconds(14 * 60);
+    Instant now = Instant.now();
     Instant expiry = ReflectionTestUtils.invokeMethod(jwtService, "getAccessTokenExpiry");
-    Instant after = Instant.now().plusSeconds(16 * 60);
-
-    assertTrue(expiry.isAfter(before));
-    assertTrue(expiry.isBefore(after));
+    long diffSeconds = expiry.getEpochSecond() - now.getEpochSecond();
+    assertTrue(diffSeconds >= 14 * 60 && diffSeconds <= 16 * 60);
   }
 
   @Test
-  void getRestPasswordExpiryShouldReturnInstant15MinutesAhead() {
-    Instant before = Instant.now().plusSeconds(14 * 60);
+  void getRestPasswordExpiryShouldReturnInstant30MinutesAhead() {
+    Instant now = Instant.now();
     Instant expiry = ReflectionTestUtils.invokeMethod(jwtService, "getRestPasswordExpiry");
-    Instant after = Instant.now().plusSeconds(30 * 60);
-
-    assertTrue(expiry.isAfter(before));
-    assertTrue(expiry.isBefore(after));
+    long diffSeconds = expiry.getEpochSecond() - now.getEpochSecond();
+    assertTrue(diffSeconds >= 29 * 60 && diffSeconds <= 31 * 60);
   }
 
   @Test
-  void generateAccessTokenShouldThrowJWTCreationExceptionWhenSecretInvalid() {
-    ReflectionTestUtils.setField(jwtService, "secret", null);
-    assertThrows(JWTCreationException.class, () -> jwtService.generateAccessToken("fail@example.com"));
+  void getRefreshTokenExpiryShouldReturnInstant7DaysAhead() {
+    Instant now = Instant.now();
+    Instant expiry = ReflectionTestUtils.invokeMethod(jwtService, "getRefreshTokenExpiry");
+    long diffSeconds = expiry.getEpochSecond() - now.getEpochSecond();
+    assertTrue(diffSeconds >= 6 * 24 * 3600 && diffSeconds <= 8 * 24 * 3600);
   }
-
-  @Test
-  void generateRefreshTokenShouldThrowJWTCreationExceptionWhenSecretInvalid() {
-    ReflectionTestUtils.setField(jwtService, "secret", null);
-    assertThrows(JWTCreationException.class, () -> jwtService.generateRefreshToken("fail@example.com"));
-  }
-
-  @Test
-  void generateResetPasswordTokenShouldThrowJWTCreationExceptionWhenSecretInvalid() {
-    ReflectionTestUtils.setField(jwtService, "secret", null);
-    assertThrows(JWTCreationException.class, () -> jwtService.generateResetPasswordToken("fail@example.com"));
-  }
-
-  @Test
-  void generateVerificationTokenShouldThrowJWTCreationExceptionWhenSecretInvalid() {
-    ReflectionTestUtils.setField(jwtService, "secret", null);
-    assertThrows(JWTCreationException.class, () -> jwtService.generateVerificationToken("fail@example.com"));
-  }
-
 }
