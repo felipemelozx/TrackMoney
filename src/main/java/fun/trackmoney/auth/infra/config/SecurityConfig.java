@@ -34,13 +34,12 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
             .requestMatchers(HttpMethod.POST, "/auth/forgot-password/**").permitAll()
-            .requestMatchers(HttpMethod.POST, "/auth/reset-password/**").hasRole("RESET_PASSWORD")
-            .requestMatchers(HttpMethod.POST, "/auth/resend-verification-email").hasRole("USER_UNVERIFIED")
-            .requestMatchers(HttpMethod.POST, "/auth/verify-email/**").hasRole("USER_UNVERIFIED")
-            .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/auth/reset-password").hasAuthority("RESET_PASSWORD")
+            .requestMatchers(HttpMethod.POST, "/auth/resend-verification-email").hasAuthority("USER_UNVERIFIED")
+            .requestMatchers(HttpMethod.POST, "/auth/verify-email/**").hasAuthority("USER_UNVERIFIED")
             .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-            .anyRequest().authenticated()
+            .anyRequest().hasAuthority("USER_ROLES")
         )
         .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();

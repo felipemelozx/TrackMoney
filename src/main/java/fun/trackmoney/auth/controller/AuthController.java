@@ -23,7 +23,6 @@ import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
-import fun.trackmoney.utils.ValidPassword;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -164,8 +163,7 @@ public class AuthController {
   }
 
   @PostMapping("/reset-password")
-  public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@RequestBody
-                                                                     @ValidPassword PasswordRequest request) {
+  public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@RequestBody @Valid PasswordRequest request) {
     UserEntity user = authUtils.getCurrentUser();
     ForgotPasswordResult response = authService.resetPassword(user.getEmail(), request.newPassword());
     if(response instanceof ForgotPasswordSuccess) {

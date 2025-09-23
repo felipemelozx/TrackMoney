@@ -1,4 +1,6 @@
 package fun.trackmoney.auth.dto;
 
-public record PasswordRequest(String newPassword) {
+import fun.trackmoney.utils.ValidPassword;
+
+public record PasswordRequest(@ValidPassword String newPassword) {
 }
