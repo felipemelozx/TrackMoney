@@ -80,21 +80,15 @@ public class JwtService {
   }
 
   protected Instant getAccessTokenExpiry() {
-    return LocalDateTime.now()
-        .plusMinutes(15)
-        .toInstant(ZoneOffset.ofHours(-3));
+    return Instant.now().plusSeconds(15 * 60);
   }
 
   protected Instant getRestPasswordExpiry() {
-    return LocalDateTime.now()
-        .plusMinutes(30)
-        .toInstant(ZoneOffset.ofHours(-3));
+    return Instant.now().plusSeconds(30 * 60);
   }
 
   protected Instant getRefreshTokenExpiry() {
-    return LocalDateTime.now()
-        .plusDays(7)
-        .toInstant(ZoneOffset.ofHours(-3));
+    return Instant.now().plusSeconds(7 * 24 * 3600);
   }
 
   public String generateVerificationToken(String email) {
