@@ -37,7 +37,7 @@ jobs:
         run: mvn -B clean verify -Dspring.profiles.active=dev
 
       - name: Upload Test Reports for Sonar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-reports
           path: |
@@ -67,7 +67,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Download Test Reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: test-reports
           path: target/site
