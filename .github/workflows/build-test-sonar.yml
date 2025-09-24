@@ -10,9 +10,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build & Test
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,17 +20,10 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "21"
+          distribution: temurin
+          java-version: 21
 
-      - name: Cache Sonar packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache Maven packages
+      - name: Cache Maven
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
@@ -45,11 +36,17 @@ jobs:
       - name: Build & Run Tests
         run: mvn -B clean verify -Dspring.profiles.active=dev
 
-  sonar-analysis:
-    name: SonarCloud Analysis
-    runs-on: ubuntu-latest
-    needs: build-and-test
+      - name: Upload Test Reports for Sonar
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: |
+            target/site/jacoco/jacoco.xml
+            target/checkstyle-result.xml
 
+  sonar-analysis:
+    needs: build-and-test
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,32 +56,30 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: "temurin"
-          java-version: "21"
+          distribution: temurin
+          java-version: 21
 
-      - name: Cache Sonar packages
+      - name: Cache Sonar
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
+      - name: Download Test Reports
+        uses: actions/download-artifact@v3
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven
+          name: test-reports
+          path: target/site
 
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn -B verify sonar:sonar \
-            -Dspring.profiles.active=dev \
+          mvn sonar:sonar \
             -Dsonar.projectKey=felipemelozx_TrackMoney \
             -Dsonar.organization=felipemelozx-trackmoney \
             -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
-            -Dsonar.coverage.exclusions=**/*Config.java,**/*Application.java,**/*Entity.java
+            -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
