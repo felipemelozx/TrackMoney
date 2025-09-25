@@ -72,6 +72,9 @@ jobs:
           name: test-reports
           path: target/site
 
+      - name: Start Docker Compose
+        run: docker compose up -d
+
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
