@@ -5,8 +5,6 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,14 +19,17 @@ public class JwtService {
   private static final String CLAIM_ROLES = "roles";
   private static final String CLAIM_TOKEN_TYPE = "token_type";
   private static final String ISSUER = "trackmoney";
-  
+
+  private static final String ACCESS = "ACCESS";
+  private static final String REFRESH = "REFRESH";
+
   public String generateAccessToken(String email) {
     try {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.create()
           .withIssuer(ISSUER)
           .withClaim(CLAIM_ROLES, "USER_ROLES")
-          .withClaim(CLAIM_TOKEN_TYPE, "ACCESS")
+          .withClaim(CLAIM_TOKEN_TYPE, ACCESS)
           .withSubject(email)
           .withExpiresAt(getAccessTokenExpiry())
           .sign(algorithm);
@@ -43,7 +44,7 @@ public class JwtService {
       return JWT.create()
           .withIssuer(ISSUER)
           .withClaim(CLAIM_ROLES, "USER_ROLES")
-          .withClaim(CLAIM_TOKEN_TYPE, "REFRESH")
+          .withClaim(CLAIM_TOKEN_TYPE, REFRESH)
           .withSubject(email)
           .withExpiresAt(getRefreshTokenExpiry())
           .sign(algorithm);
@@ -58,7 +59,7 @@ public class JwtService {
       return JWT.create()
           .withIssuer(ISSUER)
           .withClaim(CLAIM_ROLES, "RESET_PASSWORD")
-          .withClaim(CLAIM_TOKEN_TYPE, "ACCESS")
+          .withClaim(CLAIM_TOKEN_TYPE, ACCESS)
           .withSubject(email)
           .withExpiresAt(getRestPasswordExpiry())
           .sign(algorithm);
@@ -79,22 +80,16 @@ public class JwtService {
     }
   }
 
-  private Instant getAccessTokenExpiry() {
-    return LocalDateTime.now()
-        .plusMinutes(15)
-        .toInstant(ZoneOffset.ofHours(-3));
+  protected Instant getAccessTokenExpiry() {
+    return Instant.now().plusSeconds(15L * 60);
   }
 
-  private Instant getRestPasswordExpiry() {
-    return LocalDateTime.now()
-        .plusMinutes(5)
-        .toInstant(ZoneOffset.ofHours(-3));
+  protected Instant getRestPasswordExpiry() {
+    return Instant.now().plusSeconds(30L * 60);
   }
 
-  private Instant getRefreshTokenExpiry() {
-    return LocalDateTime.now()
-        .plusDays(7)
-        .toInstant(ZoneOffset.ofHours(-3));
+  protected Instant getRefreshTokenExpiry() {
+    return Instant.now().plusSeconds(7L * 24 * 3600);
   }
 
   public String generateVerificationToken(String email) {
@@ -124,11 +119,11 @@ public class JwtService {
 
   public boolean isAccessToken(String token) {
     DecodedJWT jwt = validateToken(token);
-    return jwt != null && "ACCESS".equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
+    return jwt != null && ACCESS.equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
   }
 
   public boolean isRefreshToken(String token) {
     DecodedJWT jwt = validateToken(token);
-    return jwt != null && "REFRESH".equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
+    return jwt != null && REFRESH.equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
   }
 }

@@ -2,6 +2,7 @@ package fun.trackmoney.auth.controller;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.PasswordRequest;
 import fun.trackmoney.auth.dto.PasswordResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
@@ -22,7 +23,6 @@ import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
-import fun.trackmoney.utils.ValidPassword;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -162,10 +162,10 @@ public class AuthController {
     );
   }
 
-  @PostMapping("/reset-password/{newPassword}")
-  public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@PathVariable @ValidPassword String newPassword) {
+  @PostMapping("/reset-password")
+  public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@RequestBody @Valid PasswordRequest request) {
     UserEntity user = authUtils.getCurrentUser();
-    ForgotPasswordResult response = authService.resetPassword(user.getEmail(), newPassword);
+    ForgotPasswordResult response = authService.resetPassword(user.getEmail(), request.newPassword());
     if(response instanceof ForgotPasswordSuccess) {
       return ResponseEntity.ok().body(
           ApiResponse.<PasswordResponse>success()

@@ -2,11 +2,11 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [main, develop]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [main, develop]
+    branches: [ "main", "develop" ]
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '30 1 * * 0'
 
 jobs:
   analyze:
@@ -18,27 +18,21 @@ jobs:
       security-events: write
 
     strategy:
+      fail-fast: false
       matrix:
-        language: [java]
+        language: [ 'java' ]
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Perform CodeQL Analysis
+      - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
-      - name: Start Docker Compose
-        run: docker compose up -d
-
-      - name: Build with Maven
-        run: mvn clean install -Dspring.profiles.active=dev
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
-
-      - name: Stop Docker Compose
-        if: always()
-        run: docker compose down

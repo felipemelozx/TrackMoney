@@ -58,4 +58,5 @@ management:
     health:
       show-details: always
 front:
-  url: ${FRONT_URL:http://localhost:3000}
+  url: ${FRONT_URL:http://localhost:4200}
+

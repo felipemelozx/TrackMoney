@@ -2,6 +2,7 @@ package fun.trackmoney.auth.controller;
 
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
+import fun.trackmoney.auth.dto.PasswordRequest;
 import fun.trackmoney.auth.dto.PasswordResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
@@ -304,12 +305,13 @@ class AuthControllerTest {
   void shouldReturnSuccessfullyWhenNewPasswordIsValid() {
     UUID uuid = UUID.randomUUID();
     String newPassword = "newPassword";
+    PasswordRequest request = new PasswordRequest(newPassword);
     UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
     ForgotPasswordResult result = new ForgotPasswordSuccess();
     when(authUtils.getCurrentUser()).thenReturn(mockUser);
     when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
 
-    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(request);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -324,13 +326,14 @@ class AuthControllerTest {
   void shouldReturnBadRequestWhenUserIsNotRegistered() {
     UUID uuid = UUID.randomUUID();
     String newPassword = "newPassword";
+    PasswordRequest request = new PasswordRequest(newPassword);
     UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
 
     ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
     when(authUtils.getCurrentUser()).thenReturn(mockUser);
     when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
 
-    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(request);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
@@ -347,13 +350,14 @@ class AuthControllerTest {
   void shouldReturnBadRequestWhenInternalErrorOccurs() {
     UUID uuid = UUID.randomUUID();
     String newPassword = "newPassword";
+    PasswordRequest request = new PasswordRequest(newPassword);
     UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
 
     ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
     when(authUtils.getCurrentUser()).thenReturn(mockUser);
     when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
 
-    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(newPassword);
+    ResponseEntity<ApiResponse<PasswordResponse>> response = authController.resetPassword(request);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
