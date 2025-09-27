@@ -220,12 +220,14 @@ public class AuthController {
     if(accessToken == null){
       return ResponseEntity.badRequest().body(
           ApiResponse.<RefreshTokenResponse>failure()
+              .message("User not found")
               .errors(new CustomFieldError("User", "User not found"))
               .build()
       );
     }
     return ResponseEntity.ok().body(
         ApiResponse.<RefreshTokenResponse>success()
+            .message("Access token refreshed successfully.")
             .data(new RefreshTokenResponse(accessToken))
             .build()
     );
