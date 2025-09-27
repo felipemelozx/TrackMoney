@@ -380,7 +380,7 @@ class AuthControllerTest {
 
     ResponseEntity<ApiResponse<RefreshTokenResponse>> response = authController.refreshAccessToken();
 
-    assertEquals(400, response.getStatusCodeValue());
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
     assertEquals("User", response.getBody().getErrors().get(0).getField());
@@ -397,7 +397,7 @@ class AuthControllerTest {
 
     ResponseEntity<ApiResponse<RefreshTokenResponse>> response = authController.refreshAccessToken();
 
-    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals(expectedToken, response.getBody().getData().accessToken());
