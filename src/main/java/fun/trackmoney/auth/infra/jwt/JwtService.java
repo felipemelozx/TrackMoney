@@ -17,10 +17,8 @@ public class JwtService {
   private String secret;
 
   private static final String CLAIM_ROLES = "roles";
-  private static final String CLAIM_TOKEN_TYPE = "token_type";
   private static final String ISSUER = "trackmoney";
 
-  private static final String ACCESS = "ACCESS";
   private static final String REFRESH = "REFRESH";
 
   public String generateAccessToken(String email) {
@@ -29,7 +27,6 @@ public class JwtService {
       return JWT.create()
           .withIssuer(ISSUER)
           .withClaim(CLAIM_ROLES, "USER_ROLES")
-          .withClaim(CLAIM_TOKEN_TYPE, ACCESS)
           .withSubject(email)
           .withExpiresAt(getAccessTokenExpiry())
           .sign(algorithm);
@@ -43,8 +40,7 @@ public class JwtService {
       Algorithm algorithm = Algorithm.HMAC256(secret);
       return JWT.create()
           .withIssuer(ISSUER)
-          .withClaim(CLAIM_ROLES, "USER_ROLES")
-          .withClaim(CLAIM_TOKEN_TYPE, REFRESH)
+          .withClaim(CLAIM_ROLES, REFRESH)
           .withSubject(email)
           .withExpiresAt(getRefreshTokenExpiry())
           .sign(algorithm);
@@ -59,7 +55,6 @@ public class JwtService {
       return JWT.create()
           .withIssuer(ISSUER)
           .withClaim(CLAIM_ROLES, "RESET_PASSWORD")
-          .withClaim(CLAIM_TOKEN_TYPE, ACCESS)
           .withSubject(email)
           .withExpiresAt(getRestPasswordExpiry())
           .sign(algorithm);
@@ -115,15 +110,5 @@ public class JwtService {
   public String extractRole(String token) {
     DecodedJWT jwt = validateToken(token);
     return jwt != null ? jwt.getClaim(CLAIM_ROLES).asString() : null;
-  }
-
-  public boolean isAccessToken(String token) {
-    DecodedJWT jwt = validateToken(token);
-    return jwt != null && ACCESS.equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
-  }
-
-  public boolean isRefreshToken(String token) {
-    DecodedJWT jwt = validateToken(token);
-    return jwt != null && REFRESH.equals(jwt.getClaim(CLAIM_TOKEN_TYPE).asString());
   }
 }

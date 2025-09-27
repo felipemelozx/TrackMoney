@@ -453,4 +453,32 @@ class AuthServiceTest {
     verify(userService, times(0)).update(any());
     verify(userService, times(1)).findUserByEmail(mockEmail);
   }
+
+  @Test
+  void shouldReturnNullWhenUserNotFoundOnRefreshAccessToken() {
+    String email = "notfound@example.com";
+    when(userService.findUserByEmail(email)).thenReturn(Optional.empty());
+
+    String result = authService.refreshAccessToken(email);
+
+    assertNull(result);
+    verify(jwtService, times(0)).generateAccessToken(any());
+    verify(userService, times(1)).findUserByEmail(email);
+  }
+
+  @Test
+  void shouldReturnNewAccessTokenWhenUserExists() {
+    String email = "test@example.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
+    String expectedAccessToken = "mocked-new-access-token";
+
+    when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
+    when(jwtService.generateAccessToken(email)).thenReturn(expectedAccessToken);
+
+    String result = authService.refreshAccessToken(email);
+
+    assertEquals(expectedAccessToken, result);
+    verify(jwtService, times(1)).generateAccessToken(email);
+    verify(userService, times(1)).findUserByEmail(email);
+  }
 }

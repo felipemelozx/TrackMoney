@@ -4,6 +4,7 @@ import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.PasswordRequest;
 import fun.trackmoney.auth.dto.PasswordResponse;
+import fun.trackmoney.auth.dto.RefreshTokenResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
@@ -210,6 +211,26 @@ public class AuthController {
             ApiResponse.<Void>failure()
                 .errors(new CustomFieldError("Email", "Error sending email"))
                 .build());
+  }
+
+  @GetMapping("/refresh")
+  public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshAccessToken() {
+    UserEntity actualUser = authUtils.getCurrentUser();
+    String accessToken = authService.refreshAccessToken(actualUser.getEmail());
+    if(accessToken == null){
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<RefreshTokenResponse>failure()
+              .message("User not found")
+              .errors(new CustomFieldError("User", "User not found"))
+              .build()
+      );
+    }
+    return ResponseEntity.ok().body(
+        ApiResponse.<RefreshTokenResponse>success()
+            .message("Access token refreshed successfully.")
+            .data(new RefreshTokenResponse(accessToken))
+            .build()
+    );
   }
 
   @GetMapping("/verify")

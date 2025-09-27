@@ -157,6 +157,15 @@ public class AuthService {
     return new ForgotPasswordSuccess();
   }
 
+  public String refreshAccessToken(String email) {
+    UserEntity user = userService.findUserByEmail(email).orElse(null);
+
+    if(user == null) {
+      return null;
+    }
+    return jwtService.generateAccessToken(email);
+  }
+
   protected Boolean saveCode(Integer code, String email) {
     return cacheManagerService.put("EmailVerificationCodes", code, email);
   }
