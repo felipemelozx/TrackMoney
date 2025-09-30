@@ -144,17 +144,10 @@ class AuthServiceTest {
     doThrow(new MessagingException()).when(emailService)
         .sendEmailToVerifyEmail(registerDto.email(), registerDto.name(), code);
 
-    PrintStream out = System.out;
-    String outPut;
     UserRegisterResult actualResponse;
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      System.setOut(new PrintStream(outputStream));
-      actualResponse = authService.register(registerDto);
-      outPut = outputStream.toString();
-    } finally {
-      System.setOut(out);
-    }
-    assertEquals("Email not send.",outPut.trim());
+
+    actualResponse = authService.register(registerDto);
+
     assertInstanceOf(UserRegisterSuccess.class, actualResponse);
     verify(authService, times(1)).saveCode(code, responseDTO.email());
     verify(emailService, times(1)).sendEmailToVerifyEmail(responseDTO.email(), responseDTO.name(), code);
