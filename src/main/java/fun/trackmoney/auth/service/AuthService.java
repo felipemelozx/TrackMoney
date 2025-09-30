@@ -21,6 +21,8 @@ import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,11 @@ public class AuthService {
   private final EmailService emailService;
   private final CacheManagerService cacheManagerService;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+
+  private static final String EMAIL_VERIFICATION_CACHE = "EmailVerificationCodes";
+  private static final String VERIFICATION_EMAIL_ERROR_MSG = "Error sending verification email to {}.";
+  private static final String RESET_PASSWORD_EMAIL_ERROR_MSG = "Error sending reset password email to {}.";
 
   public AuthService(UserService userService,
                      PasswordEncoder passwordEncoder,
@@ -64,9 +71,8 @@ public class AuthService {
 
       try{
         emailService.sendEmailToVerifyEmail(userDto.email(), userDto.name(), code);
-      } catch (MessagingException ignored) {
-        // TODO: Implements a log system.
-        System.out.println("Email not send.");
+      } catch (MessagingException ex) {
+        logger.error(VERIFICATION_EMAIL_ERROR_MSG, userDto.email(), ex);
       }
     }
     return result;
@@ -123,9 +129,8 @@ public class AuthService {
     } while (!codeIsSaved);
     try{
       emailService.sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
-    } catch (MessagingException ignored) {
-      // TODO: Implements a log system.
-      System.out.println("Email not send.");
+    } catch (MessagingException ex) {
+      logger.error(VERIFICATION_EMAIL_ERROR_MSG, user.getEmail(), ex);
       return new VerificationEmailFailure(AuthError.ERROR_SENDING_EMAIL);
     }
     return new VerificationEmailSuccess();
@@ -141,6 +146,7 @@ public class AuthService {
     try {
       emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
     } catch (RuntimeException | MessagingException ex) {
+      logger.error(RESET_PASSWORD_EMAIL_ERROR_MSG, email, ex);
       return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
     }
     return new ForgotPasswordSuccess();
@@ -167,15 +173,15 @@ public class AuthService {
   }
 
   protected Boolean saveCode(Integer code, String email) {
-    return cacheManagerService.put("EmailVerificationCodes", code, email);
+    return cacheManagerService.put(EMAIL_VERIFICATION_CACHE, code, email);
   }
 
   protected String getEmailByCode(Integer code) {
-    return cacheManagerService.get("EmailVerificationCodes", code, String.class);
+    return cacheManagerService.get(EMAIL_VERIFICATION_CACHE, code, String.class);
   }
 
   protected void removeCode(Integer code) {
-    cacheManagerService.evict("EmailVerificationCodes", code);
+    cacheManagerService.evict(EMAIL_VERIFICATION_CACHE, code);
   }
 
   protected Integer generateVerificationCode() {
