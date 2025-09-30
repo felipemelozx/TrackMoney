@@ -48,7 +48,7 @@ public class AuthController {
 
   private final AuthService authService;
   private final AuthUtils authUtils;
-  private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
 
   public AuthController(AuthService authService, AuthUtils authUtils) {
     this.authService = authService;
@@ -57,7 +57,7 @@ public class AuthController {
 
   @PostMapping("/register")
   public ResponseEntity<ApiResponse<UserResponseDTO>> register(@RequestBody @Valid UserRequestDTO userDto) {
-    logger.info("Register attempt for email={}", userDto.email());
+    LOGGER.info("Register attempt for email={}", userDto.email());
     UserRegisterResult user = authService.register(userDto);
     if(user instanceof UserRegisterSuccess registerSuccess) {
       UserResponseDTO responseDTO = (registerSuccess).user();
@@ -69,7 +69,7 @@ public class AuthController {
       );
     }
     UserRegisterFailure failure = (UserRegisterFailure) user;
-    logger.warn("User registration failed: email={}, reason={}", userDto.email(), failure.errorList().getMessage());
+    LOGGER.warn("User registration failed: email={}, reason={}", userDto.email(), failure.errorList().getMessage());
     return ResponseEntity.badRequest().body(
         ApiResponse.<UserResponseDTO>failure()
             .message("Unregistered user.")
@@ -81,7 +81,7 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody LoginRequestDTO loginDto) {
-    logger.info("Login attempt for email={}", loginDto.email());
+    LOGGER.info("Login attempt for email={}", loginDto.email());
     LoginResult loginResult = authService.login(loginDto);
     if(loginResult instanceof LoginSuccess response) {
       return ResponseEntity.ok().body(
@@ -93,7 +93,7 @@ public class AuthController {
     }
 
     LoginFailure loginFailure = (LoginFailure) loginResult;
-    logger.warn("Login failed for email={}, reason={}", loginDto.email(), loginFailure.error().getMessage());
+    LOGGER.warn("Login failed for email={}, reason={}", loginDto.email(), loginFailure.error().getMessage());
 
     CustomFieldError error = loginFailure.error().equals(AuthError.INVALID_CREDENTIALS)
         ? new CustomFieldError("Credentials", loginFailure.error().getMessage())
@@ -115,7 +115,7 @@ public class AuthController {
                                                            message = "he code must be exactly 4 digits long.")
                                                        Integer code) {
     UserEntity user = (UserEntity) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    logger.info("Email verification attempt for userId={}, email={}, code={}", user.getUserId(), user.getEmail(), code);
+    LOGGER.info("Email verification attempt for userId={}, email={}, code={}", user.getUserId(), user.getEmail(), code);
     boolean isActive = authService.activateUser(code, user.getEmail());
 
     if(isActive) {
@@ -125,7 +125,7 @@ public class AuthController {
               .build()
       );
     }
-    logger.warn("Email verification failed for userId={}, email={}, code={}", user.getUserId(), user.getEmail(), code);
+    LOGGER.warn("Email verification failed for userId={}, email={}, code={}", user.getUserId(), user.getEmail(), code);
     return ResponseEntity.badRequest().body(
         ApiResponse.<Void>failure()
             .message("User not verification")
@@ -138,7 +138,7 @@ public class AuthController {
   public ResponseEntity<ApiResponse<Void>> resendVerificationEmail(){
     UserEntity user = authUtils.getCurrentUser();
     VerificationEmailResult response = authService.resendVerificationEmail(user);
-    logger.info("Resend verification email attempt for userId={}, email={}", user.getUserId(), user.getEmail());
+    LOGGER.info("Resend verification email attempt for userId={}, email={}", user.getUserId(), user.getEmail());
 
     if(response instanceof VerificationEmailSuccess) {
       return ResponseEntity.ok().body(
@@ -149,7 +149,7 @@ public class AuthController {
     }
     VerificationEmailFailure failure = (VerificationEmailFailure) response;
     if(failure.error().getMessage().equals(AuthError.USER_IS_VERIFIED.getMessage())) {
-      logger.info("Verification email resent successfully to email={}", user.getEmail());
+      LOGGER.info("Verification email resent successfully to email={}", user.getEmail());
       return ResponseEntity.badRequest().body(
           ApiResponse.<Void>failure()
               .message("Email not send")
@@ -158,7 +158,7 @@ public class AuthController {
       );
     }
 
-    logger.warn("Failed to resend verification email: email={}, reason={}", user.getEmail(), failure.error().getMessage());
+    LOGGER.warn("Failed to resend verification email: email={},reason={}",user.getEmail(),failure.error().getMessage());
     return ResponseEntity.badRequest().body(
         ApiResponse.<Void>failure()
             .message("Error sending email")
@@ -170,11 +170,11 @@ public class AuthController {
   @PostMapping("/reset-password")
   public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@RequestBody @Valid PasswordRequest request) {
     UserEntity user = authUtils.getCurrentUser();
-    logger.info("Password reset attempt for userId={}, email={}", user.getUserId(), user.getEmail());
+    LOGGER.info("Password reset attempt for userId={}, email={}", user.getUserId(), user.getEmail());
     ForgotPasswordResult response = authService.resetPassword(user.getEmail(), request.newPassword());
 
     if(response instanceof ForgotPasswordSuccess) {
-      logger.info("Password reset successful for email={}", user.getEmail());
+      LOGGER.info("Password reset successful for email={}", user.getEmail());
       return ResponseEntity.ok().body(
           ApiResponse.<PasswordResponse>success()
               .message("Password reset was successful")
@@ -184,7 +184,7 @@ public class AuthController {
     }
 
     ForgotPasswordFailure failure = (ForgotPasswordFailure) response;
-    logger.warn("Password reset failed for email={}, reason={}", user.getEmail(), failure.error().getMessage());
+    LOGGER.warn("Password reset failed for email={}, reason={}", user.getEmail(), failure.error().getMessage());
 
     if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
       return ResponseEntity.badRequest().body(
@@ -201,17 +201,17 @@ public class AuthController {
 
   @PostMapping("/forgot-password/{email}")
   public ResponseEntity<ApiResponse<Void>> forgotPassword(@PathVariable String email) {
-    logger.info("Forgot password attempt for email={}", email);
+    LOGGER.info("Forgot password attempt for email={}", email);
     ForgotPasswordResult result = authService.forgotPassword(email);
 
     if(result instanceof ForgotPasswordSuccess){
-      logger.info("Forgot password process initiated successfully for email={}", email);
+      LOGGER.info("Forgot password process initiated successfully for email={}", email);
       return ResponseEntity.ok().body(
           ApiResponse.<Void>successWithNoContent().build()
       );
     }
     ForgotPasswordFailure failure = (ForgotPasswordFailure) result;
-    logger.warn("Forgot password process failed for email={}, reason={}", email, failure.error().getMessage());
+    LOGGER.warn("Forgot password process failed for email={}, reason={}", email, failure.error().getMessage());
 
     if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
       return ResponseEntity.badRequest().body(
@@ -230,11 +230,11 @@ public class AuthController {
   @GetMapping("/refresh")
   public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshAccessToken() {
     UserEntity actualUser = authUtils.getCurrentUser();
-    logger.info("Refresh token attempt for userId={}, email={}", actualUser.getUserId(), actualUser.getEmail());
+    LOGGER.info("Refresh token attempt for userId={}, email={}", actualUser.getUserId(), actualUser.getEmail());
 
     String accessToken = authService.refreshAccessToken(actualUser.getEmail());
     if(accessToken == null){
-      logger.warn("Refresh token failed: user not found, email={}", actualUser.getEmail());
+      LOGGER.warn("Refresh token failed: user not found, email={}", actualUser.getEmail());
       return ResponseEntity.badRequest().body(
           ApiResponse.<RefreshTokenResponse>failure()
               .message("User not found")
@@ -243,7 +243,7 @@ public class AuthController {
       );
     }
 
-    logger.info("Access token refreshed successfully for email={}", actualUser.getEmail());
+    LOGGER.info("Access token refreshed successfully for email={}", actualUser.getEmail());
     return ResponseEntity.ok().body(
         ApiResponse.<RefreshTokenResponse>success()
             .message("Access token refreshed successfully.")
@@ -254,7 +254,7 @@ public class AuthController {
 
   @GetMapping("/verify")
   public ResponseEntity<ApiResponse<Boolean>> verify() {
-    logger.info("Access token verification requested");
+    LOGGER.info("Access token verification requested");
     return ResponseEntity.ok().body(
         ApiResponse.<Boolean>success()
             .message("Token is valid!")

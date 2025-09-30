@@ -41,7 +41,7 @@ public class AuthService {
   private final EmailService emailService;
   private final CacheManagerService cacheManagerService;
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-  private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
 
   private static final String EMAIL_VERIFICATION_CACHE = "EmailVerificationCodes";
   private static final String VERIFICATION_EMAIL_ERROR_MSG = "Error sending verification email to {}.";
@@ -72,7 +72,7 @@ public class AuthService {
       try{
         emailService.sendEmailToVerifyEmail(userDto.email(), userDto.name(), code);
       } catch (MessagingException ex) {
-        logger.error(VERIFICATION_EMAIL_ERROR_MSG, userDto.email(), ex);
+        LOGGER.error(VERIFICATION_EMAIL_ERROR_MSG, userDto.email(), ex);
       }
     }
     return result;
@@ -130,7 +130,7 @@ public class AuthService {
     try{
       emailService.sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
     } catch (MessagingException ex) {
-      logger.error(VERIFICATION_EMAIL_ERROR_MSG, user.getEmail(), ex);
+      LOGGER.error(VERIFICATION_EMAIL_ERROR_MSG, user.getEmail(), ex);
       return new VerificationEmailFailure(AuthError.ERROR_SENDING_EMAIL);
     }
     return new VerificationEmailSuccess();
@@ -146,7 +146,7 @@ public class AuthService {
     try {
       emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
     } catch (RuntimeException | MessagingException ex) {
-      logger.error(RESET_PASSWORD_EMAIL_ERROR_MSG, email, ex);
+      LOGGER.error(RESET_PASSWORD_EMAIL_ERROR_MSG, email, ex);
       return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
     }
     return new ForgotPasswordSuccess();

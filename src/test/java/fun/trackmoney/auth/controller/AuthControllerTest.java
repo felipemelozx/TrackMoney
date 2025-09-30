@@ -127,7 +127,7 @@ class AuthControllerTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Login failure", response.getBody().getMessage());
+    assertEquals("Login failed", response.getBody().getMessage());
     assertEquals(AuthError.INVALID_CREDENTIALS.getMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
@@ -143,7 +143,7 @@ class AuthControllerTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Login failure", response.getBody().getMessage());
+    assertEquals("Login failed", response.getBody().getMessage());
     assertEquals(AuthError.USER_NOT_REGISTER.getMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
@@ -159,7 +159,7 @@ class AuthControllerTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Login failure", response.getBody().getMessage());
+    assertEquals("Login failed", response.getBody().getMessage());
     assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
