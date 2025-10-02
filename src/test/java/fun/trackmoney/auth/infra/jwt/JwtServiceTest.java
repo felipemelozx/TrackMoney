@@ -37,7 +37,6 @@ class JwtServiceTest {
 
     DecodedJWT decoded = JWT.decode(token);
     assertEquals(email, decoded.getSubject());
-    assertEquals("ACCESS", decoded.getClaim("token_type").asString());
     assertEquals("USER_ROLES", decoded.getClaim("roles").asString());
     assertEquals("trackmoney", decoded.getIssuer());
     assertTrue(decoded.getExpiresAt().after(new Date()));
@@ -51,8 +50,7 @@ class JwtServiceTest {
 
     DecodedJWT decoded = JWT.decode(token);
     assertEquals(email, decoded.getSubject());
-    assertEquals("REFRESH", decoded.getClaim("token_type").asString());
-    assertEquals("USER_ROLES", decoded.getClaim("roles").asString());
+    assertEquals("REFRESH", decoded.getClaim("roles").asString());
     assertEquals("trackmoney", decoded.getIssuer());
     assertTrue(decoded.getExpiresAt().after(new Date()));
   }
@@ -66,7 +64,6 @@ class JwtServiceTest {
     DecodedJWT decoded = JWT.decode(token);
     assertEquals(email, decoded.getSubject());
     assertEquals("RESET_PASSWORD", decoded.getClaim("roles").asString());
-    assertEquals("ACCESS", decoded.getClaim("token_type").asString());
     assertEquals("trackmoney", decoded.getIssuer());
     assertTrue(decoded.getExpiresAt().after(new Date()));
   }
@@ -83,14 +80,6 @@ class JwtServiceTest {
     assertFalse(decoded.getClaim("IsVerify").asBoolean());
     assertEquals("trackmoney", decoded.getIssuer());
     assertTrue(decoded.getExpiresAt().after(new Date()));
-  }
-
-  @Test
-  void verificationTokenShouldNotContainTokenType() {
-    String email = "verify2@example.com";
-    String token = jwtService.generateVerificationToken(email);
-    DecodedJWT decoded = JWT.decode(token);
-    assertNull(decoded.getClaim("token_type").asString());
   }
 
   @Test
@@ -150,35 +139,12 @@ class JwtServiceTest {
   }
 
   @Test
-  void shouldReturnTrueForAccessToken() {
-    String token = jwtService.generateAccessToken("access@example.com");
-    assertTrue(jwtService.isAccessToken(token));
-    assertFalse(jwtService.isRefreshToken(token));
-  }
-
-  @Test
-  void shouldReturnTrueForRefreshToken() {
-    String token = jwtService.generateRefreshToken("refresh@example.com");
-    assertTrue(jwtService.isRefreshToken(token));
-    assertFalse(jwtService.isAccessToken(token));
-  }
-
-  @Test
-  void shouldReturnFalseForInvalidTokenTypes() {
-    String invalidToken = "invalid.jwt.token";
-    assertFalse(jwtService.isAccessToken(invalidToken));
-    assertFalse(jwtService.isRefreshToken(invalidToken));
-  }
-
-
-  @Test
   void validateTokenShouldReturnDecodedJWTWhenTokenIsValid() {
     String email = "valid@example.com";
     String token = jwtService.generateAccessToken(email);
     DecodedJWT decoded = ReflectionTestUtils.invokeMethod(jwtService, "validateToken", token);
     assertNotNull(decoded);
     assertEquals(email, decoded.getSubject());
-    assertEquals("ACCESS", decoded.getClaim("token_type").asString());
     assertEquals("USER_ROLES", decoded.getClaim("roles").asString());
     assertEquals("trackmoney", decoded.getIssuer());
   }

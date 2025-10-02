@@ -4,6 +4,7 @@ import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.PasswordRequest;
 import fun.trackmoney.auth.dto.PasswordResponse;
+import fun.trackmoney.auth.dto.RefreshTokenResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
@@ -126,7 +127,7 @@ class AuthControllerTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Login failure", response.getBody().getMessage());
+    assertEquals("Login failed", response.getBody().getMessage());
     assertEquals(AuthError.INVALID_CREDENTIALS.getMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
@@ -142,7 +143,7 @@ class AuthControllerTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Login failure", response.getBody().getMessage());
+    assertEquals("Login failed", response.getBody().getMessage());
     assertEquals(AuthError.USER_NOT_REGISTER.getMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
@@ -158,7 +159,7 @@ class AuthControllerTest {
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Login failure", response.getBody().getMessage());
+    assertEquals("Login failed", response.getBody().getMessage());
     assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
@@ -368,5 +369,37 @@ class AuthControllerTest {
     CustomFieldError error = body.getErrors().get(0);
     assertEquals("Internal", error.getField());
     assertEquals("Error sending email. Please try again later.", error.getMessage());
+  }
+
+  @Test
+  void shouldReturnBadRequestWhenUserNotFound() {
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "123", true);
+
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(authService.refreshAccessToken(user.getEmail())).thenReturn(null);
+
+    ResponseEntity<ApiResponse<RefreshTokenResponse>> response = authController.refreshAccessToken();
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("User", response.getBody().getErrors().get(0).getField());
+    assertEquals("User not found", response.getBody().getErrors().get(0).getMessage());
+  }
+
+  @Test
+  void shouldReturnOkWhenTokenIsGenerated() {
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", "test@example.com", "123", true);
+    String expectedToken = "new-mocked-access-token";
+
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(authService.refreshAccessToken(user.getEmail())).thenReturn(expectedToken);
+
+    ResponseEntity<ApiResponse<RefreshTokenResponse>> response = authController.refreshAccessToken();
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(expectedToken, response.getBody().getData().accessToken());
   }
 }

@@ -37,6 +37,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/auth/reset-password").hasAuthority("RESET_PASSWORD")
             .requestMatchers(HttpMethod.POST, "/auth/resend-verification-email").hasAuthority("USER_UNVERIFIED")
             .requestMatchers(HttpMethod.POST, "/auth/verify-email/**").hasAuthority("USER_UNVERIFIED")
+            .requestMatchers(HttpMethod.GET, "/auth/refresh").hasAuthority("REFRESH")
             .requestMatchers(HttpMethod.GET, "/health/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/auth/verify").hasAnyAuthority("USER_UNVERIFIED",
                 "RESET_PASSWORD",
