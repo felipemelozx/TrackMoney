@@ -5,8 +5,13 @@ import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
+import fun.trackmoney.transaction.dto.internal.TransactionResult;
+import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
 import fun.trackmoney.transaction.service.TransactionService;
+import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -28,19 +33,28 @@ import java.util.List;
 public class TransactionController {
 
   private final TransactionService transactionService;
+  private final AuthUtils authUtils;
 
-  public TransactionController(TransactionService transactionService) {
+  public TransactionController(TransactionService transactionService, AuthUtils authUtils) {
     this.transactionService = transactionService;
+    this.authUtils = authUtils;
   }
   
-  @PostMapping("/create")
-  public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody CreateTransactionDTO dto) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(
-      ApiResponse.<TransactionResponseDTO>success()
+  @PostMapping()
+  public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody
+                                                                                 @Valid CreateTransactionDTO dto) {
+    UserEntity user = authUtils.getCurrentUser();
+    TransactionResult result = transactionService.createTransaction(dto, user.getUserId());
+
+    if(result instanceof TransactionSuccess) {
+      TransactionResponseDTO responseDTO = ((TransactionSuccess) result).response();
+      var body = ApiResponse.<TransactionResponseDTO>success()
           .message("Transfer created")
-          .data(transactionService.createTransaction(dto))
-          .build()
-    );
+          .data(responseDTO)
+          .build();
+      return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+    return null;
   }
 
   @GetMapping

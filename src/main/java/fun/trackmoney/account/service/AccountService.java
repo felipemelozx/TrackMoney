@@ -44,9 +44,19 @@ public class AccountService {
     return accountMapper.accountEntityListToAccountResponseList(accountRepository.findAllByUserEmail(userId));
   }
 
+  // TODO: remove this method
+  @Deprecated
   public AccountResponseDTO findAccountById(Integer id) {
     return accountMapper.accountEntityToAccountResponse(accountRepository.findById(id)
         .orElseThrow(() -> new AccountNotFoundException("Account not found!")));
+  }
+
+  public AccountEntity findById(Integer id) {
+    return accountRepository.findById(id).orElse(null);
+  }
+
+  public AccountEntity findAccountDefaultByUserId(UUID userId) {
+    return accountRepository.findDefaultAccountByUserId(userId).orElse(null);
   }
 
   public AccountResponseDTO updateAccountById(Integer id, AccountUpdateRequestDTO dto) {
@@ -63,9 +73,12 @@ public class AccountService {
       accountRepository.deleteById(id);
   }
 
-  public void updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
-    var account = accountRepository.findById(accountId)
-        .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
+  public boolean updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
+    AccountEntity account = findById(accountId);
+
+    if(account == null) {
+      return false;
+    }
 
     if (isCredit) {
       account.setBalance(account.getBalance().add(balance));
@@ -74,5 +87,6 @@ public class AccountService {
     }
 
     accountRepository.save(account);
+    return true;
   }
 }
