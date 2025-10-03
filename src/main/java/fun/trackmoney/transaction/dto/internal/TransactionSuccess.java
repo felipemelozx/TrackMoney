@@ -1,4 +1,6 @@
 package fun.trackmoney.transaction.dto.internal;
 
-public record TransactionSuccess(fun.trackmoney.transaction.dto.TransactionResponseDTO response) implements TransactionResult {
+import fun.trackmoney.transaction.dto.TransactionResponseDTO;
+
+public record TransactionSuccess(TransactionResponseDTO response) implements TransactionResult {
 }

@@ -50,9 +50,9 @@ public class TransactionService {
   }
 
   public TransactionResult createTransaction(CreateTransactionDTO transactionDTO, UUID userId) {
-    AccountEntity optionalAccount = accountService.findAccountDefaultByUserId(userId);
+    AccountEntity account = accountService.findAccountDefaultByUserId(userId);
 
-    if(optionalAccount == null) {
+    if(account == null) {
       return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
     }
 
@@ -64,13 +64,13 @@ public class TransactionService {
 
     TransactionEntity transactionEntity = transactionMapper.createTransactionToEntity(transactionDTO);
 
-    transactionEntity.setAccount(optionalAccount);
+    transactionEntity.setAccount(account);
     transactionEntity.setCategory(category);
 
     var response = transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
 
     boolean isCredit = TransactionType.INCOME.equals(transactionDTO.transactionType());
-    var wasUpdate = accountService.updateAccountBalance(transactionDTO.amount(), optionalAccount.getAccountId(), isCredit);
+    var wasUpdate = accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
     if(!wasUpdate){
       return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
     }
