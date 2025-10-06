@@ -43,8 +43,10 @@ public class TransactionController {
   
   @PostMapping
   public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody
-                                                                               @Valid CreateTransactionDTO dto,
-                                                                               @AuthenticationPrincipal UserEntity currentUser) {
+                                                                               @Valid
+                                                                               CreateTransactionDTO dto,
+                                                                               @AuthenticationPrincipal
+                                                                               UserEntity currentUser) {
     TransactionResult result = transactionService.createTransaction(dto, currentUser.getUserId());
 
     if(result instanceof TransactionSuccess) {
