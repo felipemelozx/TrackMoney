@@ -7,9 +7,18 @@ import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.TransactionType;
+import fun.trackmoney.testutils.AccountEntityFactory;
+import fun.trackmoney.testutils.CategoryEntityFactory;
+import fun.trackmoney.testutils.CreateTransactionDTOBuilder;
+import fun.trackmoney.testutils.TransactionEntityFactory;
+import fun.trackmoney.testutils.TransactionResponseDTOFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
+import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.dto.internal.TransactionFailure;
+import fun.trackmoney.transaction.dto.internal.TransactionResult;
+import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
 import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
@@ -59,28 +68,66 @@ class TransactionServiceTest {
   }
 
   @Test
-  void createTransaction_shouldReturnResponseDTO() {
-    CreateTransactionDTO dto = new CreateTransactionDTO(
-        1, 2, TransactionType.INCOME, BigDecimal.valueOf(100), "Test", new Timestamp(System.currentTimeMillis()));
+  void shouldReturnTransactionSuccessWhenTransactionIsCreatedSuccessfully() {
+    UUID userId = UUID.randomUUID();
+    CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
+    AccountEntity account = AccountEntityFactory.defaultAccount();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+    TransactionEntity transaction = TransactionEntityFactory.defaultTransaction();
+    TransactionResponseDTO responseDTO = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    AccountEntity accountEntity = new AccountEntity();
-    CategoryEntity categoryEntity = new CategoryEntity();
-    TransactionEntity entity = new TransactionEntity();
-    TransactionEntity saved = new TransactionEntity();
-    TransactionResponseDTO response = new TransactionResponseDTO(1, "Test", BigDecimal.valueOf(100), null);
-    UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "Jhon Doe", "example@gmail.com");
+    when(accountService.findAccountDefaultByUserId(userId)).thenReturn(account);
+    when(categoryService.findById(dto.categoryId())).thenReturn(category);
+    when(transactionMapper.createTransactionToEntity(dto)).thenReturn(transaction);
+    when(transactionRepository.save(transaction)).thenReturn(transaction);
+    when(accountService.updateAccountBalance(dto.amount(), account.getAccountId(), true)).thenReturn(true);
+    when(transactionMapper.toResponseDTO(transaction)).thenReturn(responseDTO);
 
-    when(accountService.findAccountById(1)).thenReturn(new AccountResponseDTO(1, user, "btg", BigDecimal.valueOf(100), true));
-    when(accountMapper.accountResponseToEntity(any())).thenReturn(accountEntity);
-    when(categoryService.findById(2)).thenReturn(categoryEntity);
-    when(transactionMapper.createTransactionToEntity(dto)).thenReturn(entity);
-    when(transactionRepository.save(entity)).thenReturn(saved);
-    when(transactionMapper.toResponseDTO(saved)).thenReturn(response);
+    TransactionResult result = transactionService.createTransaction(dto, userId);
 
-    TransactionResponseDTO result = transactionService.createTransaction(dto);
+    assertInstanceOf(TransactionSuccess.class, result);
+    TransactionSuccess transactionSuccess = (TransactionSuccess) result;
+    assertEquals("buy bread", transactionSuccess.response().description());
+    verify(transactionRepository, times(1)).save(transaction);
+    verify(accountService, times(1)).findAccountDefaultByUserId(userId);
+    verify(categoryService, times(1)).findById(dto.categoryId());
+  }
 
-    assertEquals("Test", result.description());
-    verify(transactionRepository).save(entity);
+  @Test
+  void shouldReturnTransactionFailureWhenAccountIsNotFound() {
+    UUID userId = UUID.randomUUID();
+    CreateTransactionDTO dto = CreateTransactionDTOBuilder.defaultTransaction();
+
+    when(accountService.findAccountDefaultByUserId(userId)).thenReturn(null);
+
+    TransactionResult result = transactionService.createTransaction(dto, userId);
+
+    assertInstanceOf(TransactionFailure.class, result);
+    TransactionFailure failure = (TransactionFailure) result;
+    assertEquals(TransactionsError.ACCOUNT_NOT_FOUND, failure.error());
+
+    verify(accountService, times(1)).findAccountDefaultByUserId(userId);
+    verifyNoInteractions(categoryService, transactionRepository, transactionMapper);
+  }
+
+  @Test
+  void shouldReturnTransactionFailureWhenCategoryIsNotFound() {
+    UUID userId = UUID.randomUUID();
+    CreateTransactionDTO dto = CreateTransactionDTOBuilder.defaultTransaction();
+    AccountEntity account = AccountEntityFactory.defaultAccount();
+
+    when(accountService.findAccountDefaultByUserId(userId)).thenReturn(account);
+    when(categoryService.findById(dto.categoryId())).thenReturn(null);
+
+    TransactionResult result = transactionService.createTransaction(dto, userId);
+
+    assertInstanceOf(TransactionFailure.class, result);
+    TransactionFailure failure = (TransactionFailure) result;
+    assertEquals(TransactionsError.CATEGORY_NOT_FOUND, failure.error());
+
+    verify(accountService, times(1)).findAccountDefaultByUserId(userId);
+    verify(categoryService, times(1)).findById(dto.categoryId());
+    verifyNoInteractions(transactionRepository, transactionMapper);
   }
 
   @Test

@@ -70,10 +70,8 @@ public class TransactionService {
     var response = transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
 
     boolean isCredit = TransactionType.INCOME.equals(transactionDTO.transactionType());
-    var wasUpdate = accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
-    if(!wasUpdate){
-      return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
-    }
+    accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
+
     return new TransactionSuccess(response);
   }
 
