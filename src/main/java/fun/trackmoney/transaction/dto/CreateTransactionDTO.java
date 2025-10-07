@@ -6,7 +6,8 @@ import org.hibernate.validator.constraints.Length;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-public record CreateTransactionDTO(Integer categoryId,
+public record CreateTransactionDTO(String transactionName,
+                                   Integer categoryId,
                                    TransactionType transactionType,
                                    BigDecimal amount,
                                    @Length(max = 255)
