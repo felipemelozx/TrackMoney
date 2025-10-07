@@ -44,6 +44,8 @@ import java.util.List;
 @RequestMapping("auth")
 public class AuthController {
 
+  private static final String FIELD_EMAIL = "Email";
+
   private final AuthService authService;
   private final AuthUtils authUtils;
 
@@ -69,7 +71,7 @@ public class AuthController {
         ApiResponse.<UserResponseDTO>failure()
             .message("Unregistered user.")
             .data(null)
-            .errors(List.of(new CustomFieldError("Email", failure.errorList().getMessage())))
+            .errors(List.of(new CustomFieldError(FIELD_EMAIL, failure.errorList().getMessage())))
             .build()
     );
   }
@@ -142,7 +144,7 @@ public class AuthController {
       return ResponseEntity.badRequest().body(
           ApiResponse.<Void>failure()
               .message("Email not send")
-              .errors(new CustomFieldError("Email", failure.error().getMessage()))
+              .errors(new CustomFieldError(FIELD_EMAIL, failure.error().getMessage()))
               .build()
       );
     }
@@ -150,7 +152,7 @@ public class AuthController {
     return ResponseEntity.badRequest().body(
         ApiResponse.<Void>failure()
             .message("Error sending email")
-            .errors(new CustomFieldError("Email", failure.error().getMessage()))
+            .errors(new CustomFieldError(FIELD_EMAIL, failure.error().getMessage()))
             .build()
     );
   }
@@ -174,7 +176,7 @@ public class AuthController {
     if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
       return ResponseEntity.badRequest().body(
           ApiResponse.<PasswordResponse>failure()
-              .errors(new CustomFieldError("Email", "This email: " + user.getEmail() + " is not register"))
+              .errors(new CustomFieldError(FIELD_EMAIL, "This email: " + user.getEmail() + " is not register"))
               .build());
     }
 
@@ -198,14 +200,14 @@ public class AuthController {
     if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
       return ResponseEntity.badRequest().body(
           ApiResponse.<Void>failure()
-              .errors(new CustomFieldError("Email", "This email: " + email + " is not register"))
+              .errors(new CustomFieldError(FIELD_EMAIL, "This email: " + email + " is not register"))
               .build());
     }
 
     return ResponseEntity.internalServerError()
         .body(
             ApiResponse.<Void>failure()
-                .errors(new CustomFieldError("Email", "Error sending email"))
+                .errors(new CustomFieldError(FIELD_EMAIL, "Error sending email"))
                 .build());
   }
 
