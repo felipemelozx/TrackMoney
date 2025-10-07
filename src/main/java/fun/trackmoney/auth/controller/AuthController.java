@@ -4,6 +4,7 @@ import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.PasswordRequest;
 import fun.trackmoney.auth.dto.PasswordResponse;
+import fun.trackmoney.auth.dto.RefreshTokenResponse;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
 import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
@@ -43,6 +44,8 @@ import java.util.List;
 @RequestMapping("auth")
 public class AuthController {
 
+  private static final String FIELD_EMAIL = "Email";
+
   private final AuthService authService;
   private final AuthUtils authUtils;
 
@@ -68,7 +71,7 @@ public class AuthController {
         ApiResponse.<UserResponseDTO>failure()
             .message("Unregistered user.")
             .data(null)
-            .errors(List.of(new CustomFieldError("Email", failure.errorList().getMessage())))
+            .errors(List.of(new CustomFieldError(FIELD_EMAIL, failure.errorList().getMessage())))
             .build()
     );
   }
@@ -86,21 +89,14 @@ public class AuthController {
     }
 
     LoginFailure loginFailure = (LoginFailure) loginResult;
-    String message = "Login failure";
-    if(loginFailure.error().equals(AuthError.INVALID_CREDENTIALS)){
-      CustomFieldError error = new CustomFieldError("Credentials", loginFailure.error().getMessage());
-      return ResponseEntity.badRequest().body(
-          ApiResponse.<LoginResponseDTO>failure()
-              .message(message)
-              .errors(error)
-              .build()
-      );
-    }
 
-    CustomFieldError error = new CustomFieldError("User", loginFailure.error().getMessage());
+    CustomFieldError error = loginFailure.error().equals(AuthError.INVALID_CREDENTIALS)
+        ? new CustomFieldError("Credentials", loginFailure.error().getMessage())
+        : new CustomFieldError("User", loginFailure.error().getMessage());
+
     return ResponseEntity.badRequest().body(
         ApiResponse.<LoginResponseDTO>failure()
-            .message(message)
+            .message("Login failed")
             .errors(error)
             .build()
     );
@@ -123,7 +119,6 @@ public class AuthController {
               .build()
       );
     }
-
     return ResponseEntity.badRequest().body(
         ApiResponse.<Void>failure()
             .message("User not verification")
@@ -149,7 +144,7 @@ public class AuthController {
       return ResponseEntity.badRequest().body(
           ApiResponse.<Void>failure()
               .message("Email not send")
-              .errors(new CustomFieldError("Email", failure.error().getMessage()))
+              .errors(new CustomFieldError(FIELD_EMAIL, failure.error().getMessage()))
               .build()
       );
     }
@@ -157,7 +152,7 @@ public class AuthController {
     return ResponseEntity.badRequest().body(
         ApiResponse.<Void>failure()
             .message("Error sending email")
-            .errors(new CustomFieldError("Email", failure.error().getMessage()))
+            .errors(new CustomFieldError(FIELD_EMAIL, failure.error().getMessage()))
             .build()
     );
   }
@@ -166,6 +161,7 @@ public class AuthController {
   public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@RequestBody @Valid PasswordRequest request) {
     UserEntity user = authUtils.getCurrentUser();
     ForgotPasswordResult response = authService.resetPassword(user.getEmail(), request.newPassword());
+
     if(response instanceof ForgotPasswordSuccess) {
       return ResponseEntity.ok().body(
           ApiResponse.<PasswordResponse>success()
@@ -174,11 +170,13 @@ public class AuthController {
               .build()
       );
     }
+
     ForgotPasswordFailure failure = (ForgotPasswordFailure) response;
+
     if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
       return ResponseEntity.badRequest().body(
           ApiResponse.<PasswordResponse>failure()
-              .errors(new CustomFieldError("Email", "This email: " + user.getEmail() + " is not register"))
+              .errors(new CustomFieldError(FIELD_EMAIL, "This email: " + user.getEmail() + " is not register"))
               .build());
     }
 
@@ -191,6 +189,7 @@ public class AuthController {
   @PostMapping("/forgot-password/{email}")
   public ResponseEntity<ApiResponse<Void>> forgotPassword(@PathVariable String email) {
     ForgotPasswordResult result = authService.forgotPassword(email);
+
     if(result instanceof ForgotPasswordSuccess){
       return ResponseEntity.ok().body(
           ApiResponse.<Void>successWithNoContent().build()
@@ -201,15 +200,37 @@ public class AuthController {
     if(failure.error().getMessage().equals(AuthError.USER_NOT_REGISTER.getMessage())) {
       return ResponseEntity.badRequest().body(
           ApiResponse.<Void>failure()
-              .errors(new CustomFieldError("Email", "This email: " + email + " is not register"))
+              .errors(new CustomFieldError(FIELD_EMAIL, "This email: " + email + " is not register"))
               .build());
     }
 
     return ResponseEntity.internalServerError()
         .body(
             ApiResponse.<Void>failure()
-                .errors(new CustomFieldError("Email", "Error sending email"))
+                .errors(new CustomFieldError(FIELD_EMAIL, "Error sending email"))
                 .build());
+  }
+
+  @GetMapping("/refresh")
+  public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshAccessToken() {
+    UserEntity actualUser = authUtils.getCurrentUser();
+
+    String accessToken = authService.refreshAccessToken(actualUser.getEmail());
+    if(accessToken == null){
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<RefreshTokenResponse>failure()
+              .message("User not found")
+              .errors(new CustomFieldError("User", "User not found"))
+              .build()
+      );
+    }
+
+    return ResponseEntity.ok().body(
+        ApiResponse.<RefreshTokenResponse>success()
+            .message("Access token refreshed successfully.")
+            .data(new RefreshTokenResponse(accessToken))
+            .build()
+    );
   }
 
   @GetMapping("/verify")

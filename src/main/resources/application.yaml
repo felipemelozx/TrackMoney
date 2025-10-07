@@ -47,7 +47,7 @@ api:
 
 logging:
   level:
-    org.flywaydb.core: DEBUG
+    ROOT: TRACE
 
 management:
   endpoints:

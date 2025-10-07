@@ -5,12 +5,20 @@ import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
+import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.dto.internal.TransactionFailure;
+import fun.trackmoney.transaction.dto.internal.TransactionResult;
+import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
 import fun.trackmoney.transaction.service.TransactionService;
+import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,14 +41,37 @@ public class TransactionController {
     this.transactionService = transactionService;
   }
   
-  @PostMapping("/create")
-  public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody CreateTransactionDTO dto) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(
-      ApiResponse.<TransactionResponseDTO>success()
+  @PostMapping
+  public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody
+                                                                               @Valid
+                                                                               CreateTransactionDTO dto,
+                                                                               @AuthenticationPrincipal
+                                                                               UserEntity currentUser) {
+    TransactionResult result = transactionService.createTransaction(dto, currentUser.getUserId());
+
+    if(result instanceof TransactionSuccess) {
+      TransactionResponseDTO responseDTO = ((TransactionSuccess) result).response();
+      var body = ApiResponse.<TransactionResponseDTO>success()
           .message("Transfer created")
-          .data(transactionService.createTransaction(dto))
-          .build()
-    );
+          .data(responseDTO)
+          .build();
+      return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+    TransactionFailure failure = (TransactionFailure) result;
+
+    if(failure.error() == TransactionsError.ACCOUNT_NOT_FOUND) {
+      ApiResponse<TransactionResponseDTO> bodyData = ApiResponse.<TransactionResponseDTO>failure()
+          .message("Transaction create error.")
+          .errors(new CustomFieldError("Account", "Account not found to update balance"))
+          .build();
+      return ResponseEntity.badRequest().body(bodyData);
+    }
+
+    ApiResponse<TransactionResponseDTO> bodyData = ApiResponse.<TransactionResponseDTO>failure()
+        .message("Transaction create error.")
+        .errors(new CustomFieldError("Category", "Category not found."))
+        .build();
+    return ResponseEntity.badRequest().body(bodyData);
   }
 
   @GetMapping

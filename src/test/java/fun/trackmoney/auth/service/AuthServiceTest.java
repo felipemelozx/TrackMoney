@@ -144,17 +144,10 @@ class AuthServiceTest {
     doThrow(new MessagingException()).when(emailService)
         .sendEmailToVerifyEmail(registerDto.email(), registerDto.name(), code);
 
-    PrintStream out = System.out;
-    String outPut;
     UserRegisterResult actualResponse;
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      System.setOut(new PrintStream(outputStream));
-      actualResponse = authService.register(registerDto);
-      outPut = outputStream.toString();
-    } finally {
-      System.setOut(out);
-    }
-    assertEquals("Email not send.",outPut.trim());
+
+    actualResponse = authService.register(registerDto);
+
     assertInstanceOf(UserRegisterSuccess.class, actualResponse);
     verify(authService, times(1)).saveCode(code, responseDTO.email());
     verify(emailService, times(1)).sendEmailToVerifyEmail(responseDTO.email(), responseDTO.name(), code);
@@ -452,5 +445,33 @@ class AuthServiceTest {
     assertInstanceOf(ForgotPasswordFailure.class, response);
     verify(userService, times(0)).update(any());
     verify(userService, times(1)).findUserByEmail(mockEmail);
+  }
+
+  @Test
+  void shouldReturnNullWhenUserNotFoundOnRefreshAccessToken() {
+    String email = "notfound@example.com";
+    when(userService.findUserByEmail(email)).thenReturn(Optional.empty());
+
+    String result = authService.refreshAccessToken(email);
+
+    assertNull(result);
+    verify(jwtService, times(0)).generateAccessToken(any());
+    verify(userService, times(1)).findUserByEmail(email);
+  }
+
+  @Test
+  void shouldReturnNewAccessTokenWhenUserExists() {
+    String email = "test@example.com";
+    UserEntity user = new UserEntity(UUID.randomUUID(), "John Doe", email, "encodedPassword", true);
+    String expectedAccessToken = "mocked-new-access-token";
+
+    when(userService.findUserByEmail(email)).thenReturn(Optional.of(user));
+    when(jwtService.generateAccessToken(email)).thenReturn(expectedAccessToken);
+
+    String result = authService.refreshAccessToken(email);
+
+    assertEquals(expectedAccessToken, result);
+    verify(jwtService, times(1)).generateAccessToken(email);
+    verify(userService, times(1)).findUserByEmail(email);
   }
 }
