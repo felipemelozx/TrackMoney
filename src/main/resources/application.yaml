@@ -47,7 +47,7 @@ api:
 
 logging:
   level:
-    ROOT: INFO
+    ROOT: TRACE
 
 management:
   endpoints:

@@ -10,6 +10,10 @@ import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
+import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.dto.internal.TransactionFailure;
+import fun.trackmoney.transaction.dto.internal.TransactionResult;
+import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
 import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
@@ -22,6 +26,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -44,20 +49,30 @@ public class TransactionService {
     this.categoryService = categoryService;
   }
 
-  public TransactionResponseDTO createTransaction(CreateTransactionDTO transactionDTO) {
-    AccountEntity account = accountMapper.accountResponseToEntity(
-        accountService.findAccountById(transactionDTO.accountId()));
+  public TransactionResult createTransaction(CreateTransactionDTO transactionDTO, UUID userId) {
+    AccountEntity account = accountService.findAccountDefaultByUserId(userId);
+
+    if(account == null) {
+      return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
+    }
+
     CategoryEntity category = categoryService.findById(transactionDTO.categoryId());
+
+    if(category == null) {
+      return new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
+    }
+
     TransactionEntity transactionEntity = transactionMapper.createTransactionToEntity(transactionDTO);
 
     transactionEntity.setAccount(account);
     transactionEntity.setCategory(category);
+
     var response = transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
 
-    accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(),
-        TransactionType.INCOME.equals(transactionDTO.transactionType()));
+    boolean isCredit = TransactionType.INCOME.equals(transactionDTO.transactionType());
+    accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
 
-    return response;
+    return new TransactionSuccess(response);
   }
 
   public List<TransactionResponseDTO> findAllTransaction() {
