@@ -11,6 +11,7 @@ public class TransactionResponseDTOFactory {
     public static TransactionResponseDTO defaultTransactionResponse() {
         return new TransactionResponseDTO(
             1,
+            "Some Name",
             "buy bread",
             BigDecimal.valueOf(120.50),
             AccountResponseDTOFactory.defaultAccountResponse()
@@ -20,6 +21,7 @@ public class TransactionResponseDTOFactory {
     public static TransactionResponseDTO incomeTransactionResponse() {
         return new TransactionResponseDTO(
             2,
+            "",
             "Salário mensal",
             BigDecimal.valueOf(3000.00),
             AccountResponseDTOFactory.defaultAccountResponse()
@@ -32,6 +34,6 @@ public class TransactionResponseDTOFactory {
             BigDecimal amount,
             AccountResponseDTO account
     ) {
-        return new TransactionResponseDTO(transactionId, description, amount, account);
+        return new TransactionResponseDTO(transactionId,"Some Name", description, amount, account);
     }
 }

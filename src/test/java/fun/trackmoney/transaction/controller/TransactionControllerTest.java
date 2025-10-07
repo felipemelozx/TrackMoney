@@ -108,8 +108,8 @@ class TransactionControllerTest {
   @Test
   void findAllTransaction_shouldReturnList() {
     // Arrange
-    TransactionResponseDTO transaction1 = new TransactionResponseDTO(1, "T1", BigDecimal.TEN, null);
-    TransactionResponseDTO transaction2 = new TransactionResponseDTO(2, "T2", BigDecimal.ONE, null);
+    TransactionResponseDTO transaction1 = TransactionResponseDTOFactory.defaultTransactionResponse();
+    TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     when(transactionService.findAllTransaction()).thenReturn(List.of(transaction1, transaction2));
 
@@ -127,7 +127,7 @@ class TransactionControllerTest {
   @Test
   void findTransactionById_shouldReturnTransaction() {
     // Arrange
-    TransactionResponseDTO transaction = new TransactionResponseDTO(1, "T1", BigDecimal.TEN, null);
+    TransactionResponseDTO transaction = TransactionResponseDTOFactory.defaultTransactionResponse();
     when(transactionService.findById(1)).thenReturn(transaction);
 
     // Act
@@ -136,7 +136,7 @@ class TransactionControllerTest {
     // Assert
     assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals("T1", response.getBody().getData().description());
+    assertEquals("buy bread", response.getBody().getData().description());
 
     verify(transactionService).findById(1);
   }
@@ -145,7 +145,7 @@ class TransactionControllerTest {
   void updateTransaction_shouldReturnUpdatedTransaction() {
     // Arrange
     TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(50), 1, 2, TransactionType.EXPENSE);
-    TransactionResponseDTO updated = new TransactionResponseDTO(1, "Updated", BigDecimal.valueOf(50), null);
+    TransactionResponseDTO updated = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     when(transactionService.update(1, dto)).thenReturn(updated);
 
@@ -154,7 +154,7 @@ class TransactionControllerTest {
 
     // Assert
     assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
-    assertEquals("Updated", response.getBody().getData().description());
+    assertEquals("buy bread", response.getBody().getData().description());
 
     verify(transactionService).update(1, dto);
   }
@@ -236,8 +236,8 @@ class TransactionControllerTest {
     Pageable pageable = PageRequest.of(0, 10);
     var user = new UserResponseDTO(UUID.randomUUID(), "name", "teste");
     AccountResponseDTO res = new AccountResponseDTO(1, user, "name", BigDecimal.TEN, false);
-    TransactionResponseDTO transaction1 = new TransactionResponseDTO(1, "T1", BigDecimal.TEN, res);
-    TransactionResponseDTO transaction2 = new TransactionResponseDTO(2, "T2", BigDecimal.ONE, res);
+    TransactionResponseDTO transaction1 = TransactionResponseDTOFactory.defaultTransactionResponse();
+    TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
     Page<TransactionResponseDTO> page = new PageImpl<>(List.of(transaction1, transaction2), pageable, 2);
 
     when(transactionService.getPaginatedTransactions(pageable)).thenReturn(page);

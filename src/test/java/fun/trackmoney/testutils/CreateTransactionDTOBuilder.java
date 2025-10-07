@@ -10,7 +10,8 @@ import java.time.Instant;
 public class CreateTransactionDTOBuilder {
   public static CreateTransactionDTO defaultTransaction() {
     return new CreateTransactionDTO(
-        1,
+      "", 
+      1,
         TransactionType.EXPENSE,
         BigDecimal.valueOf(100.00),
         "Compra no supermercado",
@@ -20,7 +21,8 @@ public class CreateTransactionDTOBuilder {
 
   public static CreateTransactionDTO incomeTransaction() {
     return new CreateTransactionDTO(
-        2,
+      "",  
+      2,
         TransactionType.INCOME,
         BigDecimal.valueOf(2500.00),
         "Recebimento de salário",
@@ -35,6 +37,6 @@ public class CreateTransactionDTOBuilder {
       String description,
       Timestamp transactionDate
   ) {
-    return new CreateTransactionDTO(categoryId, transactionType, amount, description, transactionDate);
+    return new CreateTransactionDTO("", categoryId, transactionType, amount, description, transactionDate);
   }
 }

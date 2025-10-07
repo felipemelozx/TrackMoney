@@ -134,7 +134,7 @@ class TransactionServiceTest {
   void findAllTransaction_shouldReturnListOfResponseDTOs() {
     TransactionEntity entity = new TransactionEntity();
     List<TransactionEntity> entities = List.of(entity);
-    TransactionResponseDTO dto = new TransactionResponseDTO(1, "Test", BigDecimal.TEN, null);
+    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     when(transactionRepository.findAll()).thenReturn(entities);
     when(transactionMapper.toResponseDTOList(entities)).thenReturn(List.of(dto));
@@ -142,20 +142,20 @@ class TransactionServiceTest {
     List<TransactionResponseDTO> result = transactionService.findAllTransaction();
 
     assertEquals(1, result.size());
-    assertEquals("Test", result.get(0).description());
+    assertEquals("buy bread", result.get(0).description());
   }
 
   @Test
   void findById_shouldReturnTransactionResponseDTO() {
     TransactionEntity entity = new TransactionEntity();
-    TransactionResponseDTO dto = new TransactionResponseDTO(1, "Test", BigDecimal.TEN, null);
+    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     when(transactionRepository.findById(1)).thenReturn(Optional.of(entity));
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dto);
 
     TransactionResponseDTO result = transactionService.findById(1);
 
-    assertEquals("Test", result.description());
+    assertEquals("buy bread", result.description());
   }
 
   @Test
@@ -171,7 +171,7 @@ class TransactionServiceTest {
     TransactionEntity entity = new TransactionEntity();
     AccountEntity accountEntity = new AccountEntity();
     CategoryEntity categoryEntity = new CategoryEntity();
-    TransactionResponseDTO dtoResponse = new TransactionResponseDTO(1, "Updated", BigDecimal.valueOf(200), null);
+    TransactionResponseDTO dtoResponse = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2, TransactionType.EXPENSE);
     UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "Jane", "jane@mail.com");
@@ -185,7 +185,7 @@ class TransactionServiceTest {
 
     TransactionResponseDTO result = transactionService.update(1, dto);
 
-    assertEquals("Updated", result.description());
+    assertEquals("buy bread", result.description());
   }
 
   @Test
@@ -315,8 +315,7 @@ class TransactionServiceTest {
     Pageable pageable = PageRequest.of(0, 5);
 
     TransactionEntity transaction = new TransactionEntity(1, null, null, null,   BigDecimal.valueOf(100),"Some description", null );
-    TransactionResponseDTO dto = new TransactionResponseDTO(
-        1, "Some description", BigDecimal.valueOf(100), null);
+    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
 
