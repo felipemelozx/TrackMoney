@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -109,14 +110,24 @@ public class TransactionService {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
-  public BigDecimal getExpense(Integer accountId) {
+  public BigDecimal getExpense(UUID userId) {
+    Integer accountId = accountService.findAccountDefaultByUserId(userId).getAccountId();
+    LocalDate today = LocalDate.now();
+    int currentMonth = today.getMonthValue();
+    int currentYear = today.getYear();
+
     return transactionRepository.findAllByAccountId(accountId)
         .stream()
         .filter(t -> TransactionType.EXPENSE.equals(t.getTransactionType()))
+        .filter(t -> {
+          LocalDate date = t.getTransactionDate().toLocalDateTime().toLocalDate();
+          return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
+        })
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
+
 
   public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable) {
     return transactionRepository.findAll(pageable)

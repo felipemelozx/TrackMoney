@@ -116,12 +116,13 @@ public class TransactionController {
     );
   }
 
-  @GetMapping("/expense/{id}")
-  public ResponseEntity<ApiResponse<BigDecimal>> getExpense(@PathVariable Integer id) {
+  @GetMapping("/expense")
+  public ResponseEntity<ApiResponse<BigDecimal>> getExpense(@AuthenticationPrincipal UserEntity actualUser) {
+    var result = transactionService.getExpense(actualUser.getUserId());
     return ResponseEntity.ok().body(
       ApiResponse.<BigDecimal>success()
           .message("Get expense")
-          .data(transactionService.getExpense(id))
+          .data(result)
           .build()
     );
   }
