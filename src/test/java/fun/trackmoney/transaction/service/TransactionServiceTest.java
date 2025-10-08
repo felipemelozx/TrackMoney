@@ -12,6 +12,7 @@ import fun.trackmoney.testutils.CategoryEntityFactory;
 import fun.trackmoney.testutils.CreateTransactionDTOBuilder;
 import fun.trackmoney.testutils.TransactionEntityFactory;
 import fun.trackmoney.testutils.TransactionResponseDTOFactory;
+import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
@@ -24,6 +25,7 @@ import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.user.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -196,18 +198,20 @@ class TransactionServiceTest {
 
   @Test
   void getIncome_shouldReturnTotalIncome() {
-    BigDecimal totalIncome = BigDecimal.valueOf(100);
-    var tr1 = new TransactionEntity();
-    tr1.setTransactionType(TransactionType.INCOME);
-    tr1.setAmount(BigDecimal.valueOf(50));
-    var tr2 = new TransactionEntity();
-    tr2.setAmount(BigDecimal.valueOf(50));
-    tr2.setTransactionType(TransactionType.INCOME);
+    AccountEntity account = AccountEntityFactory.defaultAccount();
+    UserEntity user = UserEntityFactory.defaultUser();
 
-    var accountId = 1;
-    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(tr1, tr2));
+    var tr1 = TransactionEntityFactory.incomeTransaction();
+    var tr2 = TransactionEntityFactory.incomeTransaction();
+    var tr3 = TransactionEntityFactory.defaultTransaction();
+    var tr4 = TransactionEntityFactory.defaultTransaction();
 
-    var result = transactionService.getIncome(accountId);
+    BigDecimal totalIncome = BigDecimal.valueOf(5000.0);
+
+    when(transactionRepository.findAllByAccountId(account.getAccountId())).thenReturn(List.of(tr1, tr2, tr3, tr4));
+    when(accountService.findAccountDefaultByUserId(user.getUserId())).thenReturn(account);
+
+    var result = transactionService.getIncome(user.getUserId());
 
     assertEquals(totalIncome, result);
   }

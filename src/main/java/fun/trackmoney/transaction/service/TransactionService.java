@@ -100,7 +100,8 @@ public class TransactionService {
     transactionRepository.deleteById(id);
   }
 
-  public BigDecimal getIncome(Integer accountId) {
+  public BigDecimal getIncome(UUID userId) {
+    Integer accountId = accountService.findAccountDefaultByUserId(userId).getAccountId();
     return transactionRepository.findAllByAccountId(accountId)
         .stream()
         .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
