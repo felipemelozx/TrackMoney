@@ -25,6 +25,7 @@ import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.user.entity.UserEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -195,25 +196,78 @@ class TransactionServiceTest {
   }
 
   @Test
-  void getIncome_shouldReturnTotalIncome() {
-    BigDecimal totalIncome = BigDecimal.valueOf(100);
-    var tr1 = new TransactionEntity();
-    tr1.setTransactionType(TransactionType.INCOME);
-    tr1.setAmount(BigDecimal.valueOf(50));
-    var tr2 = new TransactionEntity();
-    tr2.setAmount(BigDecimal.valueOf(50));
-    tr2.setTransactionType(TransactionType.INCOME);
+  void shouldReturnAmountWhenMonthAndYearMatch() {
+    var user = UserEntityFactory.defaultUser();
+    var account = AccountEntityFactory.defaultAccount();
 
-    var accountId = 1;
-    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(tr1, tr2));
+    var tr1 = TransactionEntityFactory.defaultIncomeNow();
+    var tr2 = TransactionEntityFactory.defaultIncomeNow();
 
-    var result = transactionService.getIncome(accountId);
+    when(transactionRepository.findAllByAccountId(account.getAccountId()))
+        .thenReturn(List.of(tr1, tr2));
+    when(accountService.findAccountDefaultByUserId(user.getUserId()))
+        .thenReturn(account);
 
-    assertEquals(totalIncome, result);
+    var result = transactionService.getIncome(user.getUserId());
+
+    assertEquals(BigDecimal.valueOf(5000.0), result);
+    verify(accountService).findAccountDefaultByUserId(user.getUserId());
+    verify(transactionRepository).findAllByAccountId(account.getAccountId());
   }
 
   @Test
-  void shouldReturnAmountWhenMonthAndYearMatch() {
+  void shouldReturnZeroIncomeWhenMonthMatchesButYearDoesNot() {
+    var user = UserEntityFactory.defaultUser();
+    var account = AccountEntityFactory.defaultAccount();
+
+    var tr = TransactionEntityFactory.expenseCurrentMonthWrongYear(BigDecimal.valueOf(100), "Wrong year", 0);
+
+    when(transactionRepository.findAllByAccountId(account.getAccountId()))
+        .thenReturn(List.of(tr));
+    when(accountService.findAccountDefaultByUserId(user.getUserId()))
+        .thenReturn(account);
+
+    var result = transactionService.getIncome(user.getUserId());
+
+    assertEquals(BigDecimal.ZERO, result);
+  }
+
+  @Test
+  void shouldReturnZeroIncomeWhenMonthDoesNotMatchButYearMatches() {
+    var user = UserEntityFactory.defaultUser();
+    var account = AccountEntityFactory.defaultAccount();
+
+    var tr = TransactionEntityFactory.expenseWrongMonthCurrentYear(BigDecimal.valueOf(100), "Wrong month", 0);
+
+    when(transactionRepository.findAllByAccountId(account.getAccountId()))
+        .thenReturn(List.of(tr));
+    when(accountService.findAccountDefaultByUserId(user.getUserId()))
+        .thenReturn(account);
+
+    var result = transactionService.getIncome(user.getUserId());
+
+    assertEquals(BigDecimal.ZERO, result);
+  }
+
+  @Test
+  void shouldReturnZeroIncomeWhenMonthAndYearDoNotMatch() {
+    var user = UserEntityFactory.defaultUser();
+    var account = AccountEntityFactory.defaultAccount();
+
+    var tr = TransactionEntityFactory.expenseWrongMonthAndYear(BigDecimal.valueOf(100), "Wrong month and year", 0);
+
+    when(transactionRepository.findAllByAccountId(account.getAccountId()))
+        .thenReturn(List.of(tr));
+    when(accountService.findAccountDefaultByUserId(user.getUserId()))
+        .thenReturn(account);
+
+    var result = transactionService.getExpense(user.getUserId());
+
+    assertEquals(BigDecimal.ZERO, result);
+  }
+
+  @Test
+  void shouldReturnAmountIncomeWhenMonthAndYearMatch() {
     var user = UserEntityFactory.defaultUser();
     var account = AccountEntityFactory.defaultAccount();
 
@@ -237,7 +291,7 @@ class TransactionServiceTest {
     var user = UserEntityFactory.defaultUser();
     var account = AccountEntityFactory.defaultAccount();
 
-    var tr = TransactionEntityFactory.expenseCurrentMonthWrongYear(BigDecimal.valueOf(100), "Wrong year");
+    var tr = TransactionEntityFactory.expenseCurrentMonthWrongYear(BigDecimal.valueOf(100), "Wrong year",1);
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr));
@@ -254,7 +308,7 @@ class TransactionServiceTest {
     var user = UserEntityFactory.defaultUser();
     var account = AccountEntityFactory.defaultAccount();
 
-    var tr = TransactionEntityFactory.expenseWrongMonthCurrentYear(BigDecimal.valueOf(100), "Wrong month");
+    var tr = TransactionEntityFactory.expenseWrongMonthCurrentYear(BigDecimal.valueOf(100), "Wrong month",1);
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr));
@@ -271,7 +325,7 @@ class TransactionServiceTest {
     var user = UserEntityFactory.defaultUser();
     var account = AccountEntityFactory.defaultAccount();
 
-    var tr = TransactionEntityFactory.expenseWrongMonthAndYear(BigDecimal.valueOf(100), "Wrong month and year");
+    var tr = TransactionEntityFactory.expenseWrongMonthAndYear(BigDecimal.valueOf(100), "Wrong month and year",1);
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr));

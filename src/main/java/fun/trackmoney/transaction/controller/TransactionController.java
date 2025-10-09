@@ -106,12 +106,14 @@ public class TransactionController {
     );
   }
 
-  @GetMapping("/income/{id}")
-  public ResponseEntity<ApiResponse<BigDecimal>> getIncome(@PathVariable Integer id) {
+  @GetMapping("/income")
+  public ResponseEntity<ApiResponse<BigDecimal>> getIncome(@AuthenticationPrincipal UserEntity actualUser) {
+    var result = transactionService.getIncome(actualUser.getUserId());
+
     return ResponseEntity.ok().body(
       ApiResponse.<BigDecimal>success()
           .message("Get income")
-          .data(transactionService.getIncome(id))
+          .data(result)
           .build()
     );
   }

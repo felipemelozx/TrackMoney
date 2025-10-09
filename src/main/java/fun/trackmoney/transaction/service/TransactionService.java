@@ -100,10 +100,19 @@ public class TransactionService {
     transactionRepository.deleteById(id);
   }
 
-  public BigDecimal getIncome(Integer accountId) {
+  public BigDecimal getIncome(UUID userId) {
+    Integer accountId = accountService.findAccountDefaultByUserId(userId).getAccountId();
+    LocalDate today = LocalDate.now();
+    int currentMonth = today.getMonthValue();
+    int currentYear = today.getYear();
+
     return transactionRepository.findAllByAccountId(accountId)
         .stream()
         .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
+        .filter(t -> {
+          LocalDate date = t.getTransactionDate().toLocalDateTime().toLocalDate();
+          return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
+        })
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
