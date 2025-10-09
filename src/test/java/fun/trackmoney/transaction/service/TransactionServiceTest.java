@@ -49,6 +49,7 @@ import static org.mockito.Mockito.*;
 class TransactionServiceTest {
 
   @InjectMocks
+  @Spy
   private TransactionService transactionService;
 
   @Mock
