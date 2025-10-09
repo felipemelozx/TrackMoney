@@ -420,19 +420,22 @@ class TransactionServiceTest {
   @Test
   void shouldReturnPaginatedTransactions() {
     Pageable pageable = PageRequest.of(0, 5);
+    AccountEntity account = AccountEntityFactory.defaultAccount();
+    UserEntity user = UserEntityFactory.defaultUser();
 
-    TransactionEntity transaction = new TransactionEntity(1, null, null, null,   BigDecimal.valueOf(100),"Some description", null );
+    TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
     TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
 
-    when(transactionRepository.findAll(pageable)).thenReturn(transactionPage);
+    when(transactionRepository.findAllByAccountId(account.getAccountId(), pageable)).thenReturn(transactionPage);
+    when(accountService.findAccountDefaultByUserId(user.getUserId())).thenReturn(account);
     when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
 
-    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable);
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user.getUserId());
 
     assertThat(result.getContent()).containsExactly(dto);
-    verify(transactionRepository).findAll(pageable);
-    verify(transactionMapper).toResponseDTO(transaction);
+    verify(transactionRepository, times(1)).findAllByAccountId(account.getAccountId(), pageable);
+    verify(transactionMapper, times(1)).toResponseDTO(transaction);
   }
 }

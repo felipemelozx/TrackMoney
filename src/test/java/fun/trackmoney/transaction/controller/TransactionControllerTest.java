@@ -231,19 +231,21 @@ class TransactionControllerTest {
   @Test
   void getTransactionPagination() {
     Pageable pageable = PageRequest.of(0, 10);
+    UserEntity user = UserEntityFactory.defaultUser();
+
     TransactionResponseDTO transaction1 = TransactionResponseDTOFactory.defaultTransactionResponse();
     TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
     Page<TransactionResponseDTO> page = new PageImpl<>(List.of(transaction1, transaction2), pageable, 2);
 
-    when(transactionService.getPaginatedTransactions(pageable)).thenReturn(page);
+    when(transactionService.getPaginatedTransactions(pageable, user.getUserId())).thenReturn(page);
 
-    var response = transactionController.getPaginatedTransactions(pageable);
+    var response = transactionController.getPaginatedTransactions(pageable, user);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertThat(response.getBody().getData()).hasSize(2);
     assertEquals("Paginated transactions", response.getBody().getMessage());
 
-    verify(transactionService).getPaginatedTransactions(pageable);
+    verify(transactionService, times(1)).getPaginatedTransactions(pageable, user.getUserId());
   }
 }
