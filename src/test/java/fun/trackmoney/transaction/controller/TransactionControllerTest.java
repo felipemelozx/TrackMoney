@@ -189,12 +189,12 @@ class TransactionControllerTest {
 
   @Test
   void getExpense_shouldReturnCorrectApiResponse() {
-    Integer id = 2;
+    UserEntity user = UserEntityFactory.defaultUser();
     BigDecimal expense = new BigDecimal("800.00");
 
-    when(transactionService.getExpense(id)).thenReturn(expense);
+    when(transactionService.getExpense(user.getUserId())).thenReturn(expense);
 
-    var response = transactionController.getExpense(id);
+    var response = transactionController.getExpense(user);
 
     assertNotNull(response);
     assertEquals(HttpStatus.OK, response.getStatusCode());
