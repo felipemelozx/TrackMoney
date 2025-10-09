@@ -85,8 +85,11 @@ public class TransactionController {
   }
 
   @GetMapping("/page")
-  public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getPaginatedTransactions(Pageable pageable) {
-    Page<TransactionResponseDTO> page = transactionService.getPaginatedTransactions(pageable);
+  public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getPaginatedTransactions(Pageable pageable,
+                                                                                    @AuthenticationPrincipal
+                                                                                    UserEntity actualUser
+                                                                                    ) {
+    Page<TransactionResponseDTO> page = transactionService.getPaginatedTransactions(pageable, actualUser.getUserId());
     Page<TransactionDTO> dtoPage = page.map(TransactionDTO::from);
     return ResponseEntity.ok().body(
       ApiResponse.<Page<TransactionDTO>>success()

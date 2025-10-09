@@ -10,8 +10,10 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Integer> {
+
   @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId")
   List<TransactionEntity> findAllByAccountId(@Param("accountId") Integer accountId);
 
-  Page<TransactionEntity> findAll(Pageable pageable);
+  @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId")
+  Page<TransactionEntity> findAllByAccountId(@Param("accountId") Integer accountId, Pageable pageable);
 }

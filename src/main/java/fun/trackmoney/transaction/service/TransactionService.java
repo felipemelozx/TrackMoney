@@ -137,8 +137,9 @@ public class TransactionService {
   }
 
 
-  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable) {
-    return transactionRepository.findAll(pageable)
+  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable, UUID userId) {
+    Integer accountId = accountService.findAccountDefaultByUserId(userId).getAccountId();
+    return transactionRepository.findAllByAccountId(accountId, pageable)
         .map(transactionMapper::toResponseDTO);
   }
 
