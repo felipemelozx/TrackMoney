@@ -1,6 +1,5 @@
 package fun.trackmoney.transaction.controller;
 
-import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.testutils.CreateTransactionDTOBuilder;
 import fun.trackmoney.testutils.TransactionResponseDTOFactory;
@@ -14,7 +13,6 @@ import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
 import fun.trackmoney.transaction.service.TransactionService;
-import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
@@ -31,7 +29,6 @@ import org.springframework.http.HttpStatusCode;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -172,12 +169,12 @@ class TransactionControllerTest {
 
   @Test
   void getIncome_shouldReturnCorrectApiResponse() {
-    Integer id = 1;
+    UserEntity mockUser = UserEntityFactory.defaultUser();
     BigDecimal income = new BigDecimal("1200.00");
 
-    when(transactionService.getIncome(id)).thenReturn(income);
+    when(transactionService.getIncome(mockUser.getUserId())).thenReturn(income);
 
-    var response = transactionController.getIncome(id);
+    var response = transactionController.getIncome(mockUser);
 
     assertNotNull(response);
     assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -192,12 +189,12 @@ class TransactionControllerTest {
 
   @Test
   void getExpense_shouldReturnCorrectApiResponse() {
-    Integer id = 2;
+    UserEntity user = UserEntityFactory.defaultUser();
     BigDecimal expense = new BigDecimal("800.00");
 
-    when(transactionService.getExpense(id)).thenReturn(expense);
+    when(transactionService.getExpense(user.getUserId())).thenReturn(expense);
 
-    var response = transactionController.getExpense(id);
+    var response = transactionController.getExpense(user);
 
     assertNotNull(response);
     assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -234,8 +231,6 @@ class TransactionControllerTest {
   @Test
   void getTransactionPagination() {
     Pageable pageable = PageRequest.of(0, 10);
-    var user = new UserResponseDTO(UUID.randomUUID(), "name", "teste");
-    AccountResponseDTO res = new AccountResponseDTO(1, user, "name", BigDecimal.TEN, false);
     TransactionResponseDTO transaction1 = TransactionResponseDTOFactory.defaultTransactionResponse();
     TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
     Page<TransactionResponseDTO> page = new PageImpl<>(List.of(transaction1, transaction2), pageable, 2);
