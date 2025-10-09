@@ -47,41 +47,41 @@ public class TransactionEntityFactory {
     );
   }
 
-  public static TransactionEntity expenseCurrentMonthWrongYear(BigDecimal amount, String description) {
+  public static TransactionEntity expenseCurrentMonthWrongYear(BigDecimal amount, String description, Integer codeTransactionType) {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime wrongYear = now.withYear(now.getYear() - 1); // mesmo mês, ano passado
     return createTransaction(
         4,
         AccountEntityFactory.defaultAccount(),
         CategoryEntityFactory.defaultCategory(),
-        TransactionType.EXPENSE,
+        TransactionType.getByCode(codeTransactionType),
         amount,
         description,
         wrongYear
     );
   }
 
-  public static TransactionEntity expenseWrongMonthCurrentYear(BigDecimal amount, String description) {
+  public static TransactionEntity expenseWrongMonthCurrentYear(BigDecimal amount, String description, Integer codeTransactionType) {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime wrongMonth = now.minusMonths(1); // mês passado, mesmo ano
     return createTransaction(
         5,
         AccountEntityFactory.defaultAccount(),
         CategoryEntityFactory.defaultCategory(),
-        TransactionType.EXPENSE,
+        TransactionType.getByCode(codeTransactionType),
         amount,
         description,
         wrongMonth
     );
   }
 
-  public static TransactionEntity expenseWrongMonthAndYear(BigDecimal amount, String description) {
+  public static TransactionEntity expenseWrongMonthAndYear(BigDecimal amount, String description, Integer codeTransactionType) {
     LocalDateTime date = LocalDateTime.of(2000, 1, 1, 0, 0);
     return createTransaction(
         6,
         AccountEntityFactory.defaultAccount(),
         CategoryEntityFactory.defaultCategory(),
-        TransactionType.EXPENSE,
+        TransactionType.getByCode(codeTransactionType),
         amount,
         description,
         date
