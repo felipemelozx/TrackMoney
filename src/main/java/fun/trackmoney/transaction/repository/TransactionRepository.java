@@ -14,6 +14,6 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId")
   List<TransactionEntity> findAllByAccountId(@Param("accountId") Integer accountId);
 
-  @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId")
+  @Query("SELECT t FROM TransactionEntity t WHERE t.account.accountId = :accountId ORDER BY t.transactionDate DESC")
   Page<TransactionEntity> findAllByAccountId(@Param("accountId") Integer accountId, Pageable pageable);
 }
