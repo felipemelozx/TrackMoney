@@ -2,7 +2,6 @@ package fun.trackmoney.transaction.controller;
 
 import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
-import fun.trackmoney.transaction.dto.TransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
 import fun.trackmoney.transaction.dto.TransactionsError;
@@ -85,16 +84,15 @@ public class TransactionController {
   }
 
   @GetMapping("/page")
-  public ResponseEntity<ApiResponse<Page<TransactionDTO>>> getPaginatedTransactions(Pageable pageable,
+  public ResponseEntity<ApiResponse<Page<TransactionResponseDTO>>> getPaginatedTransactions(Pageable pageable,
                                                                                     @AuthenticationPrincipal
                                                                                     UserEntity actualUser
                                                                                     ) {
-    Page<TransactionResponseDTO> page = transactionService.getPaginatedTransactions(pageable, actualUser.getUserId());
-    Page<TransactionDTO> dtoPage = page.map(TransactionDTO::from);
+    Page<TransactionResponseDTO> data = transactionService.getPaginatedTransactions(pageable, actualUser.getUserId());
     return ResponseEntity.ok().body(
-      ApiResponse.<Page<TransactionDTO>>success()
+      ApiResponse.<Page<TransactionResponseDTO>>success()
           .message("Paginated transactions")
-          .data(dtoPage)
+          .data(data)
           .build()
     );
   }
