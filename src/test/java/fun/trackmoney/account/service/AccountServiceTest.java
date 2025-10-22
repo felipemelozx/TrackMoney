@@ -39,11 +39,11 @@ class AccountServiceTest {
   @Test
   void testCreateAccount() {
     UUID userId = UUID.randomUUID();
-    AccountRequestDTO requestDTO = new AccountRequestDTO(userId, "Conta Corrente", BigDecimal.valueOf(1000), true);
+    AccountRequestDTO requestDTO = new AccountRequestDTO(userId, "Conta Corrente", BigDecimal.valueOf(1000));
     AccountEntity accountEntity = new AccountEntity();
     UserEntity user = new UserEntity();
     AccountEntity savedEntity = new AccountEntity();
-    AccountResponseDTO responseDTO = new AccountResponseDTO(1, null, "Conta Corrente", BigDecimal.valueOf(1000), true);
+    AccountResponseDTO responseDTO = new AccountResponseDTO(1, null, "Conta Corrente", BigDecimal.valueOf(1000));
 
     when(accountMapper.accountRequestToAccountEntity(requestDTO)).thenReturn(accountEntity);
     when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -63,8 +63,8 @@ class AccountServiceTest {
     UUID uuid = UUID.randomUUID();
     List<AccountEntity> entities = List.of(new AccountEntity(), new AccountEntity());
     List<AccountResponseDTO> responseDTOs = List.of(
-        new AccountResponseDTO(1, null, "Conta 1", BigDecimal.valueOf(100), false),
-        new AccountResponseDTO(2, null, "Conta 2", BigDecimal.valueOf(200), true)
+        new AccountResponseDTO(1, null, "Conta 1", BigDecimal.valueOf(100)),
+        new AccountResponseDTO(2, null, "Conta 2", BigDecimal.valueOf(200))
     );
 
     when(accountRepository.findAllByUserEmail(uuid)).thenReturn(entities);
@@ -79,7 +79,7 @@ class AccountServiceTest {
   @Test
   void testFindAccountById_Success() {
     AccountEntity entity = new AccountEntity();
-    AccountResponseDTO responseDTO = new AccountResponseDTO(1, null, "Conta Corrente", BigDecimal.valueOf(1000), false);
+    AccountResponseDTO responseDTO = new AccountResponseDTO(1, null, "Conta Corrente", BigDecimal.valueOf(1000));
 
     when(accountRepository.findById(1)).thenReturn(Optional.of(entity));
     when(accountMapper.accountEntityToAccountResponse(entity)).thenReturn(responseDTO);
@@ -100,11 +100,10 @@ class AccountServiceTest {
   void testUpdateAccountById_Success() {
     AccountEntity existing = new AccountEntity();
     existing.setName("Old Name");
-    existing.setIsAccountDefault(false);
 
-    AccountUpdateRequestDTO dto = new AccountUpdateRequestDTO("New Name", true);
+    AccountUpdateRequestDTO dto = new AccountUpdateRequestDTO("New Name");
     AccountEntity saved = new AccountEntity();
-    AccountResponseDTO responseDTO = new AccountResponseDTO(1, null, "New Name", BigDecimal.ZERO, true);
+    AccountResponseDTO responseDTO = new AccountResponseDTO(1, null, "New Name", BigDecimal.ZERO);
 
     when(accountRepository.findById(1)).thenReturn(Optional.of(existing));
     when(accountRepository.save(existing)).thenReturn(saved);
@@ -114,12 +113,11 @@ class AccountServiceTest {
 
     assertEquals(responseDTO, result);
     assertEquals("New Name", existing.getName());
-    assertTrue(existing.getIsAccountDefault());
   }
 
   @Test
   void testUpdateAccountById_NotFound() {
-    AccountUpdateRequestDTO dto = new AccountUpdateRequestDTO("New Name", true);
+    AccountUpdateRequestDTO dto = new AccountUpdateRequestDTO("New Name");
 
     when(accountRepository.findById(1)).thenReturn(Optional.empty());
 
@@ -138,7 +136,7 @@ class AccountServiceTest {
 
   @Test
   void testUpdateAccountBalanceSum() {
-    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100), true);
+    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100));
     when(accountRepository.findById(1)).thenReturn(Optional.of(account));
     when(accountRepository.save(account)).thenReturn(account);
 
@@ -149,7 +147,7 @@ class AccountServiceTest {
 
   @Test
   void testUpdateAccountBalanceSub() {
-    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100), true);
+    AccountEntity account = new AccountEntity(1, null, "Test Account", BigDecimal.valueOf(100));
     when(accountRepository.findById(1)).thenReturn(Optional.of(account));
     when(accountRepository.save(account)).thenReturn(any());
 
