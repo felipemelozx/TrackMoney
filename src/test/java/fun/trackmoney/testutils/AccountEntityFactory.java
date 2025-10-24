@@ -13,8 +13,7 @@ public class AccountEntityFactory {
             1,
             defaultUser(),
             "Conta Corrente",
-            BigDecimal.valueOf(1000.00),
-            true
+            BigDecimal.valueOf(1000.00)
         );
     }
 
@@ -23,8 +22,7 @@ public class AccountEntityFactory {
             2,
             defaultUser(),
             "Poupança",
-            BigDecimal.valueOf(5000.00),
-            false
+            BigDecimal.valueOf(5000.00)
         );
     }
 
@@ -32,10 +30,9 @@ public class AccountEntityFactory {
             Integer accountId,
             UserEntity user,
             String name,
-            BigDecimal balance,
-            Boolean isAccountDefault
+            BigDecimal balance
     ) {
-        return new AccountEntity(accountId, user, name, balance, isAccountDefault);
+        return new AccountEntity(accountId, user, name, balance);
     }
 
     private static UserEntity defaultUser() {

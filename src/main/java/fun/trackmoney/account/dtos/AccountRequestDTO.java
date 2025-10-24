@@ -6,6 +6,5 @@ import java.util.UUID;
 public record AccountRequestDTO(
     UUID userId,
     String name,
-    BigDecimal balance,
-    Boolean isAccountDefault
+    BigDecimal balance
 ) {}

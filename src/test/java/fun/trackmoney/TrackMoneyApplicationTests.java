@@ -10,11 +10,4 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class TrackMoneyApplicationTests {
 
-  @Autowired
-  private MockMvc mockMvc;
-
-	@Test
-	void contextLoads() {
-	}
-
 }

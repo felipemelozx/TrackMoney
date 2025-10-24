@@ -31,9 +31,6 @@ class UserServiceTest {
   private UserRepository userRepository;
 
   @Mock
-  private AccountService accountService;
-
-  @Mock
   private UserMapper userMapper;
 
   @Mock
@@ -56,7 +53,6 @@ class UserServiceTest {
     when(passwordEncoder.encode("StrongPassword123#")).thenReturn("encodedPass");
     when(userRepository.save(entityToSave)).thenReturn(savedEntityReturn);
     when(userMapper.userEntityToUserResponseDto(savedEntityReturn)).thenReturn(mockDTO);
-    when(accountService.createAccount(any())).thenReturn(null);
 
     UserRegisterResult actualResponse = userService.register(requestDTO);
 

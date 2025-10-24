@@ -179,7 +179,7 @@ class TransactionServiceTest {
 
     when(transactionRepository.findById(1)).thenReturn(Optional.of(entity));
     when(categoryService.findById(2)).thenReturn(categoryEntity);
-    when(accountService.findAccountById(1)).thenReturn(new AccountResponseDTO(1, user, "btg", BigDecimal.valueOf(100), true));
+    when(accountService.findAccountById(1)).thenReturn(new AccountResponseDTO(1, user, "btg", BigDecimal.valueOf(100)));
     when(accountMapper.accountResponseToEntity(any())).thenReturn(accountEntity);
     when(transactionRepository.save(entity)).thenReturn(entity);
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);

@@ -67,7 +67,7 @@ class BudgetsServiceTest {
     budgetEntity = new BudgetsEntity();
     userEntity = new UserEntity();
     userResponseDTO = new UserResponseDTO(userId, "testUser", "email@test");
-    accountResponseDTO = new AccountResponseDTO(20, userResponseDTO, "true", BigDecimal.valueOf(1000), true);
+    accountResponseDTO = new AccountResponseDTO(20, userResponseDTO, "true", BigDecimal.valueOf(1000));
     accountEntity = new AccountEntity();
     categoryEntity = new CategoryEntity();
     budgetResponseDTO = new BudgetResponseDTO(1, categoryEntity, accountResponseDTO, BigDecimal.valueOf(1000), 5, BigDecimal.valueOf(1000));
@@ -126,7 +126,7 @@ class BudgetsServiceTest {
   void findAll_shouldReturnListOfBudgetResponseDTO() {
     BudgetsEntity entity = new BudgetsEntity();
     BudgetResponseDTO dto = new BudgetResponseDTO(1, new CategoryEntity(),
-        new AccountResponseDTO(1, userResponseDTO, "test", BigDecimal.valueOf(100), true),
+        new AccountResponseDTO(1, userResponseDTO, "test", BigDecimal.valueOf(100)),
         BigDecimal.TEN, 10, null);
     List<BudgetsEntity> entities = List.of(entity);
     List<BudgetResponseDTO> dtos = List.of(dto);
@@ -175,7 +175,7 @@ class BudgetsServiceTest {
     BudgetsEntity existingEntity = new BudgetsEntity();
     existingEntity.setBudgetId(budgetIdToUpdate);
     UserResponseDTO updatedUserResponseDTO = new UserResponseDTO(userId, "updatedUser", "updated@test");
-    AccountResponseDTO updatedAccountDTO = new AccountResponseDTO(21, updatedUserResponseDTO, "false", BigDecimal.valueOf(1500), false);
+    AccountResponseDTO updatedAccountDTO = new AccountResponseDTO(21, updatedUserResponseDTO, "false", BigDecimal.valueOf(1500));
     AccountEntity updatedAccountEntity = new AccountEntity();
     CategoryEntity updatedCategory = new CategoryEntity();
     BudgetResponseDTO updatedResponse = new BudgetResponseDTO(budgetIdToUpdate, updatedCategory,

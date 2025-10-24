@@ -2,6 +2,11 @@ spring:
   application:
     name: TrackMoney
 
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/developerDB}
     username: ${SPRING_DATASOURCE_USERNAME:developerDB}
@@ -11,6 +16,8 @@ spring:
 
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: none
 
   security:
     user:
@@ -47,7 +54,7 @@ api:
 
 logging:
   level:
-    ROOT: TRACE
+    ROOT: DEBUG
 
 management:
   endpoints:
