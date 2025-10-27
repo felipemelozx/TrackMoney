@@ -1,6 +1,5 @@
 package fun.trackmoney.user.service;
 
-import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
