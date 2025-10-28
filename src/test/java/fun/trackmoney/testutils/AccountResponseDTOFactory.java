@@ -12,8 +12,7 @@ public class AccountResponseDTOFactory {
             1,
             UserResponseDTOFactory.defaultUserResponse(),
             "Conta Corrente",
-            BigDecimal.valueOf(5000.00),
-            true
+            BigDecimal.valueOf(5000.00)
         );
     }
 
@@ -22,8 +21,7 @@ public class AccountResponseDTOFactory {
             2,
             UserResponseDTOFactory.defaultUserResponse(),
             "Poupança",
-            BigDecimal.valueOf(2000.00),
-            false
+            BigDecimal.valueOf(2000.00)
         );
     }
 
@@ -31,9 +29,8 @@ public class AccountResponseDTOFactory {
             Integer accountId,
             UserResponseDTO user,
             String name,
-            BigDecimal balance,
-            Boolean isAccountDefault
+            BigDecimal balance
     ) {
-        return new AccountResponseDTO(accountId, user, name, balance, isAccountDefault);
+        return new AccountResponseDTO(accountId, user, name, balance);
     }
 }

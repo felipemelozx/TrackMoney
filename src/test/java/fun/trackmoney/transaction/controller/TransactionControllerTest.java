@@ -49,7 +49,7 @@ class TransactionControllerTest {
     TransactionResponseDTO responseDTO = TransactionResponseDTOFactory.incomeTransactionResponse();
     TransactionResult transactionResult = new TransactionSuccess(responseDTO);
 
-    when(transactionService.createTransaction(dto, user.getUserId())).thenReturn(transactionResult);
+    when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
     var response = transactionController.createTransaction(dto, user);
 
@@ -59,7 +59,7 @@ class TransactionControllerTest {
     assertEquals("Transfer created", response.getBody().getMessage());
     assertEquals("Salário mensal", response.getBody().getData().description());
 
-    verify(transactionService, times(1)).createTransaction(dto, user.getUserId());
+    verify(transactionService, times(1)).createTransaction(dto, user);
   }
 
   @Test
@@ -68,7 +68,7 @@ class TransactionControllerTest {
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
     TransactionResult transactionResult = new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
 
-    when(transactionService.createTransaction(dto, user.getUserId())).thenReturn(transactionResult);
+    when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
     var response = transactionController.createTransaction(dto, user);
 
@@ -79,7 +79,7 @@ class TransactionControllerTest {
     assertEquals("Account", response.getBody().getErrors().get(0).getField());
     assertEquals("Account not found to update balance", response.getBody().getErrors().get(0).getMessage());
 
-    verify(transactionService, times(1)).createTransaction(dto, user.getUserId());
+    verify(transactionService, times(1)).createTransaction(dto, user);
   }
 
   @Test
@@ -88,7 +88,7 @@ class TransactionControllerTest {
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
     TransactionResult transactionResult = new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
 
-    when(transactionService.createTransaction(dto, user.getUserId())).thenReturn(transactionResult);
+    when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
     var response = transactionController.createTransaction(dto, user);
 
@@ -99,72 +99,63 @@ class TransactionControllerTest {
     assertEquals("Category", response.getBody().getErrors().get(0).getField());
     assertEquals("Category not found.", response.getBody().getErrors().get(0).getMessage());
 
-    verify(transactionService, times(1)).createTransaction(dto, user.getUserId());
+    verify(transactionService, times(1)).createTransaction(dto, user);
   }
 
   @Test
   void findAllTransaction_shouldReturnList() {
-    // Arrange
+    UserEntity currentUser = UserEntityFactory.defaultUser();
     TransactionResponseDTO transaction1 = TransactionResponseDTOFactory.defaultTransactionResponse();
     TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    when(transactionService.findAllTransaction()).thenReturn(List.of(transaction1, transaction2));
+    when(transactionService.findAllTransaction(currentUser)).thenReturn(List.of(transaction1, transaction2));
 
-    // Act
-    var response = transactionController.findAllTransaction();
+    var response = transactionController.findAllTransaction(currentUser);
 
-    // Assert
     assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
     assertNotNull(response.getBody());
     assertThat(response.getBody().getData()).hasSize(2);
 
-    verify(transactionService).findAllTransaction();
+    verify(transactionService).findAllTransaction(currentUser);
   }
 
   @Test
   void findTransactionById_shouldReturnTransaction() {
-    // Arrange
     TransactionResponseDTO transaction = TransactionResponseDTOFactory.defaultTransactionResponse();
-    when(transactionService.findById(1)).thenReturn(transaction);
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    when(transactionService.findById(1, currentUser)).thenReturn(transaction);
 
-    // Act
-    var response = transactionController.findTransactionById(1);
+    var response = transactionController.findTransactionById(1, currentUser);
 
-    // Assert
     assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
     assertNotNull(response.getBody());
     assertEquals("buy bread", response.getBody().getData().description());
 
-    verify(transactionService).findById(1);
+    verify(transactionService, times(1)).findById(1, currentUser);
   }
 
   @Test
   void updateTransaction_shouldReturnUpdatedTransaction() {
-    // Arrange
+    UserEntity currentUser = UserEntityFactory.defaultUser();
     TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(50), 1, 2, TransactionType.EXPENSE);
     TransactionResponseDTO updated = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    when(transactionService.update(1, dto)).thenReturn(updated);
+    when(transactionService.update(1, dto, currentUser)).thenReturn(updated);
 
-    // Act
-    var response = transactionController.updateTransaction(1, dto);
+    var response = transactionController.updateTransaction(1, dto, currentUser);
 
-    // Assert
     assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
     assertEquals("buy bread", response.getBody().getData().description());
 
-    verify(transactionService).update(1, dto);
+    verify(transactionService).update(1, dto, currentUser);
   }
 
   @Test
   void deleteTransaction_shouldReturnSuccessMessage() {
-    // Act
-    var response = transactionController.deleteTransaction(1);
-
-    // Assert
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    var response = transactionController.deleteTransaction(1, currentUser);
     assertEquals(HttpStatusCode.valueOf(200), response.getStatusCode());
-
-    verify(transactionService).delete(1);
+    verify(transactionService).delete(1, currentUser);
   }
 
   @Test
@@ -192,7 +183,7 @@ class TransactionControllerTest {
     UserEntity user = UserEntityFactory.defaultUser();
     BigDecimal expense = new BigDecimal("800.00");
 
-    when(transactionService.getExpense(user.getUserId())).thenReturn(expense);
+    when(transactionService.getExpense(user)).thenReturn(expense);
 
     var response = transactionController.getExpense(user);
 
@@ -209,13 +200,12 @@ class TransactionControllerTest {
 
   @Test
   void getBill_shouldReturnBill() {
-    Integer id = 2;
     BillResponseDTO billResponseDTO = new BillResponseDTO(
         BigDecimal.valueOf(800), BigDecimal.valueOf(800), BigDecimal.valueOf(800));
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    when(transactionService.getBill(currentUser)).thenReturn(billResponseDTO);
 
-    when(transactionService.getBill(id)).thenReturn(billResponseDTO);
-
-    var response = transactionController.getBill(id);
+    var response = transactionController.getBill(currentUser);
 
     assertNotNull(response);
     assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -223,7 +213,7 @@ class TransactionControllerTest {
     ApiResponse<BillResponseDTO> body = response.getBody();
     assertNotNull(body);
     assertTrue(body.isSuccess());
-    assertEquals("Get expense", body.getMessage());
+    assertEquals("Get bill", body.getMessage());
     assertEquals(billResponseDTO, body.getData());
     assertTrue(body.getErrors().isEmpty());
   }

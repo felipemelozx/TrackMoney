@@ -64,7 +64,6 @@ public class AccountService {
         .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
 
     account.setName(dto.name());
-    account.setIsAccountDefault(dto.isAccountDefault());
 
     return accountMapper.accountEntityToAccountResponse(accountRepository.save(account));
   }

@@ -46,8 +46,8 @@ class AccountControllerTest {
 
   @Test
   void testCreateAccount() {
-    AccountRequestDTO requestDTO = new AccountRequestDTO(userId, "Conta Corrente", BigDecimal.valueOf(1000), true);
-    AccountResponseDTO responseDTO = new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000), true);
+    AccountRequestDTO requestDTO = new AccountRequestDTO(userId, "Conta Corrente", BigDecimal.valueOf(1000));
+    AccountResponseDTO responseDTO = new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000));
 
     when(accountService.createAccount(requestDTO)).thenReturn(responseDTO);
 
@@ -63,8 +63,8 @@ class AccountControllerTest {
   @Test
   void testFindAllAccounts() {
     List<AccountResponseDTO> accounts = List.of(
-        new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000), true),
-        new AccountResponseDTO(2, userResponseDTO, "Conta Poupança", BigDecimal.valueOf(500), false)
+        new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000)),
+        new AccountResponseDTO(2, userResponseDTO, "Conta Poupança", BigDecimal.valueOf(500))
     );
     UUID uuid = UUID.randomUUID();
     UserEntity user = new UserEntity(uuid, "", "", "");
@@ -82,7 +82,7 @@ class AccountControllerTest {
 
   @Test
   void testFindAccountById() {
-    AccountResponseDTO responseDTO = new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000), true);
+    AccountResponseDTO responseDTO = new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000));
 
     when(accountService.findAccountById(1)).thenReturn(responseDTO);
 
@@ -97,8 +97,8 @@ class AccountControllerTest {
 
   @Test
   void testUpdateAccountById() {
-    AccountUpdateRequestDTO updateDTO = new AccountUpdateRequestDTO("Nova Conta", false);
-    AccountResponseDTO updatedResponse = new AccountResponseDTO(1, userResponseDTO, "Nova Conta", BigDecimal.valueOf(1000), false);
+    AccountUpdateRequestDTO updateDTO = new AccountUpdateRequestDTO("Nova Conta");
+    AccountResponseDTO updatedResponse = new AccountResponseDTO(1, userResponseDTO, "Nova Conta", BigDecimal.valueOf(1000));
 
     when(accountService.updateAccountById(1, updateDTO)).thenReturn(updatedResponse);
 

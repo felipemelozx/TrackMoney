@@ -1,6 +1,5 @@
 package fun.trackmoney.user.service;
 
-import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
@@ -31,9 +30,6 @@ class UserServiceTest {
   private UserRepository userRepository;
 
   @Mock
-  private AccountService accountService;
-
-  @Mock
   private UserMapper userMapper;
 
   @Mock
@@ -56,7 +52,6 @@ class UserServiceTest {
     when(passwordEncoder.encode("StrongPassword123#")).thenReturn("encodedPass");
     when(userRepository.save(entityToSave)).thenReturn(savedEntityReturn);
     when(userMapper.userEntityToUserResponseDto(savedEntityReturn)).thenReturn(mockDTO);
-    when(accountService.createAccount(any())).thenReturn(null);
 
     UserRegisterResult actualResponse = userService.register(requestDTO);
 

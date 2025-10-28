@@ -1,7 +1,6 @@
 package fun.trackmoney.user.service;
 
-import fun.trackmoney.account.dtos.AccountRequestDTO;
-import fun.trackmoney.account.service.AccountService;
+import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
@@ -25,16 +24,13 @@ public class UserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder encoder;
-  private final AccountService accountService;
 
   public UserService(UserRepository userRepository,
                      UserMapper userMapper,
-                     PasswordEncoder encoder,
-                     AccountService accountService) {
+                     PasswordEncoder encoder) {
     this.userRepository = userRepository;
     this.userMapper = userMapper;
     this.encoder = encoder;
-    this.accountService = accountService;
   }
 
   @Transactional
@@ -43,15 +39,19 @@ public class UserService {
     if(userExist.isPresent()) {
       return new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
     }
+
     UserEntity user = userMapper.userRequestDTOToEntity(userRequestDTO);
     user.setPassword(encoder.encode(user.getPassword()));
 
-    UserEntity userResponse = userRepository.save(user);
+    AccountEntity account = new AccountEntity()
+        .setName("Default Account")
+        .setBalance(BigDecimal.ZERO)
+        .setUser(user);
 
-    UserResponseDTO userResponseDTO = userMapper.userEntityToUserResponseDto(userResponse);
-    AccountRequestDTO account = new AccountRequestDTO(
-        userResponseDTO.userId(), "Default Account", BigDecimal.valueOf(0), true);
-    accountService.createAccount(account);
+    user.setAccount(account);
+    UserEntity savedUser = userRepository.save(user);
+
+    UserResponseDTO userResponseDTO = userMapper.userEntityToUserResponseDto(savedUser);
     return new UserRegisterSuccess(userResponseDTO);
   }
 
