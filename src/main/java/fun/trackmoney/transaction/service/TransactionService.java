@@ -9,7 +9,8 @@ import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.enums.DateFilterEnum;
+import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
@@ -18,6 +19,7 @@ import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.DateFilterUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -112,7 +115,7 @@ public class TransactionService {
         .stream()
         .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
         .filter(t -> {
-          LocalDate date = t.getTransactionDate().toLocalDateTime().toLocalDate();
+          LocalDate date = t.getTransactionDate().toLocalDate();
           return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
         })
         .map(TransactionEntity::getAmount)
@@ -130,7 +133,7 @@ public class TransactionService {
         .stream()
         .filter(t -> TransactionType.EXPENSE.equals(t.getTransactionType()))
         .filter(t -> {
-          LocalDate date = t.getTransactionDate().toLocalDateTime().toLocalDate();
+          LocalDate date = t.getTransactionDate().toLocalDate();
           return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
         })
         .map(TransactionEntity::getAmount)
@@ -139,9 +142,25 @@ public class TransactionService {
   }
 
 
-  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable, UUID userId) {
-    Integer accountId = accountService.findAccountDefaultByUserId(userId).getAccountId();
-    return transactionRepository.findAllByAccountId(accountId, pageable)
+  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable,
+                                                               UserEntity currentUser,
+                                                               String name,
+                                                               Long categoryId,
+                                                               DateFilterEnum dateFilter
+                                                               ) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    LocalDateTime startDate = null;
+    LocalDateTime endDate = null;
+    if(dateFilter != null){
+      var dateRager = DateFilterUtil.getDateRange(dateFilter);
+      startDate = dateRager.start();
+      endDate = dateRager.end();
+    }
+    if(name == null){
+      name = "";
+    }
+    return transactionRepository.findAllByFilters(accountId, name, categoryId, startDate, endDate, pageable)
         .map(transactionMapper::toResponseDTO);
   }
 
@@ -152,7 +171,7 @@ public class TransactionService {
     BigDecimal totalBillsBeforeToday = result.stream()
         .filter(transaction ->
             transaction.getCategory().getName().equalsIgnoreCase("bill") &&
-                transaction.getTransactionDate().toLocalDateTime().toLocalDate().isBefore(LocalDate.now())
+                transaction.getTransactionDate().toLocalDate().isBefore(LocalDate.now())
         )
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
@@ -162,7 +181,7 @@ public class TransactionService {
     BigDecimal totalUpComing = result.stream()
         .filter(transaction ->
             transaction.getCategory().getName().equalsIgnoreCase("bill") &&
-                transaction.getTransactionDate().toLocalDateTime().toLocalDate().isAfter(LocalDate.now())
+                transaction.getTransactionDate().toLocalDate().isAfter(LocalDate.now())
         )
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
@@ -170,7 +189,7 @@ public class TransactionService {
 
     BigDecimal totalBueSoon = result.stream()
         .filter(transaction -> {
-          LocalDate date = transaction.getTransactionDate().toLocalDateTime().toLocalDate();
+          LocalDate date = transaction.getTransactionDate().toLocalDate();
           return transaction.getCategory().getName().equalsIgnoreCase("bill")
               && !date.isBefore(LocalDate.now())
               && !date.isAfter(LocalDate.now().plusDays(7));

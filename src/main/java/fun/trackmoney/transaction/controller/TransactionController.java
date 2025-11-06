@@ -4,7 +4,8 @@ import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.enums.DateFilterEnum;
+import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
@@ -85,11 +87,18 @@ public class TransactionController {
   }
 
   @GetMapping("/page")
-  public ResponseEntity<ApiResponse<Page<TransactionResponseDTO>>> getPaginatedTransactions(Pageable pageable,
-                                                                                            @AuthenticationPrincipal
-                                                                                            UserEntity actualUser
+  public ResponseEntity<ApiResponse<Page<TransactionResponseDTO>>> getPaginatedTransactions(
+      Pageable pageable,
+      @RequestParam(required = false)
+      String transactionName,
+      @RequestParam(required = false)
+      Long categoryId,
+      @RequestParam(required = false)
+      DateFilterEnum date,
+      @AuthenticationPrincipal
+      UserEntity actualUser
   ) {
-    Page<TransactionResponseDTO> data = transactionService.getPaginatedTransactions(pageable, actualUser.getUserId());
+    var data = transactionService.getPaginatedTransactions(pageable, actualUser, transactionName, categoryId, date);
     return ResponseEntity.ok().body(
         ApiResponse.<Page<TransactionResponseDTO>>success()
             .message("Paginated transactions")
