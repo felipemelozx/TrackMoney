@@ -49,7 +49,7 @@ public class DateFilterUtil {
         break;
 
       default:
-        throw new IllegalArgumentException("Filtro de data inválido: " + dateFilter);
+        return null;
     }
 
     return new DateRange(startDate, endDate);
