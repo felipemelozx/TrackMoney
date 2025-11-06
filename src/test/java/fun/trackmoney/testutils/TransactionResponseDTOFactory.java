@@ -4,12 +4,12 @@ import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
-import fun.trackmoney.user.dtos.UserResponseDTO;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class TransactionResponseDTOFactory {
-
     public static TransactionResponseDTO defaultTransactionResponse() {
         return new TransactionResponseDTO(
             1,
@@ -18,7 +18,8 @@ public class TransactionResponseDTOFactory {
             BigDecimal.valueOf(120.50),
             AccountResponseDTOFactory.defaultAccountResponse(),
             TransactionType.EXPENSE,
-            CategoryEntityFactory.defaultCategory()
+            CategoryEntityFactory.defaultCategory(),
+            LocalDate.now().atStartOfDay()
         );
     }
 
@@ -30,7 +31,8 @@ public class TransactionResponseDTOFactory {
             BigDecimal.valueOf(3000.00),
             AccountResponseDTOFactory.defaultAccountResponse(),
             TransactionType.EXPENSE,
-            CategoryEntityFactory.defaultCategory()
+            CategoryEntityFactory.defaultCategory(),
+             LocalDate.now().atStartOfDay()
         );
     }
 
@@ -40,8 +42,9 @@ public class TransactionResponseDTOFactory {
             BigDecimal amount,
             AccountResponseDTO account,
             TransactionType type,
-            CategoryEntity category
+            CategoryEntity category,
+            LocalDateTime transactionDate
     ) {
-        return new TransactionResponseDTO(transactionId,"Some Name", description, amount, account, type, category);
+        return new TransactionResponseDTO(transactionId,"Some Name", description, amount, account, type, category, transactionDate);
     }
 }

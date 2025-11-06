@@ -8,7 +8,8 @@ import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.enums.DateFilterEnum;
+import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
@@ -28,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -227,15 +229,14 @@ class TransactionControllerTest {
     TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
     Page<TransactionResponseDTO> page = new PageImpl<>(List.of(transaction1, transaction2), pageable, 2);
 
-    when(transactionService.getPaginatedTransactions(pageable, user.getUserId())).thenReturn(page);
+    when(transactionService.getPaginatedTransactions(pageable, user, "some name", 1l, DateFilterEnum.LAST_MONTH)).thenReturn(page);
 
-    var response = transactionController.getPaginatedTransactions(pageable, user);
+    var response = transactionController.getPaginatedTransactions(pageable, "some name", 1l,DateFilterEnum.LAST_MONTH, user);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertThat(response.getBody().getData()).hasSize(2);
     assertEquals("Paginated transactions", response.getBody().getMessage());
-
-    verify(transactionService, times(1)).getPaginatedTransactions(pageable, user.getUserId());
+    verify(transactionService, times(1)).getPaginatedTransactions(pageable, user, "some name", 1l, DateFilterEnum.LAST_MONTH);
   }
 }

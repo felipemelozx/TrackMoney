@@ -15,7 +15,7 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
@@ -34,7 +34,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -334,13 +333,13 @@ class TransactionServiceTest {
     LocalDateTime baseDate = LocalDate.now().atStartOfDay();
 
 
-    var day1 = Timestamp.valueOf(baseDate.minusDays(8));
+    var day1 = baseDate.minusDays(8);
     transaction1.setTransactionDate(day1);
 
-    var day2 = Timestamp.valueOf(baseDate.plusDays(2));
+    var day2 = baseDate.plusDays(2);
     transaction2.setTransactionDate(day2);
 
-    var day3 = Timestamp.valueOf(baseDate.plusDays(8));
+    var day3 = baseDate.plusDays(8);
     transaction3.setTransactionDate(day3);
 
     CategoryEntity category = new CategoryEntity(1, "bill", "anyColor");
@@ -376,13 +375,13 @@ class TransactionServiceTest {
     LocalDateTime baseDate = LocalDate.now().atStartOfDay();
 
 
-    var day1 = Timestamp.valueOf(baseDate.minusDays(8));
+    var day1 = baseDate.minusDays(8);
     transaction1.setTransactionDate(day1);
 
-    var day2 = Timestamp.valueOf(baseDate.plusDays(2));
+    var day2 = baseDate.plusDays(2);
     transaction2.setTransactionDate(day2);
 
-    var day3 = Timestamp.valueOf(baseDate.plusDays(8));
+    var day3 = baseDate.plusDays(8);
     transaction3.setTransactionDate(day3);
 
     CategoryEntity category = new CategoryEntity(1, "otherCategory", "anyColor");
@@ -412,14 +411,13 @@ class TransactionServiceTest {
 
     Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
 
-    when(transactionRepository.findAllByAccountId(account.getAccountId(), pageable)).thenReturn(transactionPage);
-    when(accountService.findAccountDefaultByUserId(user.getUserId())).thenReturn(account);
+    when(transactionRepository.findAllByFilters(user.getAccount().getAccountId(), "" ,null, null, null, pageable)).thenReturn(transactionPage);
     when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
 
-    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user.getUserId());
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null);
 
     assertThat(result.getContent()).containsExactly(dto);
-    verify(transactionRepository, times(1)).findAllByAccountId(account.getAccountId(), pageable);
+    verify(transactionRepository, times(1)).findAllByFilters(user.getAccount().getAccountId(), "" ,null, null, null, pageable);
     verify(transactionMapper, times(1)).toResponseDTO(transaction);
   }
 }
