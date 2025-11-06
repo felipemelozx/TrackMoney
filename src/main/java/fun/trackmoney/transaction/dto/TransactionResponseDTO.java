@@ -5,6 +5,7 @@ import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public record TransactionResponseDTO(Integer transactionId,
                                      String transactionName,
@@ -12,5 +13,6 @@ public record TransactionResponseDTO(Integer transactionId,
                                      BigDecimal amount,
                                      AccountResponseDTO account,
                                      TransactionType transactionType,
-                                     CategoryEntity category) {
+                                     CategoryEntity category,
+                                     LocalDateTime transactionDate) {
 }
