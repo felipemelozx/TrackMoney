@@ -15,6 +15,7 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
+import fun.trackmoney.transaction.enums.DateFilterEnum;
 import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
@@ -24,6 +25,7 @@ import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.DateFilterUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -403,7 +405,6 @@ class TransactionServiceTest {
   @Test
   void shouldReturnPaginatedTransactions() {
     Pageable pageable = PageRequest.of(0, 5);
-    AccountEntity account = AccountEntityFactory.defaultAccount();
     UserEntity user = UserEntityFactory.defaultUser();
 
     TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
@@ -419,5 +420,71 @@ class TransactionServiceTest {
     assertThat(result.getContent()).containsExactly(dto);
     verify(transactionRepository, times(1)).findAllByFilters(user.getAccount().getAccountId(), "" ,null, null, null, pageable);
     verify(transactionMapper, times(1)).toResponseDTO(transaction);
+  }
+
+  @Test
+  void shouldUseEmptyNameAndNullDatesWhenDateFilterAndNameAreNull() {
+    Pageable pageable = PageRequest.of(0, 5);
+    UserEntity user = UserEntityFactory.defaultUser();
+    TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
+    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
+
+    Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
+
+    when(transactionRepository.findAllByFilters(
+        user.getAccount().getAccountId(),
+        "",
+        null,
+        null,
+        null,
+        pageable
+    )).thenReturn(transactionPage);
+
+    when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
+
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null);
+
+    assertThat(result.getContent()).containsExactly(dto);
+    verify(transactionRepository, times(1)).findAllByFilters(
+        user.getAccount().getAccountId(), "", null, null, null, pageable);
+    verify(transactionMapper, times(1)).toResponseDTO(transaction);
+  }
+
+  @Test
+  void shouldUseDateRangeWhenDateFilterIsProvided() {
+    Pageable pageable = PageRequest.of(0, 5);
+    UserEntity user = UserEntityFactory.defaultUser();
+    TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
+    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
+
+    Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
+
+
+    LocalDateTime start = LocalDateTime.now().minusDays(7);
+    LocalDateTime end = LocalDateTime.now();
+    var mockDateRange = new DateFilterUtil.DateRange(start, end);
+
+    try (MockedStatic<DateFilterUtil> mocked = mockStatic(DateFilterUtil.class)) {
+      mocked.when(() -> DateFilterUtil.getDateRange(DateFilterEnum.LAST_MONTH))
+          .thenReturn(mockDateRange);
+
+      when(transactionRepository.findAllByFilters(
+          user.getAccount().getAccountId(),
+          "Food",
+          1L,
+          start,
+          end,
+          pageable
+      )).thenReturn(transactionPage);
+
+      when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
+
+      Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(
+          pageable, user, "Food", 1L, DateFilterEnum.LAST_MONTH);
+
+      assertThat(result.getContent()).containsExactly(dto);
+      verify(transactionRepository, times(1)).findAllByFilters(
+          user.getAccount().getAccountId(), "Food", 1L, start, end, pageable);
+    }
   }
 }
