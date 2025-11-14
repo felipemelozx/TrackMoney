@@ -1,7 +1,6 @@
 package fun.trackmoney.transaction.service;
 
 import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
@@ -10,7 +9,8 @@ import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.enums.DateFilterEnum;
+import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
@@ -18,12 +18,16 @@ import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
+import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.DateFilterUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -34,31 +38,28 @@ public class TransactionService {
   private final TransactionRepository transactionRepository;
   private final TransactionMapper transactionMapper;
   private final AccountService accountService;
-  private final AccountMapper accountMapper;
   private final CategoryService categoryService;
 
   public TransactionService(TransactionRepository transactionRepository,
                             TransactionMapper transactionMapper,
                             AccountService accountService,
-                            AccountMapper accountMapper,
                             CategoryService categoryService) {
     this.transactionRepository = transactionRepository;
     this.transactionMapper = transactionMapper;
     this.accountService = accountService;
-    this.accountMapper = accountMapper;
     this.categoryService = categoryService;
   }
 
-  public TransactionResult createTransaction(CreateTransactionDTO transactionDTO, UUID userId) {
-    AccountEntity account = accountService.findAccountDefaultByUserId(userId);
+  public TransactionResult createTransaction(CreateTransactionDTO transactionDTO, UserEntity currentUser) {
+    AccountEntity account = currentUser.getAccount();
 
-    if(account == null) {
+    if (account == null) {
       return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
     }
 
     CategoryEntity category = categoryService.findById(transactionDTO.categoryId());
 
-    if(category == null) {
+    if (category == null) {
       return new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
     }
 
@@ -75,29 +76,33 @@ public class TransactionService {
     return new TransactionSuccess(response);
   }
 
-  public List<TransactionResponseDTO> findAllTransaction() {
-     return transactionMapper.toResponseDTOList(transactionRepository.findAll());
+  public List<TransactionResponseDTO> findAllTransaction(UserEntity currentUser) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+    return transactionMapper.toResponseDTOList(transactionRepository.findAllByAccountId(accountId));
   }
 
-  public TransactionResponseDTO findById(Integer id) {
-    return transactionMapper.toResponseDTO(transactionRepository.findById(id)
-        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found.")));
+  public TransactionResponseDTO findById(Integer id, UserEntity currentUser) {
+    TransactionEntity transaction = transactionRepository.findByIdAndAccount(id, currentUser.getAccount())
+        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
+    return transactionMapper.toResponseDTO(transaction);
   }
 
-  public TransactionResponseDTO update(Integer id, TransactionUpdateDTO dto) {
-    TransactionEntity transaction = transactionRepository.findById(id)
+  public TransactionResponseDTO update(Integer id, TransactionUpdateDTO dto, UserEntity currentUser) {
+    AccountEntity account = currentUser.getAccount();
+    TransactionEntity transaction = transactionRepository.findByIdAndAccount(id, account)
         .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
 
     transaction.setAmount(dto.amount());
     transaction.setDescription(dto.description());
     transaction.setCategory(categoryService.findById(dto.categoryId()));
-    transaction.setAccount(accountMapper.accountResponseToEntity(accountService.findAccountById(dto.accountId())));
+    transaction.setAccount(account);
 
     return transactionMapper.toResponseDTO(transactionRepository.save(transaction));
   }
 
-  public void delete(Integer id) {
-    transactionRepository.deleteById(id);
+  @Transactional
+  public void delete(Integer id, UserEntity currentUser) {
+    transactionRepository.deleteByIdAndAccountId(id, currentUser.getAccount());
   }
 
   public BigDecimal getIncome(UUID userId) {
@@ -110,7 +115,7 @@ public class TransactionService {
         .stream()
         .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
         .filter(t -> {
-          LocalDate date = t.getTransactionDate().toLocalDateTime().toLocalDate();
+          LocalDate date = t.getTransactionDate().toLocalDate();
           return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
         })
         .map(TransactionEntity::getAmount)
@@ -118,8 +123,8 @@ public class TransactionService {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
-  public BigDecimal getExpense(UUID userId) {
-    Integer accountId = accountService.findAccountDefaultByUserId(userId).getAccountId();
+  public BigDecimal getExpense(UserEntity currentUser) {
+    Integer accountId = currentUser.getAccount().getAccountId();
     LocalDate today = LocalDate.now();
     int currentMonth = today.getMonthValue();
     int currentYear = today.getYear();
@@ -128,7 +133,7 @@ public class TransactionService {
         .stream()
         .filter(t -> TransactionType.EXPENSE.equals(t.getTransactionType()))
         .filter(t -> {
-          LocalDate date = t.getTransactionDate().toLocalDateTime().toLocalDate();
+          LocalDate date = t.getTransactionDate().toLocalDate();
           return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
         })
         .map(TransactionEntity::getAmount)
@@ -137,18 +142,36 @@ public class TransactionService {
   }
 
 
-  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable) {
-    return transactionRepository.findAll(pageable)
+  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable,
+                                                               UserEntity currentUser,
+                                                               String name,
+                                                               Long categoryId,
+                                                               DateFilterEnum dateFilter
+                                                               ) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    LocalDateTime startDate = null;
+    LocalDateTime endDate = null;
+    if(dateFilter != null){
+      var dateRager = DateFilterUtil.getDateRange(dateFilter);
+      startDate = dateRager.start();
+      endDate = dateRager.end();
+    }
+    if(name == null){
+      name = "";
+    }
+    return transactionRepository.findAllByFilters(accountId, name, categoryId, startDate, endDate, pageable)
         .map(transactionMapper::toResponseDTO);
   }
 
-  public BillResponseDTO getBill(Integer id) {
-    var result = transactionRepository.findAllByAccountId(id);
+  public BillResponseDTO getBill(UserEntity currentUser) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+    var result = transactionRepository.findAllByAccountId(accountId);
 
     BigDecimal totalBillsBeforeToday = result.stream()
         .filter(transaction ->
             transaction.getCategory().getName().equalsIgnoreCase("bill") &&
-                transaction.getTransactionDate().toLocalDateTime().toLocalDate().isBefore(LocalDate.now())
+                transaction.getTransactionDate().toLocalDate().isBefore(LocalDate.now())
         )
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
@@ -158,7 +181,7 @@ public class TransactionService {
     BigDecimal totalUpComing = result.stream()
         .filter(transaction ->
             transaction.getCategory().getName().equalsIgnoreCase("bill") &&
-                transaction.getTransactionDate().toLocalDateTime().toLocalDate().isAfter(LocalDate.now())
+                transaction.getTransactionDate().toLocalDate().isAfter(LocalDate.now())
         )
         .map(TransactionEntity::getAmount)
         .filter(Objects::nonNull)
@@ -166,7 +189,7 @@ public class TransactionService {
 
     BigDecimal totalBueSoon = result.stream()
         .filter(transaction -> {
-          LocalDate date = transaction.getTransactionDate().toLocalDateTime().toLocalDate();
+          LocalDate date = transaction.getTransactionDate().toLocalDate();
           return transaction.getCategory().getName().equalsIgnoreCase("bill")
               && !date.isBefore(LocalDate.now())
               && !date.isAfter(LocalDate.now().plusDays(7));

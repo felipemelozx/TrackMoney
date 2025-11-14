@@ -30,7 +30,7 @@ class GoalsControllerTest {
     controller = new GoalsController(goalsService);
 
     UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "User", "user@email.com");
-    AccountResponseDTO account = new AccountResponseDTO(1, user, "Conta 1", new BigDecimal("1000"), true);
+    AccountResponseDTO account = new AccountResponseDTO(1, user, "Conta 1", new BigDecimal("1000"));
 
     goalResponse = new GoalsResponseDTO(1, "Viagem", account, new BigDecimal("1000"), new BigDecimal("200"), 20);
   }

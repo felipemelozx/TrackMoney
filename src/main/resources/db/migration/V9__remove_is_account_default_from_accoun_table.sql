@@ -1,0 +1,2 @@
+ALTER TABLE tb_account
+DROP COLUMN is_account_default

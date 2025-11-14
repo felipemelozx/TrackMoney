@@ -1,5 +1,6 @@
 package fun.trackmoney.auth.infra.config;
 
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.repository.UserRepository;
@@ -31,21 +32,29 @@ public class SecurityFilterConfig extends OncePerRequestFilter {
                                   FilterChain filterChain) throws ServletException, IOException {
 
     String token = this.recoverToken(request);
-    if (token == null) {
-      filterChain.doFilter(request, response);
-      return;
-    }
 
-    String email = tokenService.extractEmail(token);
-    String role = tokenService.extractRole(token);
+    if (token != null) {
+      String email;
+      String role;
 
-    if (email != null) {
+      try {
+        email = tokenService.extractEmail(token);
+        role = tokenService.extractRole(token);
+
+        if (email == null || role == null) {
+          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+          return;
+        }
+
+      } catch (TokenExpiredException e) {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        return;
+      }
+
       UserEntity user = userRepository.findByEmail(email)
           .orElseThrow(() -> new RuntimeException("User Not Found"));
 
-
-      List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
-
+      var authorities = List.of(new SimpleGrantedAuthority(role));
       var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
       SecurityContextHolder.getContext().setAuthentication(authentication);
     }

@@ -1,6 +1,5 @@
 package fun.trackmoney.transaction.service;
 
-import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
@@ -16,7 +15,8 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.dto.TransactionsError;
+import fun.trackmoney.transaction.enums.DateFilterEnum;
+import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
@@ -24,8 +24,8 @@ import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
-import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.DateFilterUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -36,7 +36,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -70,77 +69,70 @@ class TransactionServiceTest {
 
   @Test
   void shouldReturnTransactionSuccessWhenTransactionIsCreatedSuccessfully() {
-    UUID userId = UUID.randomUUID();
+    UserEntity currentUser = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
     AccountEntity account = AccountEntityFactory.defaultAccount();
     CategoryEntity category = CategoryEntityFactory.defaultCategory();
     TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
     TransactionResponseDTO responseDTO = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    when(accountService.findAccountDefaultByUserId(userId)).thenReturn(account);
     when(categoryService.findById(dto.categoryId())).thenReturn(category);
     when(transactionMapper.createTransactionToEntity(dto)).thenReturn(transaction);
     when(transactionRepository.save(transaction)).thenReturn(transaction);
     when(accountService.updateAccountBalance(dto.amount(), account.getAccountId(), true)).thenReturn(true);
     when(transactionMapper.toResponseDTO(transaction)).thenReturn(responseDTO);
 
-    TransactionResult result = transactionService.createTransaction(dto, userId);
+    TransactionResult result = transactionService.createTransaction(dto, currentUser);
 
     assertInstanceOf(TransactionSuccess.class, result);
     TransactionSuccess transactionSuccess = (TransactionSuccess) result;
     assertEquals("buy bread", transactionSuccess.response().description());
     verify(transactionRepository, times(1)).save(transaction);
-    verify(accountService, times(1)).findAccountDefaultByUserId(userId);
     verify(categoryService, times(1)).findById(dto.categoryId());
   }
 
   @Test
   void shouldReturnTransactionFailureWhenAccountIsNotFound() {
-    UUID userId = UUID.randomUUID();
+    UserEntity currentUser = UserEntityFactory.customUser(UUID.randomUUID(), "some name", "some@gmail", "somepass",true, null);
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.defaultTransaction();
 
-    when(accountService.findAccountDefaultByUserId(userId)).thenReturn(null);
-
-    TransactionResult result = transactionService.createTransaction(dto, userId);
+    TransactionResult result = transactionService.createTransaction(dto, currentUser);
 
     assertInstanceOf(TransactionFailure.class, result);
     TransactionFailure failure = (TransactionFailure) result;
     assertEquals(TransactionsError.ACCOUNT_NOT_FOUND, failure.error());
 
-    verify(accountService, times(1)).findAccountDefaultByUserId(userId);
     verifyNoInteractions(categoryService, transactionRepository, transactionMapper);
   }
 
   @Test
   void shouldReturnTransactionFailureWhenCategoryIsNotFound() {
-    UUID userId = UUID.randomUUID();
+    UserEntity currentUser = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.defaultTransaction();
-    AccountEntity account = AccountEntityFactory.defaultAccount();
 
-    when(accountService.findAccountDefaultByUserId(userId)).thenReturn(account);
     when(categoryService.findById(dto.categoryId())).thenReturn(null);
 
-    TransactionResult result = transactionService.createTransaction(dto, userId);
+    TransactionResult result = transactionService.createTransaction(dto, currentUser);
 
     assertInstanceOf(TransactionFailure.class, result);
     TransactionFailure failure = (TransactionFailure) result;
     assertEquals(TransactionsError.CATEGORY_NOT_FOUND, failure.error());
 
-    verify(accountService, times(1)).findAccountDefaultByUserId(userId);
     verify(categoryService, times(1)).findById(dto.categoryId());
     verifyNoInteractions(transactionRepository, transactionMapper);
   }
 
   @Test
   void findAllTransaction_shouldReturnListOfResponseDTOs() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
     TransactionEntity entity = new TransactionEntity();
     List<TransactionEntity> entities = List.of(entity);
     TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    when(transactionRepository.findAll()).thenReturn(entities);
+    when(transactionRepository.findAllByAccountId(currentUser.getAccount().getAccountId())).thenReturn(List.of(entity));
     when(transactionMapper.toResponseDTOList(entities)).thenReturn(List.of(dto));
 
-    List<TransactionResponseDTO> result = transactionService.findAllTransaction();
+    List<TransactionResponseDTO> result = transactionService.findAllTransaction(currentUser);
 
     assertEquals(1, result.size());
     assertEquals("buy bread", result.get(0).description());
@@ -148,51 +140,52 @@ class TransactionServiceTest {
 
   @Test
   void findById_shouldReturnTransactionResponseDTO() {
-    TransactionEntity entity = new TransactionEntity();
+    TransactionEntity entity = TransactionEntityFactory.defaultExpenseNow();
     TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
+    UserEntity user = UserEntityFactory.defaultUser();
 
-    when(transactionRepository.findById(1)).thenReturn(Optional.of(entity));
+    when(transactionRepository.findByIdAndAccount(entity.getTransactionId(), user.getAccount())).thenReturn(Optional.of(entity));
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dto);
 
-    TransactionResponseDTO result = transactionService.findById(1);
+    TransactionResponseDTO result = transactionService.findById(1, user);
 
     assertEquals("buy bread", result.description());
   }
 
   @Test
   void findById_shouldThrowExceptionIfNotFound() {
-    when(transactionRepository.findById(1)).thenReturn(Optional.empty());
+    UserEntity user = UserEntityFactory.defaultUser();
 
-    TransactionNotFoundException exception = assertThrows(TransactionNotFoundException.class, () -> transactionService.findById(1));
+    when(transactionRepository.findByIdAndAccount(1, user.getAccount())).thenReturn(Optional.empty());
+    TransactionNotFoundException exception = assertThrows(TransactionNotFoundException.class, () -> transactionService.findById(1, user));
     assertEquals("Transaction not found.", exception.getMessage());
   }
 
   @Test
   void update_shouldUpdateAndReturnTransactionResponseDTO() {
-    TransactionEntity entity = new TransactionEntity();
-    AccountEntity accountEntity = new AccountEntity();
-    CategoryEntity categoryEntity = new CategoryEntity();
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    TransactionEntity entity = TransactionEntityFactory.defaultExpenseNow();
+    AccountEntity accountEntity = currentUser.getAccount();
+    CategoryEntity categoryEntity = entity.getCategory();
     TransactionResponseDTO dtoResponse = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2, TransactionType.EXPENSE);
-    UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "Jane", "jane@mail.com");
 
-    when(transactionRepository.findById(1)).thenReturn(Optional.of(entity));
+    when(transactionRepository.findByIdAndAccount(1, accountEntity)).thenReturn(Optional.of(entity));
     when(categoryService.findById(2)).thenReturn(categoryEntity);
-    when(accountService.findAccountById(1)).thenReturn(new AccountResponseDTO(1, user, "btg", BigDecimal.valueOf(100), true));
-    when(accountMapper.accountResponseToEntity(any())).thenReturn(accountEntity);
     when(transactionRepository.save(entity)).thenReturn(entity);
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);
 
-    TransactionResponseDTO result = transactionService.update(1, dto);
+    TransactionResponseDTO result = transactionService.update(1, dto, currentUser);
 
     assertEquals("buy bread", result.description());
   }
 
   @Test
   void delete_shouldCallRepositoryDeleteById() {
-    transactionService.delete(1);
-    verify(transactionRepository).deleteById(1);
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    transactionService.delete(1, currentUser);
+    verify(transactionRepository).deleteByIdAndAccountId(1, currentUser.getAccount());
   }
 
   @Test
@@ -258,10 +251,8 @@ class TransactionServiceTest {
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr));
-    when(accountService.findAccountDefaultByUserId(user.getUserId()))
-        .thenReturn(account);
 
-    var result = transactionService.getExpense(user.getUserId());
+    var result = transactionService.getExpense(user);
 
     assertEquals(BigDecimal.ZERO, result);
   }
@@ -276,13 +267,10 @@ class TransactionServiceTest {
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr1, tr2));
-    when(accountService.findAccountDefaultByUserId(user.getUserId()))
-        .thenReturn(account);
 
-    var result = transactionService.getExpense(user.getUserId());
+    var result = transactionService.getExpense(user);
 
     assertEquals(BigDecimal.valueOf(200.0), result);
-    verify(accountService).findAccountDefaultByUserId(user.getUserId());
     verify(transactionRepository).findAllByAccountId(account.getAccountId());
   }
 
@@ -295,10 +283,8 @@ class TransactionServiceTest {
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr));
-    when(accountService.findAccountDefaultByUserId(user.getUserId()))
-        .thenReturn(account);
 
-    var result = transactionService.getExpense(user.getUserId());
+    var result = transactionService.getExpense(user);
 
     assertEquals(BigDecimal.ZERO, result);
   }
@@ -312,10 +298,8 @@ class TransactionServiceTest {
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr));
-    when(accountService.findAccountDefaultByUserId(user.getUserId()))
-        .thenReturn(account);
 
-    var result = transactionService.getExpense(user.getUserId());
+    var result = transactionService.getExpense(user);
 
     assertEquals(BigDecimal.ZERO, result);
   }
@@ -329,17 +313,16 @@ class TransactionServiceTest {
 
     when(transactionRepository.findAllByAccountId(account.getAccountId()))
         .thenReturn(List.of(tr));
-    when(accountService.findAccountDefaultByUserId(user.getUserId()))
-        .thenReturn(account);
 
-    var result = transactionService.getExpense(user.getUserId());
+    var result = transactionService.getExpense(user);
 
     assertEquals(BigDecimal.ZERO, result);
   }
 
   @Test
   void getBill_shouldReturnBillResponseDTO() {
-    var accountId = 1;
+    var currentUser = UserEntityFactory.defaultUser();
+    var accountId = currentUser.getAccount().getAccountId();
 
     var transaction1 = new TransactionEntity();
     var transaction2 = new TransactionEntity();
@@ -352,13 +335,13 @@ class TransactionServiceTest {
     LocalDateTime baseDate = LocalDate.now().atStartOfDay();
 
 
-    var day1 = Timestamp.valueOf(baseDate.minusDays(8));
+    var day1 = baseDate.minusDays(8);
     transaction1.setTransactionDate(day1);
 
-    var day2 = Timestamp.valueOf(baseDate.plusDays(2));
+    var day2 = baseDate.plusDays(2);
     transaction2.setTransactionDate(day2);
 
-    var day3 = Timestamp.valueOf(baseDate.plusDays(8));
+    var day3 = baseDate.plusDays(8);
     transaction3.setTransactionDate(day3);
 
     CategoryEntity category = new CategoryEntity(1, "bill", "anyColor");
@@ -369,7 +352,7 @@ class TransactionServiceTest {
 
     when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(transaction1, transaction2));
 
-    var result = transactionService.getBill(accountId);
+    var result = transactionService.getBill(currentUser);
 
     assertNotNull(result);
     assertEquals(BigDecimal.valueOf(100), result.totalUpcoming());
@@ -379,7 +362,9 @@ class TransactionServiceTest {
 
   @Test
   void getBill_shouldReturnEmptyBillResponseDTOWhenNoBills() {
-    var accountId = 1;
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+
+    var accountId = currentUser.getAccount().getAccountId();
 
     var transaction1 = new TransactionEntity();
     var transaction2 = new TransactionEntity();
@@ -392,13 +377,13 @@ class TransactionServiceTest {
     LocalDateTime baseDate = LocalDate.now().atStartOfDay();
 
 
-    var day1 = Timestamp.valueOf(baseDate.minusDays(8));
+    var day1 = baseDate.minusDays(8);
     transaction1.setTransactionDate(day1);
 
-    var day2 = Timestamp.valueOf(baseDate.plusDays(2));
+    var day2 = baseDate.plusDays(2);
     transaction2.setTransactionDate(day2);
 
-    var day3 = Timestamp.valueOf(baseDate.plusDays(8));
+    var day3 = baseDate.plusDays(8);
     transaction3.setTransactionDate(day3);
 
     CategoryEntity category = new CategoryEntity(1, "otherCategory", "anyColor");
@@ -409,7 +394,7 @@ class TransactionServiceTest {
 
     when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(transaction1, transaction2));
 
-    var result = transactionService.getBill(accountId);
+    var result = transactionService.getBill(currentUser);
 
     assertNotNull(result);
     assertEquals(BigDecimal.valueOf(0), result.totalUpcoming());
@@ -420,19 +405,86 @@ class TransactionServiceTest {
   @Test
   void shouldReturnPaginatedTransactions() {
     Pageable pageable = PageRequest.of(0, 5);
+    UserEntity user = UserEntityFactory.defaultUser();
 
-    TransactionEntity transaction = new TransactionEntity(1, null, null, null,   BigDecimal.valueOf(100),"Some description", null );
+    TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
     TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
 
-    when(transactionRepository.findAll(pageable)).thenReturn(transactionPage);
+    when(transactionRepository.findAllByFilters(user.getAccount().getAccountId(), "" ,null, null, null, pageable)).thenReturn(transactionPage);
     when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
 
-    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable);
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null);
 
     assertThat(result.getContent()).containsExactly(dto);
-    verify(transactionRepository).findAll(pageable);
-    verify(transactionMapper).toResponseDTO(transaction);
+    verify(transactionRepository, times(1)).findAllByFilters(user.getAccount().getAccountId(), "" ,null, null, null, pageable);
+    verify(transactionMapper, times(1)).toResponseDTO(transaction);
+  }
+
+  @Test
+  void shouldUseEmptyNameAndNullDatesWhenDateFilterAndNameAreNull() {
+    Pageable pageable = PageRequest.of(0, 5);
+    UserEntity user = UserEntityFactory.defaultUser();
+    TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
+    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
+
+    Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
+
+    when(transactionRepository.findAllByFilters(
+        user.getAccount().getAccountId(),
+        "",
+        null,
+        null,
+        null,
+        pageable
+    )).thenReturn(transactionPage);
+
+    when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
+
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null);
+
+    assertThat(result.getContent()).containsExactly(dto);
+    verify(transactionRepository, times(1)).findAllByFilters(
+        user.getAccount().getAccountId(), "", null, null, null, pageable);
+    verify(transactionMapper, times(1)).toResponseDTO(transaction);
+  }
+
+  @Test
+  void shouldUseDateRangeWhenDateFilterIsProvided() {
+    Pageable pageable = PageRequest.of(0, 5);
+    UserEntity user = UserEntityFactory.defaultUser();
+    TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
+    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
+
+    Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
+
+
+    LocalDateTime start = LocalDateTime.now().minusDays(7);
+    LocalDateTime end = LocalDateTime.now();
+    var mockDateRange = new DateFilterUtil.DateRange(start, end);
+
+    try (MockedStatic<DateFilterUtil> mocked = mockStatic(DateFilterUtil.class)) {
+      mocked.when(() -> DateFilterUtil.getDateRange(DateFilterEnum.LAST_MONTH))
+          .thenReturn(mockDateRange);
+
+      when(transactionRepository.findAllByFilters(
+          user.getAccount().getAccountId(),
+          "Food",
+          1L,
+          start,
+          end,
+          pageable
+      )).thenReturn(transactionPage);
+
+      when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
+
+      Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(
+          pageable, user, "Food", 1L, DateFilterEnum.LAST_MONTH);
+
+      assertThat(result.getContent()).containsExactly(dto);
+      verify(transactionRepository, times(1)).findAllByFilters(
+          user.getAccount().getAccountId(), "Food", 1L, start, end, pageable);
+    }
   }
 }

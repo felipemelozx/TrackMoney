@@ -95,7 +95,7 @@ public class TransactionEntityFactory {
       TransactionType transactionType,
       BigDecimal amount,
       String description,
-      Timestamp transactionDate
+      LocalDateTime transactionDate
   ) {
     return new TransactionEntity(transactionId, account, category, transactionType, amount, description, transactionDate);
   }
@@ -109,7 +109,6 @@ public class TransactionEntityFactory {
       String description,
       LocalDateTime dateTime
   ) {
-    Timestamp timestamp = Timestamp.valueOf(dateTime);
-    return new TransactionEntity(transactionId, account, category, type, amount, description, timestamp);
+    return new TransactionEntity(transactionId, account, category, type, amount, description, dateTime);
   }
 }

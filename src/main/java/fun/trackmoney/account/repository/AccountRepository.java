@@ -13,6 +13,6 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Integer>
   @Query("SELECT a FROM AccountEntity a WHERE a.user.userId = :userId")
   List<AccountEntity> findAllByUserEmail(@Param("userId") UUID userId);
 
-  @Query("SELECT a FROM AccountEntity a WHERE a.user.userId = :userId AND a.isAccountDefault = true")
+  @Query("SELECT a FROM AccountEntity a WHERE a.user.userId = :userId")
   Optional<AccountEntity> findDefaultAccountByUserId(@Param("userId") UUID userId);
 }

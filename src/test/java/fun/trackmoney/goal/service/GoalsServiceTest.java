@@ -52,7 +52,7 @@ class GoalsServiceTest {
     AccountEntity accountEntity = new AccountEntity();
 
     UserResponseDTO userDTO = new UserResponseDTO(UUID.randomUUID(), "user@email.com", "User");
-    AccountResponseDTO accountDTO = new AccountResponseDTO(1, userDTO, "Conta 1", new BigDecimal("5000"), true);
+    AccountResponseDTO accountDTO = new AccountResponseDTO(1, userDTO, "Conta 1", new BigDecimal("5000"));
 
     GoalsResponseDTO responseDTO = new GoalsResponseDTO(
         1,
@@ -83,7 +83,7 @@ class GoalsServiceTest {
 
     UserResponseDTO userDTO = new UserResponseDTO(UUID.randomUUID(), "user@email.com", "User");
 
-    AccountResponseDTO acc = new AccountResponseDTO(1, userDTO, "Conta", new BigDecimal("2000"), true);
+    AccountResponseDTO acc = new AccountResponseDTO(1, userDTO, "Conta", new BigDecimal("2000"));
 
     List<GoalsResponseDTO> dtoList = List.of(
         new GoalsResponseDTO(1, "Meta1", acc, new BigDecimal("1000"), new BigDecimal("500"), 50),
@@ -104,7 +104,7 @@ class GoalsServiceTest {
   void findById_shouldReturnGoalResponse_whenExists() {
     GoalsEntity entity = new GoalsEntity();
     UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "Usuário", "mail@mail.com");
-    AccountResponseDTO acc = new AccountResponseDTO(1, user, "Conta", new BigDecimal("2000"), true);
+    AccountResponseDTO acc = new AccountResponseDTO(1, user, "Conta", new BigDecimal("2000"));
     GoalsResponseDTO dto = new GoalsResponseDTO(1, "Meta", acc, new BigDecimal("1000"), new BigDecimal("500"), 50);
 
     when(goalsRepository.findById(1)).thenReturn(Optional.of(entity));
@@ -129,7 +129,7 @@ class GoalsServiceTest {
     GoalsEntity saved = new GoalsEntity();
 
     UserResponseDTO user = new UserResponseDTO(UUID.randomUUID(), "Usuário","mail@mail.com");
-    AccountResponseDTO acc = new AccountResponseDTO(1, user, "Conta", new BigDecimal("2000"), true);
+    AccountResponseDTO acc = new AccountResponseDTO(1, user, "Conta", new BigDecimal("2000"));
     GoalsResponseDTO responseDTO = new GoalsResponseDTO(1, "Nova Meta", acc, new BigDecimal("3000"), new BigDecimal("1000"), 33);
 
     when(goalsRepository.findById(1)).thenReturn(Optional.of(entity));

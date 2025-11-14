@@ -14,7 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tb_transaction")
@@ -42,14 +42,14 @@ public class TransactionEntity {
 
   private String description;
 
-  private Timestamp transactionDate;
+  private LocalDateTime transactionDate;
 
   public TransactionEntity() {
   }
 
   public TransactionEntity(Integer transactionId, AccountEntity account, CategoryEntity category,
                            TransactionType transactionType, BigDecimal amount, String description,
-                           Timestamp transactionDate) {
+                           LocalDateTime transactionDate) {
     this.transactionId = transactionId;
     this.account = account;
     this.category = category;
@@ -109,11 +109,11 @@ public class TransactionEntity {
     this.description = description;
   }
 
-  public Timestamp getTransactionDate() {
+  public LocalDateTime getTransactionDate() {
     return transactionDate;
   }
 
-  public void setTransactionDate(Timestamp transactionDate) {
+  public void setTransactionDate(LocalDateTime transactionDate) {
     this.transactionDate = transactionDate;
   }
 
