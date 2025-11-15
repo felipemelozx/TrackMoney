@@ -92,10 +92,13 @@ public class TransactionService {
     TransactionEntity transaction = transactionRepository.findByIdAndAccount(id, account)
         .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
 
+    transaction.setTransactionName(dto.transactionName());
     transaction.setAmount(dto.amount());
     transaction.setDescription(dto.description());
     transaction.setCategory(categoryService.findById(dto.categoryId()));
     transaction.setAccount(account);
+    transaction.setTransactionType(dto.transactionType());
+    transaction.setTransactionDate(dto.transactionDate());
 
     return transactionMapper.toResponseDTO(transactionRepository.save(transaction));
   }

@@ -1,8 +1,8 @@
 package fun.trackmoney.transaction.controller;
 
-import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.testutils.CreateTransactionDTOBuilder;
 import fun.trackmoney.testutils.TransactionResponseDTOFactory;
+import fun.trackmoney.testutils.TransactionUpdateDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
@@ -29,7 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -139,7 +138,7 @@ class TransactionControllerTest {
   @Test
   void updateTransaction_shouldReturnUpdatedTransaction() {
     UserEntity currentUser = UserEntityFactory.defaultUser();
-    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(50), 1, 2, TransactionType.EXPENSE);
+    TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransaction();
     TransactionResponseDTO updated = TransactionResponseDTOFactory.defaultTransactionResponse();
 
     when(transactionService.update(1, dto, currentUser)).thenReturn(updated);

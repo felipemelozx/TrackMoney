@@ -3,10 +3,12 @@ package fun.trackmoney.transaction.dto;
 import fun.trackmoney.enums.TransactionType;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-public record TransactionUpdateDTO(String description,
+public record TransactionUpdateDTO(String transactionName,
+                                   String description,
                                    BigDecimal amount,
-                                   Integer accountId,
                                    Integer categoryId,
-                                   TransactionType transactionType) {
+                                   TransactionType transactionType,
+                                   LocalDateTime transactionDate) {
 }

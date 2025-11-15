@@ -5,12 +5,12 @@ import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
-import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.testutils.AccountEntityFactory;
 import fun.trackmoney.testutils.CategoryEntityFactory;
 import fun.trackmoney.testutils.CreateTransactionDTOBuilder;
 import fun.trackmoney.testutils.TransactionEntityFactory;
 import fun.trackmoney.testutils.TransactionResponseDTOFactory;
+import fun.trackmoney.testutils.TransactionUpdateDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
@@ -169,10 +169,10 @@ class TransactionServiceTest {
     CategoryEntity categoryEntity = entity.getCategory();
     TransactionResponseDTO dtoResponse = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2, TransactionType.EXPENSE);
+    TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransaction();
 
     when(transactionRepository.findByIdAndAccount(1, accountEntity)).thenReturn(Optional.of(entity));
-    when(categoryService.findById(2)).thenReturn(categoryEntity);
+    when(categoryService.findById(1)).thenReturn(categoryEntity);
     when(transactionRepository.save(entity)).thenReturn(entity);
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);
 
