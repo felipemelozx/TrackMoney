@@ -4,19 +4,24 @@ import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.budget.dtos.BudgetCreateDTO;
 import fun.trackmoney.budget.dtos.BudgetResponseDTO;
+import fun.trackmoney.budget.dtos.internal.BudgetFailure;
+import fun.trackmoney.budget.dtos.internal.BudgetResult;
+import fun.trackmoney.budget.dtos.internal.BudgetSuccess;
 import fun.trackmoney.budget.entity.BudgetsEntity;
+import fun.trackmoney.budget.enums.BudgetError;
 import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.budget.mapper.BudgetMapper;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.user.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class BudgetsService {
@@ -42,17 +47,34 @@ public class BudgetsService {
     this.userService = userService;
   }
 
-  public BudgetResponseDTO create(BudgetCreateDTO dto) {
-    BudgetsEntity budgets = budgetMapper.createDtoTOEntity(dto);
-    Optional<UserEntity> optionalUser = userService.findUserById(dto.userId());
-    // TODO: Improve logic to use an interface instead of throwing exceptions
-    if(optionalUser.isEmpty()) {
-      throw new UserNotFoundException("User not found.");
+  @Transactional
+  public BudgetResult create(BudgetCreateDTO dto, UserEntity currentUser) {
+    var account = currentUser.getAccount();
+    var category = categoryService.findById(dto.categoryId());
+
+    if(category == null)  {
+      String message = "Category not foudn with this id: " + dto.categoryId();
+      return new BudgetFailure(BudgetError.CATEGORY_NOT_FOUND, message);
     }
-    budgets.setUserEntity(optionalUser.get());
-    budgets.setAccount(accountMapper.accountResponseToEntity(accountService.findAccountById(dto.accountId())));
-    budgets.setCategory(categoryService.findById(dto.categoryId()));
-    return budgetMapper.entityToResponseDTO(budgetsRepository.save(budgets));
+
+    var check = budgetsRepository.checkBudget(account, category);
+
+    if (check.getCategoryExists()) {
+      return new BudgetFailure(BudgetError.EXIST_BUDGET, "Já existe um budget para esta categoria.");
+    }
+
+    if (check.getTotalPercent() + dto.percent() > 100) {
+     return new BudgetFailure(BudgetError.PERCENT_LIMIT_EXCEEDED,"A soma das porcentagens ultrapassa 100%. Soma atual: "
+              + check.getTotalPercent() + "%, valor disponível: " + (100 - check.getTotalPercent())
+      );
+    }
+
+    var budget = new BudgetsEntity()
+        .setAccount(account)
+        .setCategory(category)
+        .setPercent(dto.percent());
+    var data = budgetMapper.entityToResponseDTO(budgetsRepository.save(budget));
+    return new BudgetSuccess(data);
   }
 
   public List<BudgetResponseDTO> findAllByAccountId(Integer accountId) {
@@ -87,16 +109,13 @@ public class BudgetsService {
 
     BudgetsEntity budgets = budgetMapper.createDtoTOEntity(dto);
     budgets.setBudgetId(id);
-    Optional<UserEntity> optionalUser = userService.findUserById(dto.userId());
     // TODO: Improve logic to use an interface instead of throwing exceptions
-    if(optionalUser.isEmpty()) {
+ /*   if(optionalUser.isEmpty()) {
       throw new UserNotFoundException("User not found.");
-    }
-    budgets.setUserEntity(optionalUser.get());
-    budgets.setAccount(accountMapper.accountResponseToEntity(accountService.findAccountById(dto.accountId())));
+    }*/
+    // budgets.setUserEntity(optionalUser.get());
+    //budgets.setAccount(accountMapper.accountResponseToEntity(accountService.findAccountById(dto.accountId())));
     budgets.setCategory(categoryService.findById(dto.categoryId()));
-    budgets.setTargetAmount(dto.targetAmount());
-    budgets.setResetDay(dto.resetDay());
 
     return budgetMapper.entityToResponseDTO(budgetsRepository.save(budgets));
   }
