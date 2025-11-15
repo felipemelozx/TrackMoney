@@ -5,6 +5,7 @@ import fun.trackmoney.transaction.entity.TransactionEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -42,6 +43,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   @Query("SELECT t FROM TransactionEntity t WHERE t.account = :account AND t.transactionId = :id")
   Optional<TransactionEntity> findByIdAndAccount(@Param("id") Integer id, @Param("account") AccountEntity account);
 
+  @Modifying
   @Query("DELETE FROM TransactionEntity t WHERE t.account = :account AND t.transactionId = :id")
   void deleteByIdAndAccountId(@Param("id") Integer id, @Param("account") AccountEntity account);
 }
