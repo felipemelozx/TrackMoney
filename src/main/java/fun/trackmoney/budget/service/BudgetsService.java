@@ -1,7 +1,5 @@
 package fun.trackmoney.budget.service;
 
-import fun.trackmoney.account.mapper.AccountMapper;
-import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.budget.dtos.BudgetCreateDTO;
 import fun.trackmoney.budget.dtos.BudgetResponseDTO;
 import fun.trackmoney.budget.dtos.internal.BudgetFailure;
@@ -14,37 +12,25 @@ import fun.trackmoney.budget.mapper.BudgetMapper;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class BudgetsService {
 
   private final BudgetsRepository budgetsRepository;
   private final BudgetMapper budgetMapper;
-  private final AccountService accountService;
-  private final AccountMapper accountMapper;
   private final CategoryService categoryService;
-  private final UserService userService;
 
   public BudgetsService(BudgetsRepository budgetsRepository,
                         BudgetMapper budgetMapper,
-                        AccountService accountService,
-                        AccountMapper accountMapper,
-                        CategoryService categoryService,
-                        UserService userService) {
+                        CategoryService categoryService) {
     this.budgetsRepository = budgetsRepository;
     this.budgetMapper = budgetMapper;
-    this.accountService = accountService;
-    this.accountMapper = accountMapper;
     this.categoryService = categoryService;
-    this.userService = userService;
   }
 
   @Transactional
