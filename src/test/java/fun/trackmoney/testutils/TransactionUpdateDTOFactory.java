@@ -18,4 +18,15 @@ public class TransactionUpdateDTOFactory {
             LocalDateTime.now()
         );
     }
+
+  public static TransactionUpdateDTO defaultUpdateTransactionIncome() {
+    return new TransactionUpdateDTO(
+        "Updated Transaction Name",
+        "Updated transaction description",
+        new BigDecimal("199.99"),
+        1,
+        TransactionType.EXPENSE,
+        LocalDateTime.now()
+    );
+  }
 }

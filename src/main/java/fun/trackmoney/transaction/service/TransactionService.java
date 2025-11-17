@@ -20,10 +20,10 @@ import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.DateFilterUtil;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,6 +50,7 @@ public class TransactionService {
     this.categoryService = categoryService;
   }
 
+  @Transactional
   public TransactionResult createTransaction(CreateTransactionDTO transactionDTO, UserEntity currentUser) {
     AccountEntity account = currentUser.getAccount();
 
@@ -87,24 +88,41 @@ public class TransactionService {
     return transactionMapper.toResponseDTO(transaction);
   }
 
+  @Transactional
   public TransactionResponseDTO update(Integer id, TransactionUpdateDTO dto, UserEntity currentUser) {
     AccountEntity account = currentUser.getAccount();
-    TransactionEntity transaction = transactionRepository.findByIdAndAccount(id, account)
+    TransactionEntity oldTransaction = transactionRepository.findByIdAndAccount(id, account)
         .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
 
-    transaction.setTransactionName(dto.transactionName());
-    transaction.setAmount(dto.amount());
-    transaction.setDescription(dto.description());
-    transaction.setCategory(categoryService.findById(dto.categoryId()));
-    transaction.setAccount(account);
-    transaction.setTransactionType(dto.transactionType());
-    transaction.setTransactionDate(dto.transactionDate());
+    if (oldTransaction.getTransactionType() == TransactionType.INCOME) {
+      accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), false);
+    } else {
+      accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), true);
+    }
 
-    return transactionMapper.toResponseDTO(transactionRepository.save(transaction));
+    boolean newIsCredit = (dto.transactionType() == TransactionType.INCOME);
+    accountService.updateAccountBalance(dto.amount(), account.getAccountId(), newIsCredit);
+
+    oldTransaction.setTransactionName(dto.transactionName());
+    oldTransaction.setAmount(dto.amount());
+    oldTransaction.setDescription(dto.description());
+    oldTransaction.setCategory(categoryService.findById(dto.categoryId()));
+    oldTransaction.setTransactionType(dto.transactionType());
+    oldTransaction.setTransactionDate(dto.transactionDate());
+
+    return transactionMapper.toResponseDTO(transactionRepository.save(oldTransaction));
   }
 
   @Transactional
   public void delete(Integer id, UserEntity currentUser) {
+    TransactionEntity transaction = transactionRepository.findById(id).orElse(null);
+
+    if(transaction != null){
+      boolean isCredit = !transaction.getTransactionType().equals(TransactionType.INCOME);
+      Integer accountId = currentUser.getAccount().getAccountId();
+      accountService.updateAccountBalance(transaction.getAmount(), accountId , isCredit);
+    }
+
     transactionRepository.deleteByIdAndAccountId(id, currentUser.getAccount());
   }
 
@@ -144,7 +162,6 @@ public class TransactionService {
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
-
   public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable,
                                                                UserEntity currentUser,
                                                                String name,
@@ -167,6 +184,7 @@ public class TransactionService {
         .map(transactionMapper::toResponseDTO);
   }
 
+  //TODO: remove this method and implementations other logic with new Entity: Bills
   public BillResponseDTO getBill(UserEntity currentUser) {
     Integer accountId = currentUser.getAccount().getAccountId();
     var result = transactionRepository.findAllByAccountId(accountId);
