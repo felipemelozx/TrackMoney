@@ -1,5 +1,6 @@
 package fun.trackmoney.budget.service;
 
+import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.budget.dtos.BudgetCreateDTO;
 import fun.trackmoney.budget.dtos.BudgetResponseDTO;
 import fun.trackmoney.budget.dtos.internal.BudgetFailure;
@@ -9,16 +10,17 @@ import fun.trackmoney.budget.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetError;
 import fun.trackmoney.budget.mapper.BudgetMapper;
 import fun.trackmoney.budget.repository.BudgetsRepository;
+import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.transaction.entity.TransactionEntity;
-import fun.trackmoney.transaction.repository.TransactionRepository;
+import fun.trackmoney.transaction.service.TransactionService;
 import fun.trackmoney.user.entity.UserEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class BudgetsService {
@@ -26,15 +28,18 @@ public class BudgetsService {
   private final BudgetsRepository budgetsRepository;
   private final BudgetMapper budgetMapper;
   private final CategoryService categoryService;
-  private final TransactionRepository transactionRepository;
+  private final TransactionService transactionService;
+  private final AccountMapper accountMapper;
 
   public BudgetsService(BudgetsRepository budgetsRepository,
                         BudgetMapper budgetMapper,
-                        CategoryService categoryService, TransactionRepository transactionRepository) {
+                        CategoryService categoryService,
+                        TransactionService transactionService, AccountMapper accountMapper) {
     this.budgetsRepository = budgetsRepository;
     this.budgetMapper = budgetMapper;
     this.categoryService = categoryService;
-    this.transactionRepository = transactionRepository;
+    this.transactionService = transactionService;
+    this.accountMapper = accountMapper;
   }
 
   @Transactional
@@ -54,7 +59,8 @@ public class BudgetsService {
     }
 
     if (check.getTotalPercent() + dto.percent() > 100) {
-      return new BudgetFailure(BudgetError.PERCENT_LIMIT_EXCEEDED, "A soma das porcentagens ultrapassa 100%. Soma atual: "
+      return new BudgetFailure(BudgetError.PERCENT_LIMIT_EXCEEDED,
+          "A soma das porcentagens ultrapassa 100%. Soma atual: "
           + check.getTotalPercent() + "%, valor disponível: " + (100 - check.getTotalPercent())
       );
     }
@@ -71,18 +77,35 @@ public class BudgetsService {
     Integer accountId = currentUser.getAccount().getAccountId();
     var budgets = budgetsRepository.findAllByAccountAccountId(accountId);
 
-    var allTransactions = transactionRepository.findAllByAccountId(accountId);
-    Map<String, List<TransactionEntity>> categoryMap = new HashMap<>();
+    var allTransactions = transactionService.getLast5TransactionsPerCategory(accountId);
+    List<BudgetResponseDTO> budgetDTOS = new ArrayList<>();
+    List<TransactionEntity> currentMonthTransaction = transactionService.getCurrentMonthTransactions();
 
-    allTransactions.stream().forEach((transaction) -> {
-      if (categoryMap.containsKey(transaction.getCategory())) {
-        categoryMap.get(transaction.getCategory().getName()).add(transaction);
-      } else {
-        categoryMap.put(transaction.getCategory().getName(), List.of(transaction));
-      }
-    });
 
-    return budgetMapper.entityListToResponseList(budgets);
+
+    int income = transactionService.getIncome(currentUser.getUserId()).intValue();
+
+    for(BudgetsEntity budget : budgets) {
+      CategoryEntity category = budget.getCategory();
+      int currentAmout = getCurrentAmountWested(category, currentMonthTransaction);
+      var categoryTransactionLast5 = allTransactions.get(category);
+      int targetAmount = income * budget.getPercent() / 100;
+
+      var accountDto = accountMapper.accountEntityToAccountResponse(currentUser.getAccount());
+
+      var budgetDto = new BudgetResponseDTO(
+          budget.getBudgetId(),
+          category,
+          accountDto,
+          budget.getPercent(),
+          BigDecimal.valueOf(targetAmount),
+          BigDecimal.valueOf(currentAmout),
+          categoryTransactionLast5
+          );
+      budgetDTOS.add(budgetDto);
+    }
+
+    return budgetDTOS;
   }
 
   public BudgetResponseDTO findById(Integer id, UserEntity currentUser) {
@@ -137,5 +160,16 @@ public class BudgetsService {
   @Transactional
   public void deleteById(Integer id, UserEntity currentUser) {
     budgetsRepository.deleteByBudgetIdAndAccount(id, currentUser.getAccount());
+  }
+
+
+  public int getCurrentAmountWested(CategoryEntity category, List<TransactionEntity> transactions) {
+    int sum = 0;
+    for(TransactionEntity transaction : transactions) {
+      if(transaction.getCategory().equals(category)) {
+        sum += transaction.getAmount().intValue();
+      }
+    }
+    return sum;
   }
 }
