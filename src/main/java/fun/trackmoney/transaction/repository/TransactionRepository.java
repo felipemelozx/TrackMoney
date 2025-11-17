@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Integer> {
 
-  @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId")
+  @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId ORDER BY t.transactionDate DESC")
   List<TransactionEntity> findAllByAccountId(@Param("accountId") Integer accountId);
 
   @Query("SELECT t FROM TransactionEntity t WHERE t.account.accountId = :accountId ORDER BY t.transactionDate DESC")

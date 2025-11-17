@@ -66,11 +66,10 @@ public class BudgetsController {
             .build());
   }
 
-  @GetMapping("/findAll/{accountId}")
-  public ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> findAllByAccountId(@PathVariable Integer accountId,
-                                                                                 @AuthenticationPrincipal
+  @GetMapping
+  public ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> findAllByAccountId(@AuthenticationPrincipal
                                                                                  UserEntity currentUser) {
-    var list = budgetsService.findAllByAccountId(accountId);
+    var list = budgetsService.findAllBudgets(currentUser);
     return ResponseEntity.status(HttpStatus.OK).body(
         ApiResponse.<List<BudgetResponseDTO>>success()
             .message("Get all Budget")
@@ -82,18 +81,25 @@ public class BudgetsController {
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> findById(@PathVariable Integer id,
                                                                  @AuthenticationPrincipal UserEntity currentUser) {
-    return ResponseEntity.status(HttpStatus.OK).body(
-        ApiResponse.<BudgetResponseDTO>success()
-            .message("Get Budget by id")
-            .data(budgetsService.findById(id))
-            .build()
-    );
+    var budget = budgetsService.findById(id, currentUser);
+
+    if (budget == null) {
+      var body = ApiResponse.<BudgetResponseDTO>failure()
+          .message("Budget not found")
+          .build();
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+    var body = ApiResponse.<BudgetResponseDTO>success()
+        .message("Get Budget by id")
+        .data(budget)
+        .build();
+    return ResponseEntity.status(HttpStatus.OK).body(body);
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteById(@PathVariable Integer id,
                                                       @AuthenticationPrincipal UserEntity currentUser) {
-    budgetsService.findById(id);
+    budgetsService.deleteById(id, currentUser);
     return ResponseEntity.status(HttpStatus.OK).body(
         ApiResponse.<Void>success()
             .message("Delete Budget by id")
@@ -103,14 +109,44 @@ public class BudgetsController {
 
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> updateById(@PathVariable Integer id,
-                                                                   @RequestBody BudgetCreateDTO dto,
+                                                                   @RequestBody
+                                                                   @Valid
+                                                                   BudgetCreateDTO dto,
                                                                    @AuthenticationPrincipal UserEntity currentUser) {
-    return ResponseEntity.status(HttpStatus.OK).body(
-        ApiResponse.<BudgetResponseDTO>success()
-            .message("Update budget")
-            .data(budgetsService.update(dto, id))
-            .build()
-    );
+
+    var budgetResult = budgetsService.update(dto, id, currentUser);
+
+    if (budgetResult instanceof BudgetSuccess success) {
+      return ResponseEntity
+          .status(HttpStatus.OK)
+          .body(ApiResponse.<BudgetResponseDTO>success()
+              .message("Budget updated successfully")
+              .data(success.response())
+              .build());
+    }
+
+    BudgetFailure failure = (BudgetFailure) budgetResult;
+
+    String field = switch (failure.reason()) {
+      case CATEGORY_NOT_FOUND -> "categoryId";
+      case BUDGET_NOT_FOUND -> "id";
+      case PERCENT_LIMIT_EXCEEDED -> "percent";
+      default -> "category";
+    };
+
+    HttpStatus status = switch (failure.reason()) {
+      case CATEGORY_NOT_FOUND, BUDGET_NOT_FOUND -> HttpStatus.NOT_FOUND;
+      case PERCENT_LIMIT_EXCEEDED -> HttpStatus.BAD_REQUEST;
+      default -> HttpStatus.BAD_REQUEST;
+    };
+
+    return ResponseEntity
+        .status(status)
+        .body(ApiResponse.<BudgetResponseDTO>failure()
+            .message("Error while trying to update budget")
+            .errors(new CustomFieldError(field, failure.message()))
+            .build());
   }
+
 }
 
