@@ -73,7 +73,7 @@ class BudgetsServiceTest {
 
     var mockResponseCheck = new BudgetCheckProjection() {
       @Override
-      public Boolean getCategoryExists() {
+      public boolean getCategoryExists() {
         return false;
       }
 
@@ -131,7 +131,7 @@ class BudgetsServiceTest {
     when(categoryService.findById(dto.categoryId())).thenReturn(category);
 
     var mockCheck = new BudgetCheckProjection() {
-      @Override public Boolean getCategoryExists() { return true; }
+      @Override public boolean getCategoryExists() { return true; }
       @Override public Integer getTotalPercent() { return 50; }
     };
 
@@ -155,7 +155,7 @@ class BudgetsServiceTest {
     when(categoryService.findById(dto.categoryId())).thenReturn(category);
 
     var mockCheck = new BudgetCheckProjection() {
-      @Override public Boolean getCategoryExists() { return false; }
+      @Override public boolean getCategoryExists() { return false; }
       @Override public Integer getTotalPercent() { return 50; }
     };
 
