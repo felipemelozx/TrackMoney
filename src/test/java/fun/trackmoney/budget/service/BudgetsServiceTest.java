@@ -3,234 +3,367 @@ package fun.trackmoney.budget.service;
 import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.account.mapper.AccountMapper;
-import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.budget.dtos.BudgetCreateDTO;
 import fun.trackmoney.budget.dtos.BudgetResponseDTO;
+import fun.trackmoney.budget.dtos.internal.BudgetFailure;
+import fun.trackmoney.budget.dtos.internal.BudgetResult;
+import fun.trackmoney.budget.dtos.internal.BudgetSuccess;
 import fun.trackmoney.budget.entity.BudgetsEntity;
+import fun.trackmoney.budget.enums.BudgetError;
 import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.budget.mapper.BudgetMapper;
+import fun.trackmoney.budget.repository.BudgetCheckProjection;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
+import fun.trackmoney.testutils.AccountResponseDTOFactory;
+import fun.trackmoney.testutils.BudgetCreateDTOFactory;
+import fun.trackmoney.testutils.BudgetResponseDTOFactory;
+import fun.trackmoney.testutils.BudgetsEntityFactory;
+import fun.trackmoney.testutils.CategoryEntityFactory;
+import fun.trackmoney.testutils.TransactionEntityFactory;
+import fun.trackmoney.testutils.TransactionResponseDTOFactory;
+import fun.trackmoney.testutils.UserEntityFactory;
+import fun.trackmoney.transaction.dto.TransactionResponseDTO;
+import fun.trackmoney.transaction.entity.TransactionEntity;
+import fun.trackmoney.transaction.service.TransactionService;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class BudgetsServiceTest {
-/*
+
   @Mock
   private BudgetsRepository budgetsRepository;
   @Mock
   private BudgetMapper budgetMapper;
   @Mock
-  private AccountService accountService;
+  private TransactionService transactionService;
   @Mock
   private AccountMapper accountMapper;
   @Mock
   private CategoryService categoryService;
-  @Mock
-  private UserService userService;
 
   @InjectMocks
   private BudgetsService budgetsService;
 
-  private UUID userId;
-  private BudgetCreateDTO createDTO;
-  private BudgetsEntity budgetEntity;
-  private UserEntity userEntity;
-  private UserResponseDTO userResponseDTO;
-  private AccountResponseDTO accountResponseDTO;
-  private AccountEntity accountEntity;
-  private CategoryEntity categoryEntity;
-  private BudgetResponseDTO budgetResponseDTO;
-
-  @BeforeEach
-  void setUp() {
-    MockitoAnnotations.openMocks(this);
-
-    userId = UUID.randomUUID();
-    createDTO = new BudgetCreateDTO(10, userId, 20, 5);
-    budgetEntity = new BudgetsEntity();
-    userEntity = new UserEntity();
-    userResponseDTO = new UserResponseDTO(userId, "testUser", "email@test");
-    accountResponseDTO = new AccountResponseDTO(20, userResponseDTO, "true", BigDecimal.valueOf(1000));
-    accountEntity = new AccountEntity();
-    categoryEntity = new CategoryEntity();
-    budgetResponseDTO = new BudgetResponseDTO(1, categoryEntity, accountResponseDTO, BigDecimal.valueOf(1000), 5, BigDecimal.valueOf(1000));
-  }
-
   @Test
   void create_shouldReturnBudgetResponseDTO() {
-    budgetEntity.setBudgetId(99);
-    budgetEntity.setCategory(categoryEntity);
-    budgetEntity.setUserEntity(userEntity);
-    budgetEntity.setTargetAmount(BigDecimal.valueOf(1234));
-    budgetEntity.setResetDay(7);
-    budgetEntity.setAccount(accountEntity);
+    BudgetCreateDTO createDTO = BudgetCreateDTOFactory.defaultDTO();
+    UserEntity userEntity = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+    BudgetResponseDTO budgetResponseDTO = BudgetResponseDTOFactory.defaultResponse();
 
-    when(budgetMapper.createDtoTOEntity(createDTO)).thenReturn(budgetEntity);
-    when(userService.findUserById(userId)).thenReturn(Optional.ofNullable(userEntity));
-    when(accountService.findAccountById(20)).thenReturn(accountResponseDTO);
-    when(accountMapper.accountResponseToEntity(accountResponseDTO)).thenReturn(accountEntity);
-    when(categoryService.findById(10)).thenReturn(categoryEntity);
-    when(budgetsRepository.save(budgetEntity)).thenReturn(budgetEntity);
-    when(budgetMapper.entityToResponseDTO(budgetEntity)).thenReturn(budgetResponseDTO);
+    var mockResponseCheck = new BudgetCheckProjection() {
+      @Override
+      public Boolean getCategoryExists() {
+        return false;
+      }
 
-    BudgetResponseDTO result = budgetsService.create(createDTO);
+      @Override
+      public Integer getTotalPercent() {
+        return 0;
+      }
+    };
+
+    when(categoryService.findById(createDTO.categoryId())).thenReturn(category);
+    when(budgetsRepository.checkBudget(userEntity.getAccount(), category)).thenReturn(mockResponseCheck);
+
+    BudgetsEntity savedEntity = new BudgetsEntity()
+        .setBudgetId(1)
+        .setAccount(userEntity.getAccount())
+        .setCategory(category)
+        .setPercent(createDTO.percent());
+
+    when(budgetsRepository.save(any(BudgetsEntity.class))).thenReturn(savedEntity);
+    when(budgetMapper.entityToResponseDTO(savedEntity)).thenReturn(budgetResponseDTO);
+
+    BudgetResult result = budgetsService.create(createDTO, userEntity);
 
     assertNotNull(result);
-    assertEquals(99, budgetEntity.getBudgetId());
-    assertEquals(categoryEntity, budgetEntity.getCategory());
-    assertEquals(userEntity, budgetEntity.getUserEntity());
-    assertEquals(BigDecimal.valueOf(1234), budgetEntity.getTargetAmount());
-    assertEquals(7, budgetEntity.getResetDay());
-    assertEquals(accountEntity, budgetEntity.getAccount());
-    assertEquals(budgetResponseDTO, result);
-    verify(budgetsRepository, times(1)).save(budgetEntity);
-    verify(budgetMapper, times(1)).createDtoTOEntity(createDTO);
-    verify(userService, times(1)).findUserById(userId);
-    verify(accountService, times(1)).findAccountById(20);
-    verify(accountMapper, times(1)).accountResponseToEntity(accountResponseDTO);
-    verify(categoryService, times(1)).findById(10);
-    verify(budgetMapper, times(1)).entityToResponseDTO(budgetEntity);
+    assertInstanceOf(BudgetSuccess.class, result);
+
+    BudgetSuccess budgetSuccess = (BudgetSuccess) result;
+    assertEquals(1, budgetSuccess.response().budgetId());
+  }
+
+
+  @Test
+  void create_shouldFailWhenCategoryNotFound() {
+    BudgetCreateDTO dto = BudgetCreateDTOFactory.defaultDTO();
+    UserEntity user = UserEntityFactory.defaultUser();
+
+    when(categoryService.findById(dto.categoryId())).thenReturn(null);
+
+    BudgetResult result = budgetsService.create(dto, user);
+
+    assertInstanceOf(BudgetFailure.class, result);
+    BudgetFailure failure = (BudgetFailure) result;
+
+    assertEquals(BudgetError.CATEGORY_NOT_FOUND, failure.reason());
+  }
+
+
+  @Test
+  void create_shouldFailWhenBudgetAlreadyExists() {
+
+    BudgetCreateDTO dto = BudgetCreateDTOFactory.defaultDTO();
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+
+    when(categoryService.findById(dto.categoryId())).thenReturn(category);
+
+    var mockCheck = new BudgetCheckProjection() {
+      @Override public Boolean getCategoryExists() { return true; }
+      @Override public Integer getTotalPercent() { return 50; }
+    };
+
+    when(budgetsRepository.checkBudget(user.getAccount(), category)).thenReturn(mockCheck);
+
+    BudgetResult result = budgetsService.create(dto, user);
+
+    assertInstanceOf(BudgetFailure.class, result);
+    BudgetFailure failure = (BudgetFailure) result;
+
+    assertEquals(BudgetError.EXIST_BUDGET, failure.reason());
   }
 
   @Test
-  void findAll_shouldReturnEmptyList_whenNoBudgetsExist() {
-    when(budgetsRepository.findAll()).thenReturn(Collections.emptyList());
-    when(budgetMapper.entityListToResponseList(Collections.emptyList())).thenReturn(Collections.emptyList());
+  void create_shouldFailWhenPercentExceedsLimit() {
 
-    List<BudgetResponseDTO> result = budgetsService.findAllByAccountId(accountEntity.getAccountId());
+    BudgetCreateDTO dto = new BudgetCreateDTO(1, (short)60);
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+
+    when(categoryService.findById(dto.categoryId())).thenReturn(category);
+
+    var mockCheck = new BudgetCheckProjection() {
+      @Override public Boolean getCategoryExists() { return false; }
+      @Override public Integer getTotalPercent() { return 50; }
+    };
+
+    when(budgetsRepository.checkBudget(user.getAccount(), category)).thenReturn(mockCheck);
+
+    BudgetResult result = budgetsService.create(dto, user);
+
+    assertInstanceOf(BudgetFailure.class, result);
+    BudgetFailure failure = (BudgetFailure) result;
+
+    assertEquals(BudgetError.PERCENT_LIMIT_EXCEEDED, failure.reason());
+  }
+
+  @Test
+  void findAllBudgets_shouldReturnBudgetList() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    Integer accountId = user.getAccount().getAccountId();
+
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+
+    BudgetsEntity budget = new BudgetsEntity()
+        .setBudgetId(10)
+        .setPercent((short)20)
+        .setCategory(category)
+        .setAccount(user.getAccount());
+
+    when(budgetsRepository.findAllByAccountAccountId(accountId))
+        .thenReturn(List.of(budget));
+
+    TransactionResponseDTO t1 = TransactionResponseDTOFactory.defaultTransactionResponse();
+    TransactionEntity t2 = TransactionEntityFactory.defaultExpenseNow();
+
+    when(transactionService.getCurrentMonthTransactions())
+        .thenReturn(List.of(t2));
+    Map<CategoryEntity, List<TransactionResponseDTO>> maps = new HashMap<>();
+    maps.put(category, List.of(t1));
+    when(transactionService.getLast5TransactionsPerCategory(accountId))
+        .thenReturn(maps);
+
+    when(transactionService.getIncome(user.getUserId()))
+        .thenReturn(BigDecimal.valueOf(1000));
+
+    when(accountMapper.accountEntityToAccountResponse(user.getAccount()))
+        .thenReturn(AccountResponseDTOFactory.defaultAccountResponse());
+
+    List<BudgetResponseDTO> response = budgetsService.findAllBudgets(user);
+
+    assertEquals(1, response.size());
+    BudgetResponseDTO dto = response.get(0);
+
+    assertEquals(10, dto.budgetId());
+    assertEquals(20, dto.percent());
+    assertEquals(BigDecimal.valueOf(200), dto.targetAmount());
+    assertEquals(BigDecimal.valueOf(0), dto.currentAmount());
+  }
+
+  @Test
+  void findAllBudgets_shouldReturnEmptyListWhenNoBudgets() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    Integer accountId = user.getAccount().getAccountId();
+
+    when(budgetsRepository.findAllByAccountAccountId(accountId))
+        .thenReturn(List.of());
+    when(transactionService.getLast5TransactionsPerCategory(accountId)).thenReturn(Map.of());
+    when(transactionService.getIncome(user.getUserId())).thenReturn(BigDecimal.valueOf(100));
+
+    List<BudgetResponseDTO> result = budgetsService.findAllBudgets(user);
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
-    verify(budgetsRepository, times(1)).findAllByAccountAccountId(accountEntity.getAccountId());
-    verify(budgetMapper, times(1)).entityListToResponseList(Collections.emptyList());
   }
 
   @Test
-  void findAll_shouldReturnListOfBudgetResponseDTO() {
-    BudgetsEntity entity = new BudgetsEntity();
-    BudgetResponseDTO dto = new BudgetResponseDTO(1, new CategoryEntity(),
-        new AccountResponseDTO(1, userResponseDTO, "test", BigDecimal.valueOf(100)),
-        BigDecimal.TEN, 10, null);
-    List<BudgetsEntity> entities = List.of(entity);
-    List<BudgetResponseDTO> dtos = List.of(dto);
+  void findById_shouldReturnDTO() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    BudgetsEntity budget = BudgetsEntityFactory.defaultBudget();
+    BudgetResponseDTO responseDTO = BudgetResponseDTOFactory.defaultResponse();
 
-    when(budgetsRepository.findAllByAccountAccountId(accountEntity.getAccountId())).thenReturn(entities);
-    when(budgetMapper.entityListToResponseList(entities)).thenReturn(dtos);
+    when(budgetsRepository.findByBudgetIdAndAccount(budget.getBudgetId(), user.getAccount()))
+        .thenReturn(Optional.of(budget));
 
-    List<BudgetResponseDTO> result = budgetsService.findAllByAccountId(accountEntity.getAccountId());
+    when(budgetMapper.entityToResponseDTO(budget)).thenReturn(responseDTO);
+
+    BudgetResponseDTO result = budgetsService.findById(budget.getBudgetId(), user);
 
     assertNotNull(result);
-    assertNotNull(result.get(0).currentAmount());
-    assertEquals(1, result.size());
-    verify(budgetsRepository, times(1)).findAllByAccountAccountId(accountEntity.getAccountId());
-    verify(budgetMapper, times(1)).entityListToResponseList(entities);
+    assertEquals(responseDTO, result);
   }
 
   @Test
-  void findById_shouldReturnBudgetResponseDTO_whenExists() {
-    int budgetId = 1;
-    when(budgetsRepository.findById(budgetId)).thenReturn(Optional.of(budgetEntity));
-    when(budgetMapper.entityToResponseDTO(budgetEntity)).thenReturn(budgetResponseDTO);
+  void findById_shouldReturnNullWhenNotFound() {
+    UserEntity user = UserEntityFactory.defaultUser();
 
-    BudgetResponseDTO result = budgetsService.findById(budgetId);
+    when(budgetsRepository.findByBudgetIdAndAccount(1, user.getAccount()))
+        .thenReturn(Optional.empty());
 
-    assertNotNull(result);
-    assertEquals(budgetResponseDTO, result);
-    verify(budgetsRepository, times(1)).findById(budgetId);
-    verify(budgetMapper, times(1)).entityToResponseDTO(budgetEntity);
+    BudgetResponseDTO result = budgetsService.findById(1, user);
+
+    assertNull(result);
+  }
+
+
+  @Test
+  void update_shouldUpdateSuccessfully() {
+    BudgetCreateDTO dto = BudgetCreateDTOFactory.defaultDTO();
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+
+    BudgetsEntity existing = BudgetsEntityFactory.defaultBudget();
+    BudgetsEntity saved = BudgetsEntityFactory.defaultBudget();
+
+    BudgetResponseDTO response = BudgetResponseDTOFactory.defaultResponse();
+
+    when(categoryService.findById(dto.categoryId())).thenReturn(category);
+    when(budgetsRepository.findByBudgetIdAndAccount(existing.getBudgetId(), user.getAccount()))
+        .thenReturn(Optional.of(existing));
+
+    when(budgetsRepository.getTotalPercentExcludingId(user.getAccount(), existing.getBudgetId()))
+        .thenReturn(20);
+
+    when(budgetsRepository.save(existing)).thenReturn(saved);
+    when(budgetMapper.entityToResponseDTO(saved)).thenReturn(response);
+
+    BudgetResult result = budgetsService.update(dto, existing.getBudgetId(), user);
+
+    assertInstanceOf(BudgetSuccess.class, result);
+    assertEquals(response, ((BudgetSuccess) result).response());
   }
 
   @Test
-  void findById_shouldThrowException_whenNotExists() {
-    int budgetId = 1;
-    when(budgetsRepository.findById(budgetId)).thenReturn(Optional.empty());
+  void update_shouldFailWhenCategoryNotFound() {
+    BudgetCreateDTO dto = BudgetCreateDTOFactory.defaultDTO();
+    UserEntity user = UserEntityFactory.defaultUser();
 
-    BudgetsNotFoundException exception = assertThrows(BudgetsNotFoundException.class, () -> budgetsService.findById(budgetId));
-    assertEquals("Budget not found", exception.getMessage());
-    verify(budgetsRepository, times(1)).findById(budgetId);
-    verify(budgetMapper, never()).entityToResponseDTO(any());
+    when(categoryService.findById(dto.categoryId())).thenReturn(null);
+
+    BudgetResult result = budgetsService.update(dto, 1, user);
+
+    assertInstanceOf(BudgetFailure.class, result);
+    assertEquals(BudgetError.CATEGORY_NOT_FOUND, ((BudgetFailure) result).reason());
   }
 
   @Test
-  void update_shouldReturnUpdatedBudgetResponseDTO_whenBudgetExists() {
-    int budgetIdToUpdate = 1;
-    BudgetCreateDTO updateDTO = new BudgetCreateDTO(11, userId, 21, BigDecimal.valueOf(1500), 6);
-    BudgetsEntity existingEntity = new BudgetsEntity();
-    existingEntity.setBudgetId(budgetIdToUpdate);
-    UserResponseDTO updatedUserResponseDTO = new UserResponseDTO(userId, "updatedUser", "updated@test");
-    AccountResponseDTO updatedAccountDTO = new AccountResponseDTO(21, updatedUserResponseDTO, "false", BigDecimal.valueOf(1500));
-    AccountEntity updatedAccountEntity = new AccountEntity();
-    CategoryEntity updatedCategory = new CategoryEntity();
-    BudgetResponseDTO updatedResponse = new BudgetResponseDTO(budgetIdToUpdate, updatedCategory,
-        updatedAccountDTO, BigDecimal.valueOf(1500), 6, BigDecimal.valueOf(1000));
-    BudgetsEntity updatedEntity = new BudgetsEntity();
-    updatedEntity.setBudgetId(budgetIdToUpdate);
+  void update_shouldFailWhenBudgetNotFound() {
+    BudgetCreateDTO dto = BudgetCreateDTOFactory.defaultDTO();
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
 
-    when(budgetsRepository.findById(budgetIdToUpdate)).thenReturn(Optional.of(existingEntity));
-    when(budgetMapper.createDtoTOEntity(updateDTO)).thenReturn(updatedEntity);
-    when(userService.findUserById(userId)).thenReturn(Optional.ofNullable(userEntity));
-    when(accountService.findAccountById(21)).thenReturn(updatedAccountDTO);
-    when(accountMapper.accountResponseToEntity(updatedAccountDTO)).thenReturn(updatedAccountEntity);
-    when(categoryService.findById(11)).thenReturn(updatedCategory);
-    when(budgetsRepository.save(updatedEntity)).thenReturn(updatedEntity);
-    when(budgetMapper.entityToResponseDTO(updatedEntity)).thenReturn(updatedResponse);
+    when(categoryService.findById(dto.categoryId())).thenReturn(category);
+    when(budgetsRepository.findByBudgetIdAndAccount(1, user.getAccount()))
+        .thenReturn(Optional.empty());
 
-    BudgetResponseDTO result = budgetsService.update(updateDTO, budgetIdToUpdate);
+    BudgetResult result = budgetsService.update(dto, 1, user);
 
-    assertNotNull(result);
-    assertEquals(updatedResponse, result);
-    assertEquals(budgetIdToUpdate, updatedEntity.getBudgetId());
-    verify(budgetsRepository, times(1)).findById(budgetIdToUpdate);
-    verify(budgetMapper, times(1)).createDtoTOEntity(updateDTO);
-    verify(userService, times(1)).findUserById(userId);
-    verify(accountService, times(1)).findAccountById(21);
-    verify(accountMapper, times(1)).accountResponseToEntity(updatedAccountDTO);
-    verify(categoryService, times(1)).findById(11);
-    verify(budgetsRepository, times(1)).save(updatedEntity);
-    verify(budgetMapper, times(1)).entityToResponseDTO(updatedEntity);
+    assertInstanceOf(BudgetFailure.class, result);
+    assertEquals(BudgetError.BUDGET_NOT_FOUND, ((BudgetFailure) result).reason());
   }
 
   @Test
-  void update_shouldThrowException_whenBudgetNotExists() {
-    int budgetIdToUpdate = 1;
-    BudgetCreateDTO updateDTO = new BudgetCreateDTO(11, userId, 21, BigDecimal.valueOf(1500), 6);
+  void update_shouldFailWhenPercentExceedsLimit() {
+    BudgetCreateDTO dto = new BudgetCreateDTO(1, (short)60);
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+    BudgetsEntity existing = BudgetsEntityFactory.defaultBudget();
 
-    when(budgetsRepository.findById(budgetIdToUpdate)).thenReturn(Optional.empty());
+    when(categoryService.findById(dto.categoryId())).thenReturn(category);
+    when(budgetsRepository.findByBudgetIdAndAccount(existing.getBudgetId(), user.getAccount()))
+        .thenReturn(Optional.of(existing));
 
-    BudgetsNotFoundException exception = assertThrows(BudgetsNotFoundException.class,
-        () -> budgetsService.update(updateDTO, budgetIdToUpdate));
-    assertEquals("Budget not found", exception.getMessage());
-    verify(budgetsRepository, times(1)).findById(budgetIdToUpdate);
-    verify(budgetMapper, never()).createDtoTOEntity(any());
-    verify(userService, never()).findUserById(any());
-    verify(accountService, never()).findAccountById(anyInt());
-    verify(accountMapper, never()).accountResponseToEntity(any());
-    verify(categoryService, never()).findById(anyInt());
-    verify(budgetsRepository, never()).save(any());
-    verify(budgetMapper, never()).entityToResponseDTO(any());
+    when(budgetsRepository.getTotalPercentExcludingId(user.getAccount(), existing.getBudgetId()))
+        .thenReturn(50); // 50 + 60 > 100
+
+    BudgetResult result = budgetsService.update(dto, existing.getBudgetId(), user);
+
+    assertInstanceOf(BudgetFailure.class, result);
+    assertEquals(BudgetError.PERCENT_LIMIT_EXCEEDED, ((BudgetFailure) result).reason());
   }
 
   @Test
-  void deleteById_shouldCallRepositoryDelete() {
-    int budgetId = 5;
-    budgetsService.deleteById(budgetId);
-    verify(budgetsRepository, times(1)).deleteById(budgetId);
-  }*/
+  void deleteById_shouldCallRepository() {
+    UserEntity user = UserEntityFactory.defaultUser();
+
+    budgetsService.deleteById(10, user);
+
+    verify(budgetsRepository).deleteByBudgetIdAndAccount(10, user.getAccount());
+  }
+
+  @Test
+  void getCurrentAmountWested_shouldSumCorrectly() {
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+
+    TransactionEntity t1 = new TransactionEntity().setAmount(BigDecimal.valueOf(30)).setCategory(category);
+    TransactionEntity t2 = new TransactionEntity().setAmount(BigDecimal.valueOf(20)).setCategory(category);
+
+    int result = budgetsService.getCurrentAmountWested(category, List.of(t1, t2));
+
+    assertEquals(50, result);
+  }
+  @Test
+  void getCurrentAmountWested_shouldReturnZeroWhenNoMatches() {
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+
+    TransactionEntity t1 = new TransactionEntity().setAmount(BigDecimal.valueOf(30)).setCategory(new CategoryEntity());
+    TransactionEntity t2 = new TransactionEntity().setAmount(BigDecimal.valueOf(20)).setCategory(new CategoryEntity());
+
+    int result = budgetsService.getCurrentAmountWested(category, List.of(t1, t2));
+
+    assertEquals(0, result);
+  }
+
 }

@@ -81,13 +81,11 @@ public class BudgetsService {
     List<BudgetResponseDTO> budgetDTOS = new ArrayList<>();
     List<TransactionEntity> currentMonthTransaction = transactionService.getCurrentMonthTransactions();
 
-
-
     int income = transactionService.getIncome(currentUser.getUserId()).intValue();
 
     for(BudgetsEntity budget : budgets) {
       CategoryEntity category = budget.getCategory();
-      int currentAmout = getCurrentAmountWested(category, currentMonthTransaction);
+      int currentAmount = getCurrentAmountWested(category, currentMonthTransaction);
       var categoryTransactionLast5 = allTransactions.get(category);
       int targetAmount = income * budget.getPercent() / 100;
 
@@ -99,7 +97,7 @@ public class BudgetsService {
           accountDto,
           budget.getPercent(),
           BigDecimal.valueOf(targetAmount),
-          BigDecimal.valueOf(currentAmout),
+          BigDecimal.valueOf(currentAmount),
           categoryTransactionLast5
           );
       budgetDTOS.add(budgetDto);

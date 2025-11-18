@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.repository;
 
 public interface BudgetCheckProjection {
-  Boolean getCategoryExists();
+  boolean getCategoryExists();
 
   Integer getTotalPercent();
 }
