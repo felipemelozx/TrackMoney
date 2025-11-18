@@ -29,8 +29,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
@@ -222,5 +224,26 @@ public class TransactionService {
 
 
     return new BillResponseDTO(totalBillsBeforeToday, totalUpComing, totalBueSoon);
+  }
+
+  public Map<CategoryEntity, List<TransactionResponseDTO>> getLast5TransactionsPerCategory(Integer accountId) {
+    List<TransactionEntity> transactions =
+        transactionRepository.findLast5TransactionsPerCategory(accountId);
+
+    return transactions.stream()
+        .collect(Collectors.groupingBy(
+            TransactionEntity::getCategory,
+            Collectors.mapping(
+                transactionMapper::toResponseDTO,
+                Collectors.toList()
+            )
+        ));
+  }
+
+  public List<TransactionEntity> getCurrentMonthTransactions() {
+    LocalDateTime startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+    LocalDateTime endDate = LocalDateTime.now();
+
+    return transactionRepository.findAllBetweenDates(startDate, endDate);
   }
 }

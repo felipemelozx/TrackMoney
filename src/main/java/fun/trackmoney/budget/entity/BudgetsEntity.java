@@ -2,7 +2,6 @@ package fun.trackmoney.budget.entity;
 
 import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.category.entity.CategoryEntity;
-import fun.trackmoney.user.entity.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,8 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import java.math.BigDecimal;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "tb_budget")
@@ -23,108 +23,73 @@ public class BudgetsEntity {
   @Column(name = "budget_id")
   private Integer budgetId;
 
+  @NotNull
   @ManyToOne
   @JoinColumn(name = "category_id")
   private CategoryEntity category;
 
   @ManyToOne
   @JoinColumn(name = "account_id")
+  @NotNull
   private AccountEntity account;
-  @ManyToOne
-  @JoinColumn(name = "user_id")
-  private UserEntity userEntity;
 
-  private BigDecimal targetAmount;
-  @Column(name = "reset_day")
-  private Integer resetDay;
-
-  private BigDecimal currentAmount;
-
-  public AccountEntity getAccount() {
-    return account;
-  }
+  @Positive
+  @Min(1)
+  private short percent;
 
   public BudgetsEntity() {
-
   }
 
-  public BudgetsEntity(Integer budgetId,
-                       CategoryEntity category,
-                       UserEntity userEntity,
-                       BigDecimal targetAmount,
-                       Integer resetDay) {
+  public BudgetsEntity(Integer budgetId, CategoryEntity category) {
     this.budgetId = budgetId;
     this.category = category;
-    this.userEntity = userEntity;
-    this.targetAmount = targetAmount;
-    this.resetDay = resetDay;
   }
 
-  public BudgetsEntity(Integer budgetId,
-                       CategoryEntity category,
-                       AccountEntity account,
-                       UserEntity userEntity,
-                       BigDecimal targetAmount,
-                       Integer resetDay,
-                       BigDecimal currentAmount) {
-    this(budgetId, category, userEntity, targetAmount, resetDay);
-    this.currentAmount = currentAmount;
+  public BudgetsEntity(Integer budgetId, CategoryEntity category, AccountEntity account) {
+    this(budgetId, category);
     this.account = account;
   }
 
-  public void setAccount(AccountEntity account) {
-    this.account = account;
-  }
-
-  public BudgetsEntity(UserEntity userEntity) {
-    this.userEntity = userEntity;
+  public BudgetsEntity(Integer budgetId, CategoryEntity category, AccountEntity account, short percent) {
+    this(budgetId, category, account);
+    this.percent = percent;
   }
 
   public Integer getBudgetId() {
     return budgetId;
   }
 
-  public void setBudgetId(Integer budgetId) {
+  public BudgetsEntity setBudgetId(Integer budgetId) {
     this.budgetId = budgetId;
+    return this;
   }
 
   public CategoryEntity getCategory() {
     return category;
   }
 
-  public void setCategory(CategoryEntity category) {
+  public BudgetsEntity setCategory(CategoryEntity category) {
     this.category = category;
+    return this;
   }
 
-  public BigDecimal getTargetAmount() {
-    return targetAmount;
+  public AccountEntity getAccount() {
+    return account;
   }
 
-  public void setTargetAmount(BigDecimal targetAmount) {
-    this.targetAmount = targetAmount;
+  public BudgetsEntity setAccount(AccountEntity account) {
+    this.account = account;
+    return this;
   }
 
-  public Integer getResetDay() {
-    return resetDay;
+  public short getPercent() {
+    return percent;
   }
 
-  public void setResetDay(Integer resetDay) {
-    this.resetDay = resetDay;
-  }
-
-  public UserEntity getUserEntity() {
-    return userEntity;
-  }
-
-  public void setUserEntity(UserEntity userEntity) {
-    this.userEntity = userEntity;
-  }
-
-  public BigDecimal getCurrentAmount() {
-    return currentAmount;
-  }
-
-  public void setCurrentAmount(BigDecimal currentAmount) {
-    this.currentAmount = currentAmount;
+  public BudgetsEntity setPercent(short percent) {
+    this.percent = percent;
+    return this;
   }
 }
+
+
