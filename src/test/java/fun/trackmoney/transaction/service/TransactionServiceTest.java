@@ -178,6 +178,27 @@ class TransactionServiceTest {
   }
 
   @Test
+  void update_shouldUpdateAndReturnTransactionResponseDTOWhenIsIncome() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    TransactionEntity entity = TransactionEntityFactory.defaultIncomeNow();
+    AccountEntity accountEntity = currentUser.getAccount();
+    CategoryEntity categoryEntity = entity.getCategory();
+    TransactionResponseDTO dtoResponse = TransactionResponseDTOFactory.defaultTransactionResponse();
+
+    TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransactionIncome();
+
+    when(transactionRepository.findByIdAndAccount(1, accountEntity)).thenReturn(Optional.of(entity));
+    when(categoryService.findById(1)).thenReturn(categoryEntity);
+    when(transactionRepository.save(entity)).thenReturn(entity);
+    when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);
+
+    TransactionResponseDTO result = transactionService.update(1, dto, currentUser);
+
+    assertEquals("buy bread", result.description());
+  }
+
+
+  @Test
   void delete_shouldCallRepositoryDeleteById() {
     UserEntity currentUser = UserEntityFactory.defaultUser();
     transactionService.delete(1, currentUser);
