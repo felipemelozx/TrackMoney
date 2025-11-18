@@ -222,7 +222,6 @@ public class TransactionService {
         ));
   }
 
-
   public List<TransactionEntity> getCurrentMonthTransactions() {
     LocalDateTime startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
     LocalDateTime endDate = LocalDateTime.now();
