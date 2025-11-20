@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(name = "tb_pots")
@@ -19,10 +20,12 @@ public class PotsEntity {
   @Column(name = "pot_id")
   private Long potId;
 
+  @Length(min = 3, max = 30)
   private String name;
-  private String description;
+
   private Long targetAmount;
   private Long currentAmount;
+
   @ManyToOne
   @JoinColumn(name = "account_id")
   private AccountEntity account;
@@ -32,13 +35,11 @@ public class PotsEntity {
 
   public PotsEntity(Long potId,
                     String name,
-                    String description,
                     Long targetAmount,
                     Long currentAmount,
                     AccountEntity accountId) {
     this.potId = potId;
     this.name = name;
-    this.description = description;
     this.targetAmount = targetAmount;
     this.currentAmount = currentAmount;
     this.account = accountId;
@@ -48,47 +49,44 @@ public class PotsEntity {
     return potId;
   }
 
-  public void setPotId(Long potId) {
+  public PotsEntity setPotId(Long potId) {
     this.potId = potId;
+    return this;
   }
 
   public String getName() {
     return name;
   }
 
-  public void setName(String name) {
+  public PotsEntity setName(String name) {
     this.name = name;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
+    return this;
   }
 
   public Long getTargetAmount() {
     return targetAmount;
   }
 
-  public void setTargetAmount(Long targetAmount) {
+  public PotsEntity setTargetAmount(Long targetAmount) {
     this.targetAmount = targetAmount;
+    return this;
   }
 
   public Long getCurrentAmount() {
     return currentAmount;
   }
 
-  public void setCurrentAmount(Long currentAmount) {
+  public PotsEntity setCurrentAmount(Long currentAmount) {
     this.currentAmount = currentAmount;
+    return this;
   }
 
   public AccountEntity getAccount() {
     return account;
   }
 
-  public void setAccount(AccountEntity account) {
+  public PotsEntity setAccount(AccountEntity account) {
     this.account = account;
+    return this;
   }
 }
