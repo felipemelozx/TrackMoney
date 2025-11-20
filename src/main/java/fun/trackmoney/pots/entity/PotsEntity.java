@@ -1,8 +1,11 @@
 package fun.trackmoney.pots.entity;
 
 import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.pots.enums.ColorPick;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -30,6 +33,10 @@ public class PotsEntity {
   @JoinColumn(name = "account_id")
   private AccountEntity account;
 
+  @Enumerated(EnumType.STRING)
+  @Column(length = 7)
+  private ColorPick color;
+
   public PotsEntity() {
   }
 
@@ -37,12 +44,23 @@ public class PotsEntity {
                     String name,
                     Long targetAmount,
                     Long currentAmount,
-                    AccountEntity accountId) {
+                    AccountEntity account) {
     this.potId = potId;
     this.name = name;
     this.targetAmount = targetAmount;
     this.currentAmount = currentAmount;
-    this.account = accountId;
+    this.account = account;
+  }
+
+  public PotsEntity(Long potId,
+                    String name,
+                    Long targetAmount,
+                    Long currentAmount,
+                    AccountEntity account,
+                    ColorPick color) {
+
+    this(potId, name, targetAmount, currentAmount, account);
+    this.color = color;
   }
 
   public Long getPotId() {
@@ -87,6 +105,15 @@ public class PotsEntity {
 
   public PotsEntity setAccount(AccountEntity account) {
     this.account = account;
+    return this;
+  }
+
+  public ColorPick getColor() {
+    return color;
+  }
+
+  public PotsEntity setColor(ColorPick color) {
+    this.color = color;
     return this;
   }
 }
