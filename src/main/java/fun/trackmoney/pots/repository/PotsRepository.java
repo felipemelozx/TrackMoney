@@ -3,6 +3,7 @@ package fun.trackmoney.pots.repository;
 import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.pots.entity.PotsEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,5 +15,9 @@ public interface PotsRepository extends JpaRepository<PotsEntity, Long> {
   List<PotsEntity> findAllPotsByAccountId(@Param("account") AccountEntity account);
 
   @Query("SELECT p FROM PotsEntity p WHERE p.account = :account AND p.potId = :id")
-  Optional<PotsEntity> findByIdAndAccount(Integer id, AccountEntity account);
+  Optional<PotsEntity> findByIdAndAccount(@Param("id") Integer id, @Param("account") AccountEntity account);
+
+  @Modifying
+  @Query("DELETE FROM PotsEntity p WHERE p.account = :account AND p.potId = :id")
+  void deleteByIdAccount(@Param("id") Integer id, @Param("account") AccountEntity account);
 }

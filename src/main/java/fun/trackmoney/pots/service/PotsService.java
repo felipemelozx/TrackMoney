@@ -77,4 +77,21 @@ public class PotsService {
     accountService.updateAccountBalance(money.amount(), currentUser.getAccount().getAccountId(), isIncome);
     return new PotsSuccess(potsMapper.toResponse(potUpdated));
   }
+
+  @Transactional
+  public void delete(Integer id, UserEntity currentUser) {
+    Optional<PotsEntity> optionalPots = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
+
+    if(optionalPots.isEmpty()){
+      return;
+    }
+    PotsEntity pot = optionalPots.get();
+
+    potsRepository.deleteByIdAccount(id, currentUser.getAccount());
+    boolean isCredit = true;
+    Integer accountId = currentUser.getAccount().getAccountId();
+    if(!(pot.getCurrentAmount().equals(BigDecimal.ZERO))) {
+      accountService.updateAccountBalance(pot.getCurrentAmount(), accountId, isCredit);
+    }
+  }
 }
