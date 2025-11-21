@@ -111,4 +111,30 @@ public class TransactionEntityFactory {
   ) {
     return new TransactionEntity(transactionId, account, category, type, amount, description, dateTime);
   }
+
+  public static TransactionEntity expenseNextMonth(BigDecimal amount, String description) {
+    LocalDateTime nextMonth = LocalDateTime.now().plusMonths(1).withDayOfMonth(5);
+    return createTransaction(
+        7,
+        AccountEntityFactory.defaultAccount(),
+        CategoryEntityFactory.defaultCategory(),
+        TransactionType.EXPENSE,
+        amount,
+        description,
+        nextMonth
+    );
+  }
+
+  public static TransactionEntity expenseLastMonth(BigDecimal amount, String description) {
+    LocalDateTime lastMonth = LocalDateTime.now().minusMonths(1).withDayOfMonth(15);
+    return createTransaction(
+        8,
+        AccountEntityFactory.defaultAccount(),
+        CategoryEntityFactory.defaultCategory(),
+        TransactionType.EXPENSE,
+        amount,
+        description,
+        lastMonth
+    );
+  }
 }

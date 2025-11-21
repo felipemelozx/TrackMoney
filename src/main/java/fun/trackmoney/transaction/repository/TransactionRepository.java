@@ -5,6 +5,8 @@ import fun.trackmoney.transaction.entity.TransactionEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,7 +16,7 @@ import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<TransactionEntity, Integer> {
 
-  @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId")
+  @Query("SELECT a FROM TransactionEntity a WHERE a.account.accountId = :accountId ORDER BY a.transactionDate DESC")
   List<TransactionEntity> findAllByAccountId(@Param("accountId") Integer accountId);
 
   @Query("SELECT t FROM TransactionEntity t WHERE t.account.accountId = :accountId ORDER BY t.transactionDate DESC")
@@ -42,6 +44,30 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   @Query("SELECT t FROM TransactionEntity t WHERE t.account = :account AND t.transactionId = :id")
   Optional<TransactionEntity> findByIdAndAccount(@Param("id") Integer id, @Param("account") AccountEntity account);
 
+  @Modifying
   @Query("DELETE FROM TransactionEntity t WHERE t.account = :account AND t.transactionId = :id")
   void deleteByIdAndAccountId(@Param("id") Integer id, @Param("account") AccountEntity account);
+
+  @NativeQuery
+  @Query(
+      value = """
+        SELECT * FROM (
+            SELECT 
+                t.*, 
+                ROW_NUMBER() OVER (PARTITION BY t.category_id 
+                                   ORDER BY t.transaction_date DESC) AS rn
+            FROM tb_transaction t
+            WHERE t.account_id = :accountId
+        ) x
+        WHERE x.rn <= 5
+        ORDER BY x.category_id, x.transaction_date DESC
+        """,
+      nativeQuery = true
+  )
+  List<TransactionEntity> findLast5TransactionsPerCategory(@Param("accountId") Integer accountId);
+
+  @Query("SELECT t FROM TransactionEntity t " +
+      "WHERE t.transactionDate >= :startDate " +
+      "AND t.transactionDate <= :endDate")
+  List<TransactionEntity> findAllBetweenDates(LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -1,16 +1,15 @@
 package fun.trackmoney.transaction.service;
 
 import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.account.mapper.AccountMapper;
 import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
-import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.testutils.AccountEntityFactory;
 import fun.trackmoney.testutils.CategoryEntityFactory;
 import fun.trackmoney.testutils.CreateTransactionDTOBuilder;
 import fun.trackmoney.testutils.TransactionEntityFactory;
 import fun.trackmoney.testutils.TransactionResponseDTOFactory;
+import fun.trackmoney.testutils.TransactionUpdateDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
@@ -59,9 +58,6 @@ class TransactionServiceTest {
 
   @Mock
   private AccountService accountService;
-
-  @Mock
-  private AccountMapper accountMapper;
 
   @Mock
   private CategoryService categoryService;
@@ -169,10 +165,10 @@ class TransactionServiceTest {
     CategoryEntity categoryEntity = entity.getCategory();
     TransactionResponseDTO dtoResponse = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    TransactionUpdateDTO dto = new TransactionUpdateDTO("Updated", BigDecimal.valueOf(200), 1, 2, TransactionType.EXPENSE);
+    TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransaction();
 
     when(transactionRepository.findByIdAndAccount(1, accountEntity)).thenReturn(Optional.of(entity));
-    when(categoryService.findById(2)).thenReturn(categoryEntity);
+    when(categoryService.findById(1)).thenReturn(categoryEntity);
     when(transactionRepository.save(entity)).thenReturn(entity);
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);
 
@@ -180,6 +176,27 @@ class TransactionServiceTest {
 
     assertEquals("buy bread", result.description());
   }
+
+  @Test
+  void update_shouldUpdateAndReturnTransactionResponseDTOWhenIsIncome() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    TransactionEntity entity = TransactionEntityFactory.defaultIncomeNow();
+    AccountEntity accountEntity = currentUser.getAccount();
+    CategoryEntity categoryEntity = entity.getCategory();
+    TransactionResponseDTO dtoResponse = TransactionResponseDTOFactory.defaultTransactionResponse();
+
+    TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransactionIncome();
+
+    when(transactionRepository.findByIdAndAccount(1, accountEntity)).thenReturn(Optional.of(entity));
+    when(categoryService.findById(1)).thenReturn(categoryEntity);
+    when(transactionRepository.save(entity)).thenReturn(entity);
+    when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);
+
+    TransactionResponseDTO result = transactionService.update(1, dto, currentUser);
+
+    assertEquals("buy bread", result.description());
+  }
+
 
   @Test
   void delete_shouldCallRepositoryDeleteById() {
@@ -486,5 +503,104 @@ class TransactionServiceTest {
       verify(transactionRepository, times(1)).findAllByFilters(
           user.getAccount().getAccountId(), "Food", 1L, start, end, pageable);
     }
+  }
+
+  @Test
+  void getLast5TransactionsPerCategory_shouldReturnGroupedMapOfTransactions() {
+    Integer accountId = 1;
+    CategoryEntity categoryFood = CategoryEntityFactory.defaultCategory();
+    CategoryEntity categoryRent = CategoryEntityFactory.customCategory(2, "Rent", "blue");
+
+    TransactionEntity t1Food = TransactionEntityFactory.defaultExpenseNow().setTransactionId(1).setCategory(categoryFood);
+    TransactionEntity t2Rent = TransactionEntityFactory.defaultExpenseNow().setTransactionId(2).setCategory(categoryRent);
+    TransactionEntity t3Food = TransactionEntityFactory.defaultExpenseNow().setTransactionId(3).setCategory(categoryFood);
+
+    List<TransactionEntity> entities = List.of(t1Food, t2Rent, t3Food);
+
+    TransactionResponseDTO dto1Food = TransactionResponseDTOFactory.transactionResponseCustomId(1);
+    TransactionResponseDTO dto2Rent = TransactionResponseDTOFactory.transactionResponseCustomId(2);
+    TransactionResponseDTO dto3Food = TransactionResponseDTOFactory.transactionResponseCustomId(3);
+
+    when(transactionRepository.findLast5TransactionsPerCategory(accountId)).thenReturn(entities);
+
+    when(transactionMapper.toResponseDTO(t1Food)).thenReturn(dto1Food);
+    when(transactionMapper.toResponseDTO(t2Rent)).thenReturn(dto2Rent);
+    when(transactionMapper.toResponseDTO(t3Food)).thenReturn(dto3Food);
+
+    Map<CategoryEntity, List<TransactionResponseDTO>> result =
+        transactionService.getLast5TransactionsPerCategory(accountId);
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+
+    assertTrue(result.containsKey(categoryFood));
+    assertEquals(2, result.get(categoryFood).size());
+
+    assertTrue(result.containsKey(categoryRent));
+    assertEquals(1, result.get(categoryRent).size());
+
+    verify(transactionRepository, times(1)).findLast5TransactionsPerCategory(accountId);
+    verify(transactionMapper, times(3)).toResponseDTO(any(TransactionEntity.class));
+  }
+
+  @Test
+  void getLast5TransactionsPerCategory_shouldReturnEmptyMapWhenNoTransactionsFound() {
+    Integer accountId = 1;
+
+    when(transactionRepository.findLast5TransactionsPerCategory(accountId)).thenReturn(List.of());
+
+    Map<CategoryEntity, List<TransactionResponseDTO>> result =
+        transactionService.getLast5TransactionsPerCategory(accountId);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+
+    verify(transactionMapper, never()).toResponseDTO(any());
+  }
+
+  @Test
+  void getCurrentMonthTransactions_shouldOnlyReturnTransactionsInCurrentMonth() {
+    LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+    LocalDateTime endOfNow = LocalDateTime.now();
+
+    TransactionEntity currentMonthTransaction = TransactionEntityFactory.defaultExpenseNow();
+    TransactionEntity lastMonthTransaction = TransactionEntityFactory.expenseLastMonth(BigDecimal.valueOf(50), "Last month");
+    TransactionEntity nextMonthTransaction = TransactionEntityFactory.expenseNextMonth(BigDecimal.valueOf(50), "Next month");
+
+    List<TransactionEntity> expectedResult = List.of(currentMonthTransaction);
+
+    ArgumentCaptor<LocalDateTime> startDateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+    ArgumentCaptor<LocalDateTime> endDateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+
+    when(transactionRepository.findAllBetweenDates(startDateCaptor.capture(), endDateCaptor.capture()))
+        .thenReturn(expectedResult);
+
+    List<TransactionEntity> result = transactionService.getCurrentMonthTransactions();
+
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(currentMonthTransaction.getTransactionId(), result.get(0).getTransactionId());
+
+    verify(transactionRepository, times(1)).findAllBetweenDates(any(LocalDateTime.class), any(LocalDateTime.class));
+
+    assertEquals(startOfMonth.getYear(), startDateCaptor.getValue().getYear());
+    assertEquals(startOfMonth.getMonth(), startDateCaptor.getValue().getMonth());
+    assertEquals(1, startDateCaptor.getValue().getDayOfMonth());
+    assertEquals(0, startDateCaptor.getValue().getHour());
+
+    long timeDifferenceSeconds = Math.abs(java.time.Duration.between(endOfNow, endDateCaptor.getValue()).getSeconds());
+    assertTrue(timeDifferenceSeconds < 5, "A data final deve estar dentro de 5 segundos do momento da execução.");
+  }
+
+  @Test
+  void getCurrentMonthTransactions_shouldReturnEmptyListWhenNoTransactionsFound() {
+    when(transactionRepository.findAllBetweenDates(any(LocalDateTime.class), any(LocalDateTime.class)))
+        .thenReturn(List.of());
+
+    List<TransactionEntity> result = transactionService.getCurrentMonthTransactions();
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+    verify(transactionRepository, times(1)).findAllBetweenDates(any(), any());
   }
 }

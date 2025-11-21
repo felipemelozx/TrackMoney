@@ -63,16 +63,18 @@ public class TransactionEntity {
     return transactionId;
   }
 
-  public void setTransactionId(Integer transactionId) {
+  public TransactionEntity setTransactionId(Integer transactionId) {
     this.transactionId = transactionId;
+    return this;
   }
 
   public AccountEntity getAccount() {
     return account;
   }
 
-  public void setAccount(AccountEntity account) {
+  public TransactionEntity setAccount(AccountEntity account) {
     this.account = account;
+    return this;
   }
 
   public CategoryEntity getCategory() {
@@ -80,48 +82,53 @@ public class TransactionEntity {
   }
 
 
-  public void setCategory(CategoryEntity category) {
+  public TransactionEntity setCategory(CategoryEntity category) {
     this.category = category;
+    return this;
   }
-
 
   public TransactionType getTransactionType() {
     return transactionType;
   }
 
-  public void setTransactionType(TransactionType transactionType) {
+  public TransactionEntity setTransactionType(TransactionType transactionType) {
     this.transactionType = transactionType;
+    return this;
   }
 
   public BigDecimal getAmount() {
     return amount;
   }
 
-  public void setAmount(BigDecimal amount) {
+  public TransactionEntity setAmount(BigDecimal amount) {
     this.amount = amount;
+    return this;
   }
 
   public String getDescription() {
     return description;
   }
 
-  public void setDescription(String description) {
+  public TransactionEntity setDescription(String description) {
     this.description = description;
+    return this;
   }
 
   public LocalDateTime getTransactionDate() {
     return transactionDate;
   }
 
-  public void setTransactionDate(LocalDateTime transactionDate) {
+  public TransactionEntity setTransactionDate(LocalDateTime transactionDate) {
     this.transactionDate = transactionDate;
+    return this;
   }
 
   public String getTransactionName() {
     return transactionName;
   }
 
-  public void setTransactionName(String transactionName) {
+  public TransactionEntity setTransactionName(String transactionName) {
     this.transactionName = transactionName;
+    return this;
   }
 }

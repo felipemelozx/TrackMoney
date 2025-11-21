@@ -23,6 +23,19 @@ public class TransactionResponseDTOFactory {
         );
     }
 
+  public static TransactionResponseDTO transactionResponseCustomId(Integer id) {
+    return new TransactionResponseDTO(
+        id,
+        "Some Name",
+        "buy bread",
+        BigDecimal.valueOf(120.50),
+        AccountResponseDTOFactory.defaultAccountResponse(),
+        TransactionType.EXPENSE,
+        CategoryEntityFactory.defaultCategory(),
+        LocalDate.now().atStartOfDay()
+    );
+  }
+
     public static TransactionResponseDTO incomeTransactionResponse() {
         return new TransactionResponseDTO(
             2,
