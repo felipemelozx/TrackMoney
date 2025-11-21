@@ -14,6 +14,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.validator.constraints.Length;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "tb_pots")
 public class PotsEntity {
@@ -26,8 +28,8 @@ public class PotsEntity {
   @Length(min = 3, max = 30)
   private String name;
 
-  private Long targetAmount;
-  private Long currentAmount;
+  private BigDecimal targetAmount;
+  private BigDecimal currentAmount;
 
   @ManyToOne
   @JoinColumn(name = "account_id")
@@ -42,8 +44,8 @@ public class PotsEntity {
 
   public PotsEntity(Long potId,
                     String name,
-                    Long targetAmount,
-                    Long currentAmount,
+                    BigDecimal targetAmount,
+                    BigDecimal currentAmount,
                     AccountEntity account) {
     this.potId = potId;
     this.name = name;
@@ -54,8 +56,8 @@ public class PotsEntity {
 
   public PotsEntity(Long potId,
                     String name,
-                    Long targetAmount,
-                    Long currentAmount,
+                    BigDecimal targetAmount,
+                    BigDecimal currentAmount,
                     AccountEntity account,
                     ColorPick color) {
 
@@ -81,20 +83,20 @@ public class PotsEntity {
     return this;
   }
 
-  public Long getTargetAmount() {
+  public BigDecimal getTargetAmount() {
     return targetAmount;
   }
 
-  public PotsEntity setTargetAmount(Long targetAmount) {
+  public PotsEntity setTargetAmount(BigDecimal targetAmount) {
     this.targetAmount = targetAmount;
     return this;
   }
 
-  public Long getCurrentAmount() {
+  public BigDecimal getCurrentAmount() {
     return currentAmount;
   }
 
-  public PotsEntity setCurrentAmount(Long currentAmount) {
+  public PotsEntity setCurrentAmount(BigDecimal currentAmount) {
     this.currentAmount = currentAmount;
     return this;
   }
