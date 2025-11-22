@@ -59,7 +59,7 @@ public class PotsController {
 
   @PutMapping("/{id}/balance")
   public ResponseEntity<ApiResponse<PotsResponseDTO>> addMoney(
-      @PathVariable Integer id,
+      @PathVariable Long id,
       @Valid @RequestBody MoneyRequest moneyRequest,
       @AuthenticationPrincipal UserEntity currentUser) {
 
@@ -91,7 +91,7 @@ public class PotsController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id,
+  public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
                                                   @AuthenticationPrincipal UserEntity currentUser) {
 
     potsService.delete(id, currentUser);

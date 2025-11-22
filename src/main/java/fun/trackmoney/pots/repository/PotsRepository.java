@@ -12,12 +12,12 @@ import java.util.Optional;
 
 public interface PotsRepository extends JpaRepository<PotsEntity, Long> {
   @Query("SELECT p FROM PotsEntity p WHERE p.account = :account")
-  List<PotsEntity> findAllPotsByAccountId(@Param("account") AccountEntity account);
+  List<PotsEntity> findAllByAccount(@Param("account") AccountEntity account);
 
   @Query("SELECT p FROM PotsEntity p WHERE p.account = :account AND p.potId = :id")
-  Optional<PotsEntity> findByIdAndAccount(@Param("id") Integer id, @Param("account") AccountEntity account);
+  Optional<PotsEntity> findByIdAndAccount(@Param("id") Long id, @Param("account") AccountEntity account);
 
   @Modifying
   @Query("DELETE FROM PotsEntity p WHERE p.account = :account AND p.potId = :id")
-  void deleteByIdAccount(@Param("id") Integer id, @Param("account") AccountEntity account);
+  void deleteByIdAccount(@Param("id") Long id, @Param("account") AccountEntity account);
 }

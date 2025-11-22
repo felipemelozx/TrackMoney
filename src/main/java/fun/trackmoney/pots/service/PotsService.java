@@ -43,11 +43,11 @@ public class PotsService {
   }
 
   public List<PotsResponseDTO> findAllPots(UserEntity currentUser) {
-    return potsMapper.listToResponse(potsRepository.findAllPotsByAccountId(currentUser.getAccount()));
+    return potsMapper.listToResponse(potsRepository.findAllByAccount(currentUser.getAccount()));
   }
 
   @Transactional
-  public PotsResult addMoney(Integer id, MoneyRequest money, UserEntity currentUser) {
+  public PotsResult addMoney(Long id, MoneyRequest money, UserEntity currentUser) {
     Optional<PotsEntity> pot = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
 
     if(pot.isEmpty()) {
@@ -82,7 +82,7 @@ public class PotsService {
   }
 
   @Transactional
-  public void delete(Integer id, UserEntity currentUser) {
+  public void delete(Long id, UserEntity currentUser) {
     Optional<PotsEntity> optionalPots = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
 
     if(optionalPots.isEmpty()){

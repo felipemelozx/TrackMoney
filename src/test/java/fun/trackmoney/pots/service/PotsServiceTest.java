@@ -1,29 +1,33 @@
 package fun.trackmoney.pots.service;
 
 import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.account.exception.AccountNotFoundException;
-import fun.trackmoney.account.repository.AccountRepository;
+import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.pots.dtos.CreatePotsDTO;
 import fun.trackmoney.pots.dtos.PotsResponseDTO;
 import fun.trackmoney.pots.entity.PotsEntity;
 import fun.trackmoney.pots.mapper.PotsMapper;
 import fun.trackmoney.pots.repository.PotsRepository;
+import fun.trackmoney.testutils.CreatePotsDTOFactory;
+import fun.trackmoney.testutils.PotsEntityFactory;
+import fun.trackmoney.testutils.PotsResponseDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.user.entity.UserEntity;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class PotsServiceTest {
 
   @InjectMocks
@@ -36,43 +40,39 @@ class PotsServiceTest {
   private PotsMapper potsMapper;
 
   @Mock
-  private AccountRepository accountRepository;
+  private AccountService accountService;
 
-  @BeforeEach
-  void setUp() {
-    MockitoAnnotations.openMocks(this);
-  }
-/*
   @Test
   void findAllPots_shouldReturnMappedPotsList() {
-    Integer accountId = 1;
-    PotsEntity pots1 = new PotsEntity(1L,"test name2", 100L, 1001L, new AccountEntity());
-    PotsEntity pots2 = new PotsEntity(2L,"test name2", 100L, 1002L, new AccountEntity());
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    AccountEntity account = currentUser.getAccount();
+    PotsEntity pots1 = PotsEntityFactory.defaultPot();
+    PotsEntity pots2 = PotsEntityFactory.vacationPot();
 
     List<PotsEntity> potsEntities = List.of(pots1, pots2);
 
     List<PotsResponseDTO> potsResponseDTOList = List.of(
-        new PotsResponseDTO(1L, "test name2", "Test Pot1", 100L, 1001L),
-        new PotsResponseDTO(2L, "test name2", "Test Pot2", 100L, 1002L)
+        PotsResponseDTOFactory.defaultPotResponse(),
+        PotsResponseDTOFactory.vacationPotResponse()
     );
 
-    when(potsRepository.findAllPotsByAccountId(accountId)).thenReturn(potsEntities);
+    when(potsRepository.findAllByAccount(account)).thenReturn(potsEntities);
     when(potsMapper.listToResponse(potsEntities)).thenReturn(potsResponseDTOList);
 
-    var result = potsService.findAllPots(accountId);
+    var result = potsService.findAllPots(currentUser);
 
     assertNotNull(result);
     assertEquals(2, result.size());
-    assertEquals(1L, result.get(0).potId());
+    assertEquals(potsResponseDTOList.get(0), result.get(0));
+    assertEquals(potsResponseDTOList.get(1), result.get(1));
   }
 
   @Test
   void create_shouldReturnMappedPotsResponse() {
     UserEntity currentUser = UserEntityFactory.defaultUser();
-    AccountEntity account = currentUser.getAccount();
-    PotsEntity potsEntity = new PotsEntity(1L, "test name", 100L, 100L, account);
-    PotsResponseDTO potsResponseDTO = new PotsResponseDTO(1L, "test name", "Test Pot", 100L, 100L);
-    CreatePotsDTO createPotsDTO = new CreatePotsDTO("test name", "Test Pot", 1, 100L, 100L);
+    PotsEntity potsEntity = PotsEntityFactory.defaultPot();
+    PotsResponseDTO potsResponseDTO = PotsResponseDTOFactory.defaultPotResponse();
+    CreatePotsDTO createPotsDTO = CreatePotsDTOFactory.defaultCreatePot();
 
     when(potsMapper.toEntity(createPotsDTO)).thenReturn(potsEntity);
     when(potsMapper.toResponse(potsEntity)).thenReturn(potsResponseDTO);
@@ -81,5 +81,23 @@ class PotsServiceTest {
     var result = potsService.create(createPotsDTO, currentUser);
 
     assertNotNull(result);
-  }*/
+    assertEquals(potsResponseDTO, result);
+  }
+
+
+  @Test
+  void delete_shouldDeleteTransactionAndUpdateTheAccountBalance() {
+    PotsEntity potsEntity = PotsEntityFactory.defaultPot();
+    Long potsId = potsEntity.getPotId();
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+
+    when(potsRepository.findByIdAndAccount(potsId, currentUser.getAccount())).thenReturn(Optional.of(potsEntity));
+    when(accountService.updateAccountBalance(potsEntity.getCurrentAmount(), currentUser.getAccount().getAccountId(), true)).thenReturn(true);
+
+    potsService.delete(potsId, currentUser);
+
+    verify(potsRepository,times(1)).findByIdAndAccount(potsId, currentUser.getAccount());
+    verify(potsRepository, times(1)).deleteByIdAccount(potsId, currentUser.getAccount());
+    verify(accountService, times(1)).updateAccountBalance(potsEntity.getCurrentAmount(), currentUser.getAccount().getAccountId(), true);
+  }
 }
