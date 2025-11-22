@@ -67,14 +67,17 @@ public class PotsService {
       return new PotsFailure(PotsErrorType.BAD_REQUEST,"Money", "Money is greater than current amount!");
     }
 
+    BigDecimal newValue;
    if(money.type().equals(TransactionType.EXPENSE)){
-     pot.get().getCurrentAmount().subtract(money.amount());
+     newValue = pot.get().getCurrentAmount().subtract(money.amount());
+     pot.get().setCurrentAmount(newValue);
    } else {
-     pot.get().getCurrentAmount().add(money.amount());
+     newValue = pot.get().getCurrentAmount().add(money.amount());
+     pot.get().setCurrentAmount(newValue);
    }
 
     var potUpdated = potsRepository.save(pot.get());
-    accountService.updateAccountBalance(money.amount(), currentUser.getAccount().getAccountId(), isIncome);
+    accountService.updateAccountBalance(money.amount(), currentUser.getAccount().getAccountId(), !isIncome);
     return new PotsSuccess(potsMapper.toResponse(potUpdated));
   }
 
