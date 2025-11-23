@@ -30,6 +30,17 @@ public class PotsEntityFactory {
         );
     }
 
+  public static PotsEntity withoutCurrentAmount() {
+    return new PotsEntity(
+        2L,
+        "Férias",
+        BigDecimal.valueOf(5000.00),
+        BigDecimal.ZERO,
+        AccountEntityFactory.defaultAccount(),
+        ColorPick.DARK_BLUE
+    );
+  }
+
     public static PotsEntity customPot(
             Long potId,
             String name,

@@ -51,30 +51,30 @@ public class PotsService {
     Optional<PotsEntity> pot = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
 
     if(pot.isEmpty()) {
-      return new PotsFailure(PotsErrorType.NOT_FOUND,"id", "Pots not found!");
+      return new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!");
     }
 
-    BigDecimal spreed = pot.get().getTargetAmount().subtract(pot.get().getCurrentAmount());
-    boolean isAvailableToAddMoney = !(money.amount().intValue() <= spreed.intValue());
-    boolean isAvailableToWithdrawnMoney = !(money.amount().intValue() <= pot.get().getCurrentAmount().intValue());
+    BigDecimal spread = pot.get().getTargetAmount().subtract(pot.get().getCurrentAmount());
+    boolean exceedsTargetAmount = money.amount().compareTo(spread) > 0;
+    boolean exceedsCurrentBalance = money.amount().compareTo(pot.get().getCurrentAmount()) > 0;
     boolean isIncome = money.type().equals(TransactionType.INCOME);
 
-    if(isAvailableToAddMoney && isIncome) {
-      return new PotsFailure(PotsErrorType.BAD_REQUEST,"Money", "Money is greater than target amount!");
+    if (isIncome && exceedsTargetAmount) {
+      return new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Money is greater than target amount!");
     }
 
-    if(isAvailableToWithdrawnMoney && !isIncome) {
-      return new PotsFailure(PotsErrorType.BAD_REQUEST,"Money", "Money is greater than current amount!");
+    if (!isIncome && exceedsCurrentBalance) {
+      return new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Money is greater than current amount!");
     }
 
     BigDecimal newValue;
-   if(money.type().equals(TransactionType.EXPENSE)){
-     newValue = pot.get().getCurrentAmount().subtract(money.amount());
-     pot.get().setCurrentAmount(newValue);
-   } else {
-     newValue = pot.get().getCurrentAmount().add(money.amount());
-     pot.get().setCurrentAmount(newValue);
-   }
+    if (money.type().equals(TransactionType.EXPENSE)) {
+      newValue = pot.get().getCurrentAmount().subtract(money.amount());
+    } else {
+      newValue = pot.get().getCurrentAmount().add(money.amount());
+    }
+
+    pot.get().setCurrentAmount(newValue);
 
     var potUpdated = potsRepository.save(pot.get());
     accountService.updateAccountBalance(money.amount(), currentUser.getAccount().getAccountId(), !isIncome);
