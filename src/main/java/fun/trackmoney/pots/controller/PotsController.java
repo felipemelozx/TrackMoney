@@ -102,4 +102,36 @@ public class PotsController {
     );
   }
 
+  @PutMapping("/{id}")
+  public ResponseEntity<ApiResponse<PotsResponseDTO>> update(
+      @PathVariable Long id,
+      @Valid @RequestBody CreatePotsDTO request,
+      @AuthenticationPrincipal UserEntity currentUser) {
+
+    PotsResult result = potsService.update(id, request, currentUser);
+
+    if (result instanceof PotsSuccess success) {
+      return ResponseEntity.ok(
+          ApiResponse.<PotsResponseDTO>success()
+              .message("Pot updated successfully")
+              .data(success.responseDTO())
+              .build()
+      );
+    }
+
+    PotsFailure failure = (PotsFailure) result;
+
+    HttpStatus status = switch (failure.type()) {
+      case NOT_FOUND -> HttpStatus.NOT_FOUND;
+      case BAD_REQUEST -> HttpStatus.BAD_REQUEST;
+      case FORBIDDEN -> HttpStatus.FORBIDDEN;
+    };
+
+    var body = ApiResponse.<PotsResponseDTO>failure()
+        .message(failure.message())
+        .errors(new CustomFieldError(failure.field(), failure.message()))
+        .build();
+
+    return ResponseEntity.status(status).body(body);
+  }
 }

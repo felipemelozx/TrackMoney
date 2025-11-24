@@ -1,10 +1,11 @@
 package fun.trackmoney.pots.dtos;
 
 
+import java.math.BigDecimal;
+
 public record PotsResponseDTO(Long potId,
                               String name,
-                              String description,
-                              Long targetAmount,
-                              Long currentAmount,
+                              BigDecimal targetAmount,
+                              BigDecimal currentAmount,
                               String color) {
 }
