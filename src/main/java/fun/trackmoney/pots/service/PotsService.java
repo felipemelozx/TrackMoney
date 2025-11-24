@@ -97,4 +97,27 @@ public class PotsService {
       accountService.updateAccountBalance(pot.getCurrentAmount(), accountId, isCredit);
     }
   }
+
+  @Transactional
+  public PotsResult update(Long id, CreatePotsDTO dto, UserEntity currentUser) {
+    Optional<PotsEntity> optionalPots = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
+
+    if(optionalPots.isEmpty()) {
+      return new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!");
+    }
+
+    PotsEntity pot = optionalPots.get();
+
+    if(pot.getCurrentAmount().compareTo(dto.targetAmount()) > 0){
+      String message = "Target amount cannot be less than current amount!";
+      return new PotsFailure(PotsErrorType.BAD_REQUEST, "targetAmount", message);
+    }
+
+    pot.setTargetAmount(dto.targetAmount())
+        .setName(dto.name())
+        .setColor(dto.color());
+
+    PotsResponseDTO responseDTO = potsMapper.toResponse(potsRepository.save(pot));
+    return new PotsSuccess(responseDTO);
+  }
 }

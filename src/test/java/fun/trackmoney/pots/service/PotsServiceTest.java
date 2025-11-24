@@ -9,6 +9,7 @@ import fun.trackmoney.pots.dtos.PotsResponseDTO;
 import fun.trackmoney.pots.dtos.internal.PotsFailure;
 import fun.trackmoney.pots.dtos.internal.PotsSuccess;
 import fun.trackmoney.pots.entity.PotsEntity;
+import fun.trackmoney.pots.enums.ColorPick;
 import fun.trackmoney.pots.enums.PotsErrorType;
 import fun.trackmoney.pots.mapper.PotsMapper;
 import fun.trackmoney.pots.repository.PotsRepository;
@@ -289,6 +290,86 @@ class PotsServiceTest {
     var result = potsService.addMoney(pot.getPotId(), moneyRequest, currentUser);
 
     assertTrue(result instanceof PotsSuccess);
-    assertEquals(new BigDecimal("40"), pot.getCurrentAmount()); // 90 - 50
+    assertEquals(new BigDecimal("40"), pot.getCurrentAmount());
+  }
+
+  @Test
+  void update_shouldUpdatePotsSuccessfully_whenDataIsValid() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    PotsEntity existingPot = PotsEntityFactory.defaultPot();
+    existingPot.setCurrentAmount(new BigDecimal("50"));
+    existingPot.setTargetAmount(new BigDecimal("100"));
+    Long potId = existingPot.getPotId();
+
+    CreatePotsDTO updateDTO = new CreatePotsDTO(
+        "New Name",
+        new BigDecimal("200"),
+        ColorPick.DARK_BLUE
+    );
+
+    PotsResponseDTO responseDTO = PotsResponseDTOFactory.defaultPotResponse();
+
+    when(potsRepository.findByIdAndAccount(potId, currentUser.getAccount()))
+        .thenReturn(Optional.of(existingPot));
+
+    when(potsRepository.save(any(PotsEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(potsMapper.toResponse(any(PotsEntity.class))).thenReturn(responseDTO);
+
+    var result = potsService.update(potId, updateDTO, currentUser);
+
+    assertTrue(result instanceof PotsSuccess);
+
+    assertEquals("New Name", existingPot.getName());
+    assertEquals(ColorPick.DARK_BLUE, existingPot.getColor());
+    assertEquals(new BigDecimal("200"), existingPot.getTargetAmount());
+
+    verify(potsRepository, times(1)).save(existingPot);
+  }
+
+  @Test
+  void update_shouldReturnNotFound_whenPotDoesNotExist() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    Long potId = 99L;
+    CreatePotsDTO updateDTO = CreatePotsDTOFactory.defaultCreatePot();
+
+    when(potsRepository.findByIdAndAccount(potId, currentUser.getAccount()))
+        .thenReturn(Optional.empty());
+
+    var result = potsService.update(potId, updateDTO, currentUser);
+
+    assertTrue(result instanceof PotsFailure);
+    PotsFailure failure = (PotsFailure) result;
+    assertEquals(PotsErrorType.NOT_FOUND, failure.type());
+    assertEquals("Pots not found!", failure.message());
+
+    verify(potsRepository, times(0)).save(any());
+  }
+
+  @Test
+  void update_shouldFail_whenNewTargetAmountIsLessThanCurrentAmount() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+
+    PotsEntity existingPot = PotsEntityFactory.defaultPot();
+    existingPot.setCurrentAmount(new BigDecimal("100"));
+    Long potId = existingPot.getPotId();
+
+    CreatePotsDTO updateDTO = new CreatePotsDTO(
+        "Update Name",
+        new BigDecimal("50"),
+        ColorPick.DARK_BLUE
+    );
+
+    when(potsRepository.findByIdAndAccount(potId, currentUser.getAccount()))
+        .thenReturn(Optional.of(existingPot));
+
+    var result = potsService.update(potId, updateDTO, currentUser);
+
+    assertTrue(result instanceof PotsFailure);
+    PotsFailure failure = (PotsFailure) result;
+
+    assertEquals(PotsErrorType.BAD_REQUEST, failure.type());
+    assertEquals("Target amount cannot be less than current amount!", failure.message());
+
+    verify(potsRepository, times(0)).save(any());
   }
 }

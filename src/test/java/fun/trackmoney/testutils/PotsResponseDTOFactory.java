@@ -3,15 +3,16 @@ package fun.trackmoney.testutils;
 import fun.trackmoney.pots.dtos.PotsResponseDTO;
 import fun.trackmoney.pots.enums.ColorPick;
 
+import java.math.BigDecimal;
+
 public class PotsResponseDTOFactory {
 
     public static PotsResponseDTO defaultPotResponse() {
         return new PotsResponseDTO(
             1L,
             "Meu Cofrinho",
-            "Guardando dinheiro para emergências",
-            1000L,
-            150L,
+            BigDecimal.valueOf(1000),
+            BigDecimal.valueOf(150),
             ColorPick.DARK_BLUE.getHex()
         );
     }
@@ -19,10 +20,9 @@ public class PotsResponseDTOFactory {
     public static PotsResponseDTO vacationPotResponse() {
         return new PotsResponseDTO(
             2L,
-            "Férias",
             "Viagem para o nordeste",
-            5000L,
-            500L,
+            BigDecimal.valueOf(5000),
+            BigDecimal.valueOf(500),
             ColorPick.DARK_BLUE.getHex()
         );
     }
@@ -30,15 +30,13 @@ public class PotsResponseDTOFactory {
     public static PotsResponseDTO customPotResponse(
             Long potId,
             String name,
-            String description,
-            Long targetAmount,
-            Long currentAmount,
+            BigDecimal targetAmount,
+            BigDecimal currentAmount,
             String color
     ) {
         return new PotsResponseDTO(
                 potId,
                 name,
-                description,
                 targetAmount,
                 currentAmount,
                 color

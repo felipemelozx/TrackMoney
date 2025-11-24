@@ -137,17 +137,56 @@ class PotsControllerTest {
   }
 
   @Test
-  @DisplayName("addMoney: Should return 403 FORBIDDEN when result is FORBIDDEN error")
-  void addMoney_shouldReturn403_whenForbidden() {
+  @DisplayName("update: Should return 200 OK when update is successful")
+  void update_shouldReturnOk_whenSuccess() {
+    Long id = 1L;
     UserEntity user = UserEntityFactory.defaultUser();
-    Long potId = 1L;
-    MoneyRequest request = new MoneyRequest(TransactionType.INCOME, new BigDecimal("100"));
+    CreatePotsDTO request = CreatePotsDTOFactory.defaultCreatePot();
+    PotsResponseDTO responseDTO = PotsResponseDTOFactory.defaultPotResponse();
 
-    when(potsService.addMoney(potId, request, user))
-        .thenReturn(new PotsFailure(PotsErrorType.FORBIDDEN, "user", "Not owner"));
+    when(potsService.update(id, request, user))
+        .thenReturn(new PotsSuccess(responseDTO));
 
-    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.update(id, request, user);
 
-    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Pot updated successfully", response.getBody().getMessage());
+    assertEquals(responseDTO, response.getBody().getData());
+  }
+
+  @Test
+  @DisplayName("update: Should return 404 NOT_FOUND when pot does not exist")
+  void update_shouldReturn404_whenNotFound() {
+    Long id = 1L;
+    UserEntity user = UserEntityFactory.defaultUser();
+    CreatePotsDTO request = CreatePotsDTOFactory.defaultCreatePot();
+
+    when(potsService.update(id, request, user))
+        .thenReturn(new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!"));
+
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.update(id, request, user);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Pots not found!", response.getBody().getMessage());
+  }
+
+  @Test
+  @DisplayName("update: Should return 400 BAD_REQUEST when logic fails (e.g. target < current)")
+  void update_shouldReturn400_whenBadRequest() {
+    Long id = 1L;
+    UserEntity user = UserEntityFactory.defaultUser();
+    CreatePotsDTO request = CreatePotsDTOFactory.defaultCreatePot();
+
+    when(potsService.update(id, request, user))
+        .thenReturn(new PotsFailure(PotsErrorType.BAD_REQUEST, "targetAmount", "Target amount cannot be less than current amount!"));
+
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.update(id, request, user);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Target amount cannot be less than current amount!", response.getBody().getMessage());
+    assertEquals("targetAmount", response.getBody().getErrors().get(0).getField());
   }
 }
