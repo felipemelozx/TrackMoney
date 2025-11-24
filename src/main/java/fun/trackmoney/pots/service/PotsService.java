@@ -1,37 +1,123 @@
 package fun.trackmoney.pots.service;
 
-import fun.trackmoney.account.exception.AccountNotFoundException;
-import fun.trackmoney.account.repository.AccountRepository;
+import fun.trackmoney.account.service.AccountService;
+import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.pots.dtos.CreatePotsDTO;
+import fun.trackmoney.pots.dtos.MoneyRequest;
 import fun.trackmoney.pots.dtos.PotsResponseDTO;
+import fun.trackmoney.pots.dtos.internal.PotsFailure;
+import fun.trackmoney.pots.dtos.internal.PotsResult;
+import fun.trackmoney.pots.dtos.internal.PotsSuccess;
+import fun.trackmoney.pots.entity.PotsEntity;
+import fun.trackmoney.pots.enums.PotsErrorType;
 import fun.trackmoney.pots.mapper.PotsMapper;
 import fun.trackmoney.pots.repository.PotsRepository;
+import fun.trackmoney.user.entity.UserEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PotsService {
 
   private final PotsRepository potsRepository;
   private final PotsMapper potsMapper;
-  private final AccountRepository accountRepository;
+  private final AccountService accountService;
 
-  public PotsService(PotsRepository potsRepository, PotsMapper potsMapper, AccountRepository accountRepository) {
+  public PotsService(PotsRepository potsRepository, PotsMapper potsMapper, AccountService accountService) {
     this.potsRepository = potsRepository;
     this.potsMapper = potsMapper;
-    this.accountRepository = accountRepository;
+    this.accountService = accountService;
   }
 
-  public List<PotsResponseDTO> findAllPots(Integer accountId) {
-    return potsMapper.listToResponse(potsRepository.findAllPotsByAccountId(accountId));
-  }
-
-  public PotsResponseDTO create(CreatePotsDTO dto) {
+  @Transactional
+  public PotsResponseDTO create(CreatePotsDTO dto, UserEntity currentUser) {
     var entity = potsMapper.toEntity(dto);
-    var account = accountRepository.findById(dto.accountId())
-        .orElseThrow(() -> new AccountNotFoundException("Account not found exception for id: " + dto.accountId()));
+    var account = currentUser.getAccount();
     entity.setAccount(account);
-    return potsMapper.toResponse(potsRepository.save(entity));
+    var potsResponse = potsRepository.save(entity);
+    return potsMapper.toResponse(potsResponse);
+  }
+
+  public List<PotsResponseDTO> findAllPots(UserEntity currentUser) {
+    return potsMapper.listToResponse(potsRepository.findAllByAccount(currentUser.getAccount()));
+  }
+
+  @Transactional
+  public PotsResult addMoney(Long id, MoneyRequest money, UserEntity currentUser) {
+    Optional<PotsEntity> pot = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
+
+    if(pot.isEmpty()) {
+      return new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!");
+    }
+
+    BigDecimal spread = pot.get().getTargetAmount().subtract(pot.get().getCurrentAmount());
+    boolean exceedsTargetAmount = money.amount().compareTo(spread) > 0;
+    boolean exceedsCurrentBalance = money.amount().compareTo(pot.get().getCurrentAmount()) > 0;
+    boolean isIncome = money.type().equals(TransactionType.INCOME);
+
+    if (isIncome && exceedsTargetAmount) {
+      return new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Money is greater than target amount!");
+    }
+
+    if (!isIncome && exceedsCurrentBalance) {
+      return new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Money is greater than current amount!");
+    }
+
+    BigDecimal newValue;
+    if (money.type().equals(TransactionType.EXPENSE)) {
+      newValue = pot.get().getCurrentAmount().subtract(money.amount());
+    } else {
+      newValue = pot.get().getCurrentAmount().add(money.amount());
+    }
+
+    pot.get().setCurrentAmount(newValue);
+
+    var potUpdated = potsRepository.save(pot.get());
+    accountService.updateAccountBalance(money.amount(), currentUser.getAccount().getAccountId(), !isIncome);
+    return new PotsSuccess(potsMapper.toResponse(potUpdated));
+  }
+
+  @Transactional
+  public void delete(Long id, UserEntity currentUser) {
+    Optional<PotsEntity> optionalPots = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
+
+    if(optionalPots.isEmpty()){
+      return;
+    }
+    PotsEntity pot = optionalPots.get();
+
+    potsRepository.deleteByIdAccount(id, currentUser.getAccount());
+    boolean isCredit = true;
+    Integer accountId = currentUser.getAccount().getAccountId();
+    if(!(pot.getCurrentAmount().equals(BigDecimal.ZERO))) {
+      accountService.updateAccountBalance(pot.getCurrentAmount(), accountId, isCredit);
+    }
+  }
+
+  @Transactional
+  public PotsResult update(Long id, CreatePotsDTO dto, UserEntity currentUser) {
+    Optional<PotsEntity> optionalPots = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
+
+    if(optionalPots.isEmpty()) {
+      return new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!");
+    }
+
+    PotsEntity pot = optionalPots.get();
+
+    if(pot.getCurrentAmount().compareTo(dto.targetAmount()) > 0){
+      String message = "Target amount cannot be less than current amount!";
+      return new PotsFailure(PotsErrorType.BAD_REQUEST, "targetAmount", message);
+    }
+
+    pot.setTargetAmount(dto.targetAmount())
+        .setName(dto.name())
+        .setColor(dto.color());
+
+    PotsResponseDTO responseDTO = potsMapper.toResponse(potsRepository.save(pot));
+    return new PotsSuccess(responseDTO);
   }
 }

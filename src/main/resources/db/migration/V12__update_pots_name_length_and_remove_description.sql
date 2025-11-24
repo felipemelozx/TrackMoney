@@ -1,0 +1,8 @@
+ALTER TABLE tb_pots
+ALTER COLUMN name TYPE VARCHAR(30);
+
+ALTER TABLE tb_pots
+ALTER COLUMN name SET NOT NULL;
+
+ALTER TABLE tb_pots
+DROP COLUMN description;
