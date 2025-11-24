@@ -1,68 +1,153 @@
 package fun.trackmoney.pots.controller;
 
+import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.pots.dtos.CreatePotsDTO;
+import fun.trackmoney.pots.dtos.MoneyRequest;
 import fun.trackmoney.pots.dtos.PotsResponseDTO;
+import fun.trackmoney.pots.dtos.internal.PotsFailure;
+import fun.trackmoney.pots.dtos.internal.PotsSuccess;
+import fun.trackmoney.pots.enums.PotsErrorType;
 import fun.trackmoney.pots.service.PotsService;
-import org.junit.jupiter.api.BeforeEach;
+import fun.trackmoney.testutils.CreatePotsDTOFactory;
+import fun.trackmoney.testutils.PotsResponseDTOFactory;
+import fun.trackmoney.testutils.UserEntityFactory;
+import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.utils.response.ApiResponse;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class PotsControllerTest {
-
-  @InjectMocks
-  private PotsController potsController;
 
   @Mock
   private PotsService potsService;
 
-  @BeforeEach
-  void setUp() {
-    MockitoAnnotations.openMocks(this);
+  @InjectMocks
+  private PotsController potsController;
+
+  @Test
+  @DisplayName("createPots: Should return 200 OK and expected data")
+  void createPots_shouldReturnOk() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    CreatePotsDTO dto = CreatePotsDTOFactory.defaultCreatePot();
+    PotsResponseDTO expectedResponse = PotsResponseDTOFactory.defaultPotResponse();
+
+    when(potsService.create(dto, user)).thenReturn(expectedResponse);
+
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.createPots(dto, user);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("Pots register successfully", response.getBody().getMessage());
+    assertEquals(expectedResponse, response.getBody().getData());
   }
 
   @Test
-  void findAllPots() {
-    Integer accountId = 1;
+  @DisplayName("getPots: Should return 200 OK and list of pots")
+  void getPots_shouldReturnList() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    List<PotsResponseDTO> expectedList = List.of(PotsResponseDTOFactory.defaultPotResponse());
 
-    List<PotsResponseDTO> potsResponseDTOList = List.of(
-        new PotsResponseDTO(1L, "test name2", "Test Pot1", 100L, 1001L),
-        new PotsResponseDTO(2L, "test name2", "Test Pot2", 100L, 1002L)
-    );
+    when(potsService.findAllPots(user)).thenReturn(expectedList);
 
-    when(potsService.findAllPots(accountId)).thenReturn(potsResponseDTOList);
-    var result = potsController.getPots(accountId);
+    ResponseEntity<ApiResponse<List<PotsResponseDTO>>> response = potsController.getPots(user);
 
-    assertNotNull(result);
-    assertEquals(HttpStatus.OK, result.getStatusCode());
-    assertEquals("Pots retrieved successfully", result.getBody().getMessage());
-    assertEquals(2, result.getBody().getData().size());
-    assertEquals(1L, result.getBody().getData().get(0).potId());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(expectedList, response.getBody().getData());
   }
 
   @Test
-  void createPots() {
-    PotsResponseDTO potsResponseDTO = new PotsResponseDTO(1L, "test name", "Test Pot", 100L, 100L);
-    CreatePotsDTO createPotsDTO = new CreatePotsDTO("test name", "Test Pot", 1, 100L, 100L);
+  @DisplayName("delete: Should call service and return 200 OK")
+  void delete_shouldReturnOk() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    Long potId = 1L;
 
-    when(potsService.create(createPotsDTO)).thenReturn(potsResponseDTO);
+    doNothing().when(potsService).delete(potId, user);
 
-    var result = potsController.createPots(createPotsDTO);
+    ResponseEntity<ApiResponse<Void>> response = potsController.delete(potId, user);
 
-    assertNotNull(result);
-    assertEquals(HttpStatus.OK, result.getStatusCode());
-    assertEquals("Pots register successfully", result.getBody().getMessage());
-    assertEquals("test name", result.getBody().getData().name());
-    assertEquals("Test Pot", result.getBody().getData().description());
-    assertEquals(100L, result.getBody().getData().currentAmount());
-    assertEquals(100L, result.getBody().getData().targetAmount());
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(potsService, times(1)).delete(potId, user);
+  }
+
+  @Test
+  @DisplayName("addMoney: Should return 200 OK when result is Success")
+  void addMoney_shouldReturnOk_whenSuccess() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    Long potId = 1L;
+    MoneyRequest request = new MoneyRequest(TransactionType.INCOME, new BigDecimal("100"));
+    PotsResponseDTO responseDTO = PotsResponseDTOFactory.defaultPotResponse();
+
+    when(potsService.addMoney(potId, request, user))
+        .thenReturn(new PotsSuccess(responseDTO));
+
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(responseDTO, response.getBody().getData());
+  }
+
+  @Test
+  @DisplayName("addMoney: Should return 404 NOT_FOUND when result is NOT_FOUND error")
+  void addMoney_shouldReturn404_whenNotFound() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    Long potId = 1L;
+    MoneyRequest request = new MoneyRequest(TransactionType.INCOME, new BigDecimal("100"));
+
+    when(potsService.addMoney(potId, request, user))
+        .thenReturn(new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pot not found"));
+
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertEquals("Pot not found", response.getBody().getMessage());
+  }
+
+  @Test
+  @DisplayName("addMoney: Should return 400 BAD_REQUEST when result is BAD_REQUEST error")
+  void addMoney_shouldReturn400_whenBadRequest() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    Long potId = 1L;
+    MoneyRequest request = new MoneyRequest(TransactionType.INCOME, new BigDecimal("5000"));
+
+    when(potsService.addMoney(potId, request, user))
+        .thenReturn(new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Limit exceeded"));
+
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertEquals("Limit exceeded", response.getBody().getMessage());
+  }
+
+  @Test
+  @DisplayName("addMoney: Should return 403 FORBIDDEN when result is FORBIDDEN error")
+  void addMoney_shouldReturn403_whenForbidden() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    Long potId = 1L;
+    MoneyRequest request = new MoneyRequest(TransactionType.INCOME, new BigDecimal("100"));
+
+    when(potsService.addMoney(potId, request, user))
+        .thenReturn(new PotsFailure(PotsErrorType.FORBIDDEN, "user", "Not owner"));
+
+    ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
   }
 }
