@@ -79,7 +79,6 @@ public class PotsController {
     HttpStatus status = switch (failure.type()) {
       case NOT_FOUND -> HttpStatus.NOT_FOUND;
       case BAD_REQUEST -> HttpStatus.BAD_REQUEST;
-      case FORBIDDEN -> HttpStatus.FORBIDDEN;
     };
 
     var body = ApiResponse.<PotsResponseDTO>failure()
@@ -124,7 +123,6 @@ public class PotsController {
     HttpStatus status = switch (failure.type()) {
       case NOT_FOUND -> HttpStatus.NOT_FOUND;
       case BAD_REQUEST -> HttpStatus.BAD_REQUEST;
-      case FORBIDDEN -> HttpStatus.FORBIDDEN;
     };
 
     var body = ApiResponse.<PotsResponseDTO>failure()
