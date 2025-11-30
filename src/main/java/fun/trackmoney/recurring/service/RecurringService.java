@@ -22,6 +22,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class RecurringService {
@@ -61,6 +62,34 @@ public class RecurringService {
     return recurringMapper.toResponse(recurringRepository.save(recurring));
   }
 
+
+
+  public RecurringResponse update(Long id, CreateRecurringRequest request, UserEntity currentUser) {
+    CategoryEntity category = categoryService.findById(request.categoryId());
+    
+    if(category == null) {
+      return null;
+    }
+
+    Optional<RecurringEntity> optionalRecurring = recurringRepository.findByIdAndAccount(id, currentUser.getAccount().getAccountId());
+    
+    if(optionalRecurring.isEmpty()) {
+      return null;
+    }
+    
+    RecurringEntity recurring = optionalRecurring.get();
+    LocalDateTime nextDate = calculateNextRun(request.frequency(), request.recurrenceDay());
+    recurring.setCategory(category)
+        .setTransactionName(request.transactionName())
+        .setNextDate(nextDate)
+        .setDescription(request.description())
+        .setTransactionType(request.transactionType())
+        .setAmount(request.amount())
+        .setFrequency(request.frequency());
+
+    return recurringMapper.toResponse(recurringRepository.save(recurring));
+  }
+
   protected LocalDateTime calculateNextRun(Frequency frequency, LocalDateTime lastDate) {
     return switch (frequency) {
       case DAILY -> lastDate.plusDays(1);
@@ -72,10 +101,16 @@ public class RecurringService {
 
   @Scheduled(cron = "0 0 0 * * *", zone = "Europe/London")
   protected void recurringTransactions() {
-    List<RecurringEntity> recurrences = recurringRepository.findByNextDateBefore();
+    while (true) {
+      List<RecurringEntity> recurrences = recurringRepository.findByNextDateBefore();
 
-    for (RecurringEntity recurring : recurrences) {
-      processRecurring(recurring);
+      if (recurrences.isEmpty()) {
+        break;
+      }
+
+      for (RecurringEntity recurring : recurrences) {
+        processRecurring(recurring);
+      }
     }
   }
 

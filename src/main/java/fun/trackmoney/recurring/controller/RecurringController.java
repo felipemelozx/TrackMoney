@@ -9,10 +9,15 @@ import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("recurring")
@@ -25,11 +30,12 @@ public class RecurringController {
   }
 
   @PostMapping
-  public ResponseEntity<ApiResponse<RecurringResponse>> createRecurring(@Valid
-                                                                        @RequestBody
-                                                                        CreateRecurringRequest request,
-                                                                        @AuthenticationPrincipal
-                                                                        UserEntity currentUser) {
+  public ResponseEntity<ApiResponse<RecurringResponse>> createRecurring(
+      @Valid @RequestBody
+      CreateRecurringRequest request,
+      @AuthenticationPrincipal
+      UserEntity currentUser
+  ) {
     RecurringResponse result = recurringService.create(request, currentUser);
 
     if (result == null) {
@@ -49,4 +55,33 @@ public class RecurringController {
     );
   }
 
+
+  @PutMapping("/{id}")
+  public ResponseEntity<ApiResponse<RecurringResponse>> update(
+      @PathVariable
+      Long id,
+      @Valid @RequestBody
+      CreateRecurringRequest request,
+      @AuthenticationPrincipal
+      UserEntity currentUser
+  ) {
+    RecurringResponse result = recurringService.update(id, request, currentUser);
+
+    if (result == null) {
+      String message = "Category with this id: " + request.categoryId() + " not found.";
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<RecurringResponse>failure()
+              .message("Failure when try to update the recurring transaction")
+              .errors(new CustomFieldError("categoryId", message))
+              .build()
+      );
+    }
+    return ResponseEntity.ok().body(
+        ApiResponse.<RecurringResponse>success()
+            .message("Recurring update with successfully")
+            .data(result)
+            .build()
+    );
+
+  }
 }
