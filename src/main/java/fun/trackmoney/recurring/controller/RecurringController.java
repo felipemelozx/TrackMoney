@@ -9,12 +9,16 @@ import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("recurring")
@@ -52,6 +56,17 @@ public class RecurringController {
     );
   }
 
+  @GetMapping
+  public ResponseEntity<ApiResponse<List<RecurringResponse>>> findAll(
+      @AuthenticationPrincipal UserEntity currentUser
+  ) {
+    List<RecurringResponse> recurringResponses = recurringService.findAll(currentUser);
+    var body = ApiResponse.<List<RecurringResponse>>success()
+        .message("Successfully retrieved all recurring transactions")
+        .data(recurringResponses)
+        .build();
+    return ResponseEntity.ok(body);
+  }
 
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<RecurringResponse>> update(
@@ -79,5 +94,14 @@ public class RecurringController {
             .data(result)
             .build()
     );
+  }
+
+  @DeleteMapping("/{id}")
+  public ResponseEntity<ApiResponse<Void>> delete(
+      @PathVariable Long id,
+      @AuthenticationPrincipal UserEntity currentUser
+  ) {
+    recurringService.delete(id, currentUser);
+    return ResponseEntity.ok().body(ApiResponse.<Void>successWithNoContent().build());
   }
 }

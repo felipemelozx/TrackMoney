@@ -137,4 +137,14 @@ public class RecurringService {
 
     recurringRepository.save(recurring);
   }
+
+  public List<RecurringResponse> findAll(UserEntity currentUser) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+    return recurringMapper.toResponse(recurringRepository.findAllByAccountId(accountId));
+  }
+
+  @Transactional
+  public void delete(Long id, UserEntity currentUser) {
+    recurringRepository.deleteByIdAndAccountId(id, currentUser.getAccount().getAccountId());
+  }
 }

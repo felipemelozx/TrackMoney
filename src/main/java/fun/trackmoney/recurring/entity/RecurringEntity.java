@@ -43,7 +43,7 @@ public class RecurringEntity {
   @JoinColumn(name = "account_id", nullable = false)
   private AccountEntity account;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "category_id", nullable = false)
   private CategoryEntity category;
 
