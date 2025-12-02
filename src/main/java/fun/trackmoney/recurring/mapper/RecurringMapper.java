@@ -13,5 +13,6 @@ public interface RecurringMapper {
   RecurringEntity toEntity(CreateRecurringRequest request);
 
   RecurringResponse toResponse(RecurringEntity save);
+
   List<RecurringResponse> toResponse(List<RecurringEntity> save);
 }
