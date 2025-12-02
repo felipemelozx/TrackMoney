@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -260,4 +261,86 @@ class RecurringServiceTest {
 
     verify(spyService, times(recurrences.size())).processRecurring(any());
   }
+
+  @Test
+  void update_shouldUpdateRecurringSuccessfully() {
+    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
+
+    CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+
+    RecurringEntity existingRecurring = RecurringEntityFactory.defaultEntity();
+    CategoryEntity newCategory = CategoryEntityFactory.defaultCategory();
+    RecurringResponse expectedResponse = RecurringResponseFactory.defaultResponse();
+
+    LocalDateTime newNextDate = LocalDateTime.now().plusMonths(2);
+
+    when(categoryService.findById(request.categoryId())).thenReturn(newCategory);
+    when(recurringRepository.findByIdAndAccount(1l, currentUser.getAccount().getAccountId()))
+        .thenReturn(Optional.of(existingRecurring));
+
+    doReturn(newNextDate)
+        .when(recurringServiceSpy)
+        .calculateNextRun(request.frequency(), request.recurrenceDay());
+
+    when(recurringRepository.save(existingRecurring)).thenReturn(existingRecurring);
+    when(recurringMapper.toResponse(existingRecurring)).thenReturn(expectedResponse);
+
+    RecurringResponse result = recurringServiceSpy.update(1l, request, currentUser);
+
+    assertNotNull(result);
+    assertEquals(expectedResponse, result);
+
+    assertEquals(newCategory, existingRecurring.getCategory());
+    assertEquals(request.transactionName(), existingRecurring.getTransactionName());
+    assertEquals(newNextDate, existingRecurring.getNextDate());
+    assertEquals(request.description(), existingRecurring.getDescription());
+    assertEquals(request.transactionType(), existingRecurring.getTransactionType());
+    assertEquals(request.amount(), existingRecurring.getAmount());
+    assertEquals(request.frequency(), existingRecurring.getFrequency());
+
+    verify(categoryService, times(1)).findById(request.categoryId());
+    verify(recurringRepository, times(1)).findByIdAndAccount(1l, currentUser.getAccount().getAccountId());
+    verify(recurringRepository, times(1)).save(existingRecurring);
+  }
+
+  @Test
+  void update_shouldReturnNullWhenCategoryNotFound() {
+    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
+
+    CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+
+    when(categoryService.findById(request.categoryId())).thenReturn(null);
+
+    RecurringResponse result = recurringServiceSpy.update(1l, request, currentUser);
+
+    assertNull(result);
+
+    verify(categoryService, times(1)).findById(request.categoryId());
+    verify(recurringRepository, never()).findByIdAndAccount(any(), any());
+    verify(recurringRepository, never()).save(any());
+  }
+
+  @Test
+  void update_shouldReturnNullWhenRecurringNotFoundForUser() {
+    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
+
+    CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+
+    when(categoryService.findById(request.categoryId())).thenReturn(category);
+    when(recurringRepository.findByIdAndAccount(1l, currentUser.getAccount().getAccountId()))
+        .thenReturn(Optional.empty());
+
+    RecurringResponse result = recurringServiceSpy.update(1l, request, currentUser);
+
+    assertNull(result);
+
+    verify(categoryService, times(1)).findById(request.categoryId());
+    verify(recurringRepository, times(1)).findByIdAndAccount(1l,currentUser.getAccount().getAccountId());
+    verify(recurringRepository, never()).save(any());
+  }
 }
+

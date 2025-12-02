@@ -27,58 +27,108 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RecurringControllerTest {
 
-    @Mock
-    private RecurringService recurringService;
+  @Mock
+  private RecurringService recurringService;
 
-    @InjectMocks
-    private RecurringController recurringController;
+  @InjectMocks
+  private RecurringController recurringController;
 
-    @Test
-    void createRecurring_shouldReturn200AndSuccessResponse_whenRecurringIsCreated() {
-        CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
-        RecurringResponse expectedResponse = RecurringResponseFactory.defaultResponse();
-        UserEntity mockUser = UserEntityFactory.defaultUser();
+  @Test
+  void createRecurring_shouldReturn200AndSuccessResponse_whenRecurringIsCreated() {
+    CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
+    RecurringResponse expectedResponse = RecurringResponseFactory.defaultResponse();
+    UserEntity mockUser = UserEntityFactory.defaultUser();
 
-        when(recurringService.create(any(CreateRecurringRequest.class), any(UserEntity.class)))
-                .thenReturn(expectedResponse);
+    when(recurringService.create(any(CreateRecurringRequest.class), any(UserEntity.class)))
+        .thenReturn(expectedResponse);
 
-        ResponseEntity<ApiResponse<RecurringResponse>> response =
-                recurringController.createRecurring(request, mockUser);
+    ResponseEntity<ApiResponse<RecurringResponse>> response =
+        recurringController.createRecurring(request, mockUser);
 
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "O Status HTTP deve ser 200 OK.");
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode(), "O Status HTTP deve ser 200 OK.");
 
-        ApiResponse<RecurringResponse> body = response.getBody();
-        assertNotNull(body, "O corpo da resposta não deve ser nulo.");
-        assertTrue(body.isSuccess(), "O status da API deve ser SUCCESS.");
-        assertEquals("Recurring created with successfully", body.getMessage(), "A mensagem de sucesso deve estar correta.");
-        assertEquals(expectedResponse.id(), body.getData().id(), "O ID da recorrência retornada deve ser o esperado.");
-    }
+    ApiResponse<RecurringResponse> body = response.getBody();
+    assertNotNull(body, "O corpo da resposta não deve ser nulo.");
+    assertTrue(body.isSuccess(), "O status da API deve ser SUCCESS.");
+    assertEquals("Recurring created with successfully", body.getMessage(), "A mensagem de sucesso deve estar correta.");
+    assertEquals(expectedResponse.id(), body.getData().id(), "O ID da recorrência retornada deve ser o esperado.");
+  }
 
-    @Test
-    void createRecurring_shouldReturn400AndFailureResponse_whenCategoryIsNotFound() {
-        CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
-        UserEntity mockUser = UserEntityFactory.defaultUser();
-        String expectedCategoryId = request.categoryId().toString();
+  @Test
+  void createRecurring_shouldReturn400AndFailureResponse_whenCategoryIsNotFound() {
+    CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
+    UserEntity mockUser = UserEntityFactory.defaultUser();
+    String expectedCategoryId = request.categoryId().toString();
 
-        when(recurringService.create(any(CreateRecurringRequest.class), any(UserEntity.class)))
-                .thenReturn(null);
+    when(recurringService.create(any(CreateRecurringRequest.class), any(UserEntity.class)))
+        .thenReturn(null);
 
-        ResponseEntity<ApiResponse<RecurringResponse>> response =
-                recurringController.createRecurring(request, mockUser);
+    ResponseEntity<ApiResponse<RecurringResponse>> response =
+        recurringController.createRecurring(request, mockUser);
 
-        assertNotNull(response);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "O Status HTTP deve ser 400 Bad Request.");
+    assertNotNull(response);
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "O Status HTTP deve ser 400 Bad Request.");
 
-        ApiResponse<RecurringResponse> body = response.getBody();
-        assertNotNull(body, "O corpo da resposta não deve ser nulo.");
-        assertFalse(body.isSuccess(), "O status da API deve ser FAILURE.");
-        assertEquals("Failure when try to create the recurring transaction", body.getMessage(), "A mensagem de falha deve estar correta.");
-        
-        assertNotNull(body.getErrors(), "A lista de erros não deve ser nula.");
-        assertTrue(body.getErrors().size() == 1, "Deve haver exatamente um erro.");
-        
-        assertEquals("categoryId", body.getErrors().get(0).getField(), "O campo de erro deve ser 'categoryId'.");
-        assertEquals("Category with this id: " + expectedCategoryId + " not found.", body.getErrors().get(0).getMessage(), "A mensagem de erro específica deve estar correta.");
-    }
+    ApiResponse<RecurringResponse> body = response.getBody();
+    assertNotNull(body, "O corpo da resposta não deve ser nulo.");
+    assertFalse(body.isSuccess(), "O status da API deve ser FAILURE.");
+    assertEquals("Failure when try to create the recurring transaction", body.getMessage(), "A mensagem de falha deve estar correta.");
+
+    assertNotNull(body.getErrors(), "A lista de erros não deve ser nula.");
+    assertTrue(body.getErrors().size() == 1, "Deve haver exatamente um erro.");
+
+    assertEquals("categoryId", body.getErrors().get(0).getField(), "O campo de erro deve ser 'categoryId'.");
+    assertEquals("Category with this id: " + expectedCategoryId + " not found.", body.getErrors().get(0).getMessage(), "A mensagem de erro específica deve estar correta.");
+  }
+
+  @Test
+  void update_shouldReturn200AndSuccessResponse_whenRecurringIsUpdated() {
+    CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
+    RecurringResponse expectedResponse = RecurringResponseFactory.defaultResponse();
+    UserEntity mockUser = UserEntityFactory.defaultUser();
+
+
+    when(recurringService.update(1l, request, mockUser))
+        .thenReturn(expectedResponse);
+
+    ResponseEntity<ApiResponse<RecurringResponse>> response =
+        recurringController.update(1l, request, mockUser);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode(), "O Status HTTP deve ser 200 OK.");
+
+    ApiResponse<RecurringResponse> body = response.getBody();
+    assertNotNull(body, "O corpo da resposta não deve ser nulo.");
+    assertTrue(body.isSuccess(), "O status da API deve ser SUCCESS.");
+    assertEquals("Recurring update with successfully", body.getMessage(), "A mensagem de sucesso deve estar correta.");
+    assertEquals(1l, body.getData().id(), "O ID da recorrência retornada deve ser o esperado.");
+  }
+
+  @Test
+  void update_shouldReturn400AndFailureResponse_whenRecurringUpdateFails() {
+    CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
+    UserEntity mockUser = UserEntityFactory.defaultUser();
+    String expectedCategoryId = request.categoryId().toString();
+
+    when(recurringService.update(1l, request, mockUser))
+        .thenReturn(null);
+
+    ResponseEntity<ApiResponse<RecurringResponse>> response =
+        recurringController.update(1l, request, mockUser);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "O Status HTTP deve ser 400 Bad Request.");
+
+    ApiResponse<RecurringResponse> body = response.getBody();
+    assertNotNull(body, "O corpo da resposta não deve ser nulo.");
+    assertFalse(body.isSuccess(), "O status da API deve ser FAILURE.");
+    assertEquals("Failure when try to update the recurring transaction", body.getMessage(), "A mensagem de falha deve estar correta.");
+
+    assertNotNull(body.getErrors(), "A lista de erros não deve ser nula.");
+    assertTrue(body.getErrors().size() == 1, "Deve haver exatamente um erro.");
+
+    assertEquals("categoryId", body.getErrors().get(0).getField(), "O campo de erro deve ser 'categoryId'.");
+    assertEquals("Category with this id: " + expectedCategoryId + " not found.", body.getErrors().get(0).getMessage(), "A mensagem de erro específica deve estar correta.");
+  }
 }
