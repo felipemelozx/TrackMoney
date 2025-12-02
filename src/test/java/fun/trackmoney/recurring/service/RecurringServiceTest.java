@@ -29,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -69,6 +70,8 @@ class RecurringServiceTest {
 
   @InjectMocks
   private RecurringService recurringService;
+
+  private final Long RECURRING_ID = 1L;
 
   @Test
   void create_shouldCreateAnewRecurring() {
@@ -209,7 +212,6 @@ class RecurringServiceTest {
 
     CreateTransactionDTO capturedDto = dtoCaptor.getValue();
 
-    // Agora validamos se o DTO foi montado com os dados do RecurringEntity
     assertEquals(recurring.getAmount(), capturedDto.amount());
     assertEquals(recurring.getDescription(), capturedDto.description());
     assertEquals(recurring.getCategory().getCategoryId(), capturedDto.categoryId());
@@ -276,7 +278,7 @@ class RecurringServiceTest {
     LocalDateTime newNextDate = LocalDateTime.now().plusMonths(2);
 
     when(categoryService.findById(request.categoryId())).thenReturn(newCategory);
-    when(recurringRepository.findByIdAndAccount(1l, currentUser.getAccount().getAccountId()))
+    when(recurringRepository.findByIdAndAccount(RECURRING_ID, currentUser.getAccount().getAccountId()))
         .thenReturn(Optional.of(existingRecurring));
 
     doReturn(newNextDate)
@@ -286,7 +288,7 @@ class RecurringServiceTest {
     when(recurringRepository.save(existingRecurring)).thenReturn(existingRecurring);
     when(recurringMapper.toResponse(existingRecurring)).thenReturn(expectedResponse);
 
-    RecurringResponse result = recurringServiceSpy.update(1l, request, currentUser);
+    RecurringResponse result = recurringServiceSpy.update(RECURRING_ID, request, currentUser);
 
     assertNotNull(result);
     assertEquals(expectedResponse, result);
@@ -300,7 +302,7 @@ class RecurringServiceTest {
     assertEquals(request.frequency(), existingRecurring.getFrequency());
 
     verify(categoryService, times(1)).findById(request.categoryId());
-    verify(recurringRepository, times(1)).findByIdAndAccount(1l, currentUser.getAccount().getAccountId());
+    verify(recurringRepository, times(1)).findByIdAndAccount(RECURRING_ID, currentUser.getAccount().getAccountId());
     verify(recurringRepository, times(1)).save(existingRecurring);
   }
 
@@ -313,7 +315,7 @@ class RecurringServiceTest {
 
     when(categoryService.findById(request.categoryId())).thenReturn(null);
 
-    RecurringResponse result = recurringServiceSpy.update(1l, request, currentUser);
+    RecurringResponse result = recurringServiceSpy.update(RECURRING_ID, request, currentUser);
 
     assertNull(result);
 
@@ -331,16 +333,80 @@ class RecurringServiceTest {
     CategoryEntity category = CategoryEntityFactory.defaultCategory();
 
     when(categoryService.findById(request.categoryId())).thenReturn(category);
-    when(recurringRepository.findByIdAndAccount(1l, currentUser.getAccount().getAccountId()))
+    when(recurringRepository.findByIdAndAccount(RECURRING_ID, currentUser.getAccount().getAccountId()))
         .thenReturn(Optional.empty());
 
-    RecurringResponse result = recurringServiceSpy.update(1l, request, currentUser);
+    RecurringResponse result = recurringServiceSpy.update(RECURRING_ID, request, currentUser);
 
     assertNull(result);
 
     verify(categoryService, times(1)).findById(request.categoryId());
-    verify(recurringRepository, times(1)).findByIdAndAccount(1l,currentUser.getAccount().getAccountId());
+    verify(recurringRepository, times(1)).findByIdAndAccount(RECURRING_ID,currentUser.getAccount().getAccountId());
     verify(recurringRepository, never()).save(any());
   }
-}
 
+  @Test
+  void findAll_shouldReturnListOfRecurringResponses() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    List<RecurringEntity> entities = List.of(RecurringEntityFactory.defaultEntity(), RecurringEntityFactory.defaultEntity());
+    List<RecurringResponse> expectedResponses = List.of(RecurringResponseFactory.defaultResponse(), RecurringResponseFactory.defaultResponse());
+
+    when(recurringRepository.findAllByAccountId(accountId)).thenReturn(entities);
+    when(recurringMapper.toResponse(entities)).thenReturn(expectedResponses);
+
+    List<RecurringResponse> result = recurringService.findAll(currentUser);
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertEquals(expectedResponses, result);
+
+    verify(recurringRepository, times(1)).findAllByAccountId(accountId);
+    verify(recurringMapper, times(1)).toResponse(entities);
+  }
+
+  @Test
+  void findAll_shouldReturnEmptyList_whenNoRecurrencesFound() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    List<RecurringEntity> emptyEntities = Collections.emptyList();
+    List<RecurringResponse> emptyResponses = Collections.emptyList();
+
+    when(recurringRepository.findAllByAccountId(accountId)).thenReturn(emptyEntities);
+    when(recurringMapper.toResponse(emptyEntities)).thenReturn(emptyResponses);
+
+    List<RecurringResponse> result = recurringService.findAll(currentUser);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+
+    verify(recurringRepository, times(1)).findAllByAccountId(accountId);
+    verify(recurringMapper, times(1)).toResponse(emptyEntities);
+  }
+
+  @Test
+  void delete_shouldCallRepositoryDelete_whenSuccessful() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    doNothing().when(recurringRepository).deleteByIdAndAccountId(RECURRING_ID, accountId);
+
+    recurringService.delete(RECURRING_ID, currentUser);
+
+    verify(recurringRepository, times(1)).deleteByIdAndAccountId(RECURRING_ID, accountId);
+  }
+
+  @Test
+  void delete_shouldHandleException_whenRecurringNotFoundOrNotOwned() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    doNothing().when(recurringRepository).deleteByIdAndAccountId(RECURRING_ID, accountId);
+
+    recurringService.delete(RECURRING_ID, currentUser);
+
+    verify(recurringRepository, times(1)).deleteByIdAndAccountId(RECURRING_ID, accountId);
+  }
+}

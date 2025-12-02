@@ -16,11 +16,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -130,5 +135,49 @@ class RecurringControllerTest {
 
     assertEquals("categoryId", body.getErrors().get(0).getField(), "O campo de erro deve ser 'categoryId'.");
     assertEquals("Category with this id: " + expectedCategoryId + " not found.", body.getErrors().get(0).getMessage(), "A mensagem de erro específica deve estar correta.");
+  }
+
+  @Test
+  void findAll_shouldReturn200AndListOfRecurrences() {
+    UserEntity mockUser = UserEntityFactory.defaultUser();
+    RecurringResponse resp1 = RecurringResponseFactory.defaultResponse();
+    RecurringResponse resp2 = RecurringResponseFactory.defaultResponse();
+    List<RecurringResponse> expectedList = List.of(resp1, resp2);
+
+    when(recurringService.findAll(mockUser)).thenReturn(expectedList);
+
+    ResponseEntity<ApiResponse<List<RecurringResponse>>> response =
+        recurringController.findAll(mockUser);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode(), "O Status HTTP deve ser 200 OK.");
+
+    ApiResponse<List<RecurringResponse>> body = response.getBody();
+    assertNotNull(body, "O corpo da resposta não deve ser nulo.");
+    assertTrue(body.isSuccess(), "O status da API deve ser SUCCESS.");
+    assertEquals("Successfully retrieved all recurring transactions", body.getMessage(), "A mensagem de sucesso deve estar correta.");
+    assertEquals(2, body.getData().size(), "O tamanho da lista deve ser 2.");
+
+    verify(recurringService, times(1)).findAll(mockUser);
+  }
+
+  @Test
+  void delete_shouldReturn200AndSuccessWithNoContent_whenDeletionIsSuccessful() {
+    UserEntity mockUser = UserEntityFactory.defaultUser();
+
+    doNothing().when(recurringService).delete(1l, mockUser);
+
+    ResponseEntity<ApiResponse<Void>> response =
+        recurringController.delete(1l, mockUser);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode(), "O Status HTTP deve ser 200 OK.");
+
+    ApiResponse<Void> body = response.getBody();
+    assertNotNull(body, "O corpo da resposta não deve ser nulo.");
+    assertTrue(body.isSuccess(), "O status da API deve ser SUCCESS.");
+    assertEquals(null, body.getData(), "O campo data deve ser nulo para sucesso sem conteúdo.");
+
+    verify(recurringService, times(1)).delete(1l, mockUser);
   }
 }
