@@ -63,15 +63,14 @@ public class RecurringService {
   }
 
 
-
   public RecurringResponse update(Long id, CreateRecurringRequest request, UserEntity currentUser) {
     CategoryEntity category = categoryService.findById(request.categoryId());
     
     if(category == null) {
       return null;
     }
-
-    Optional<RecurringEntity> optionalRecurring = recurringRepository.findByIdAndAccount(id, currentUser.getAccount().getAccountId());
+    Integer accountId =  currentUser.getAccount().getAccountId();
+    Optional<RecurringEntity> optionalRecurring = recurringRepository.findByIdAndAccount(id, accountId);
     
     if(optionalRecurring.isEmpty()) {
       return null;
