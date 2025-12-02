@@ -4,7 +4,7 @@ import fun.trackmoney.enums.TransactionType;
 import org.hibernate.validator.constraints.Length;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 public record CreateTransactionDTO(String transactionName,
                                    Integer categoryId,
@@ -12,5 +12,5 @@ public record CreateTransactionDTO(String transactionName,
                                    BigDecimal amount,
                                    @Length(max = 255)
                                    String description,
-                                   Timestamp transactionDate) {
+                                   LocalDateTime transactionDate) {
 }
