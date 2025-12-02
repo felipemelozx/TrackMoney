@@ -33,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -244,13 +245,15 @@ class RecurringServiceTest {
     RecurringEntity recurring2 = RecurringEntityFactory.defaultEntity();
     List<RecurringEntity> recurrences = List.of(recurring1, recurring2);
 
-    when(recurringRepository.findByNextDateBefore()).thenReturn(recurrences);
+    when(recurringRepository.findByNextDateBefore())
+        .thenReturn(recurrences)
+        .thenReturn(Collections.emptyList());
 
     doNothing().when(spyService).processRecurring(any(RecurringEntity.class));
 
     spyService.recurringTransactions();
 
-    verify(recurringRepository, times(1)).findByNextDateBefore();
+    verify(recurringRepository, times(2)).findByNextDateBefore();
 
     verify(spyService, times(1)).processRecurring(recurring1);
     verify(spyService, times(1)).processRecurring(recurring2);
