@@ -7,6 +7,7 @@ on:
       - completed
     branches:
       - main
+      - ci-deploy
   workflow_dispatch:
 
 env:
