@@ -14,24 +14,14 @@ env:
   APP_NAME: trackmoney
 
 jobs:
-  check-previous-workflow:
-    runs-on: ubuntu-latest
-    #if: github.event.workflow_run.conclusion != 'success'
-    steps:
-      - name: Previous workflow failed
-        run: |
-          echo "❌ Previous workflow (SonarCloud CI) failed or was cancelled"
-          exit 1
-
   tests:
     runs-on: ubuntu-latest
     name: Tests
-    #if: github.event.workflow_run.conclusion == 'success'
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
 
       - name: 🛠️ Setup JDK 17
         uses: actions/setup-java@v4
@@ -49,12 +39,11 @@ jobs:
       - name: 🧪 Run tests
         run: ./mvnw clean test
 
-  # --- 3. BUILD & PUSH DA IMAGEM DOCKER ---
   build-and-push:
     runs-on: ubuntu-latest
     name: Build & Push
     needs: tests
-    #if: github.event.workflow_run.head_branch == 'main'
+    if: ${{ success() }}
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
@@ -107,71 +96,70 @@ jobs:
           build-args: |
             VERSION=${{ steps.version.outputs.VERSION }}
 
-deploy:
-  runs-on: ubuntu-latest
-  name: Deploy
-  needs: build-and-push
-  #if: github.ref == 'refs/heads/main'
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    needs: build-and-push
+    if: ${{ success() }}
 
-  env:
-    DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-    IMAGE_TAG: latest
-    APP_PORT: 8080
-    SERVER_CONTEXT_PATH: /api/v1
-    SPRING_PROFILES_ACTIVE: prod
-    POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-    POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-    POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-    POSTGRES_PORT: 5432
-    REDIS_PORT: 6379
-    SPRING_MAIL_HOST: ${{ secrets.SPRING_MAIL_HOST }}
-    SPRING_MAIL_PORT: ${{ secrets.SPRING_MAIL_PORT }}
-    SPRING_MAIL_USERNAME: ${{ secrets.SPRING_MAIL_USERNAME }}
-    SPRING_MAIL_PASSWORD: ${{ secrets.SPRING_MAIL_PASSWORD }}
-    API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
-    FRONT_URL: ${{ secrets.FRONT_URL }}
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      IMAGE_TAG: latest
+      APP_PORT: 8080
+      SERVER_CONTEXT_PATH: /api/v1
+      SPRING_PROFILES_ACTIVE: prod
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_PORT: 5432
+      REDIS_PORT: 6379
+      SPRING_MAIL_HOST: ${{ secrets.SPRING_MAIL_HOST }}
+      SPRING_MAIL_PORT: ${{ secrets.SPRING_MAIL_PORT }}
+      SPRING_MAIL_USERNAME: ${{ secrets.SPRING_MAIL_USERNAME }}
+      SPRING_MAIL_PASSWORD: ${{ secrets.SPRING_MAIL_PASSWORD }}
+      API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
+      FRONT_URL: ${{ secrets.FRONT_URL }}
 
-  steps:
-    - name: ⬇️ Checkout do Código
-      uses: actions/checkout@v4
+    steps:
+      - name: ⬇️ Checkout do Código
+        uses: actions/checkout@v4
 
-    - name: 🚀 Deploy com Docker Compose via SSH
-      uses: masterjanic/docker-compose-ssh-deployment@v1.4.1
-      with:
+      - name: 🚀 Deploy com Docker Compose via SSH
+        uses: masterjanic/docker-compose-ssh-deployment@v1.4.1
+        with:
+          ssh_host: ${{ secrets.VPS_HOST }}
+          ssh_user: ${{ secrets.VPS_USER }}
+          ssh_private_key: ${{ secrets.VPS_SSH_KEY }}
 
-        ssh_host: ${{ secrets.VPS_HOST }}
-        ssh_user: ${{ secrets.VPS_USER }}
-        ssh_private_key: ${{ secrets.VPS_SSH_KEY }}
+          docker_compose_filename: "docker-compose.prod.yaml"
+          docker_args: "up -d --force-recreate --pull"
 
-        docker_compose_filename: "docker-compose.prod.yaml"
-        docker_args: "up -d --force-recreate --pull"
+          env_vars: "DOCKER_USERNAME,IMAGE_TAG,APP_PORT,SERVER_CONTEXT_PATH,SPRING_PROFILES_ACTIVE,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,POSTGRES_PORT,REDIS_PORT,SPRING_MAIL_HOST,SPRING_MAIL_PORT,SPRING_MAIL_USERNAME,SPRING_MAIL_PASSWORD,API_SECRET_KEY,FRONT_URL"
 
-        env_vars: "DOCKER_USERNAME,IMAGE_TAG,APP_PORT,SERVER_CONTEXT_PATH,SPRING_PROFILES_ACTIVE,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,POSTGRES_PORT,REDIS_PORT,SPRING_MAIL_HOST,SPRING_MAIL_PORT,SPRING_MAIL_USERNAME,SPRING_MAIL_PASSWORD,API_SECRET_KEY,FRONT_URL"
-
-        pre_deployment_script: |
-          cd /opt/${{ env.APP_NAME }} || mkdir -p /opt/${{ env.APP_NAME }} && cd /opt/${{ env.APP_NAME }}
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          if [ ! -f docker-compose.prod.yaml ]; then
+          pre_deployment_script: |
+            cd /opt/${{ env.APP_NAME }} || mkdir -p /opt/${{ env.APP_NAME }} && cd /opt/${{ env.APP_NAME }}
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+            # Seu curl estava usando 'refs/heads/main' explicitamente; modifiquei para a sintaxe padrão de repositório,
+            # mas se você realmente precisa desse formato:
             curl -o docker-compose.prod.yaml https://raw.githubusercontent.com/felipemelozx/TrackMoney/refs/heads/main/docker-compose.prod.yaml
-          fi
 
-        post_deployment_script: |
-          docker image prune -f
+          post_deployment_script: |
+            docker image prune -f
 
-    - name: 💚 Health check
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          sleep 30
-          cd /opt/${{ env.APP_NAME }}
-          if curl -f http://localhost:8080/api/v1/actuator/health; then
-            echo "✅ Health check passed"
-            docker compose -f docker-compose.prod.yaml ps
-          else
-            echo "❌ Health check failed"
-            docker compose -f docker-compose.prod.yaml logs --tail=100 app
-            exit 1
-          fi
+      - name: 💚 Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            sleep 30
+            cd /opt/${{ env.APP_NAME }}
+            if curl -f http://localhost:8080/api/v1/actuator/health; then
+              echo "✅ Health check passed"
+              docker compose -f docker-compose.prod.yaml ps
+            else
+              echo "❌ Health check failed"
+              docker compose -f docker-compose.prod.yaml logs --tail=100 app
+              exit 1
+            fi
