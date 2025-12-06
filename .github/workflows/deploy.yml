@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build & Push
     needs: tests
-    if: ${{ success() }}
+
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
@@ -98,7 +98,6 @@ jobs:
     runs-on: self-hosted
     name: Deploy
     needs: build-and-push
-    if: ${{ success() }}
 
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -126,10 +125,9 @@ jobs:
         run: |
           APP_DIR="/opt/${{ env.APP_NAME }}"
           mkdir -p $APP_DIR
-          cd $APP_DIR
+          cp docker-compose.prod.yaml $APP_DIR/docker-compose.prod.yaml
 
-          curl -o docker-compose.prod.yaml \
-            https://raw.githubusercontent.com/felipemelozx/TrackMoney/refs/heads/main/docker-compose.prod.yaml
+          cd $APP_DIR
           
           docker compose -f docker-compose.prod.yaml down
 
