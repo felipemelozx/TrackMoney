@@ -17,7 +17,6 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     name: Tests
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
