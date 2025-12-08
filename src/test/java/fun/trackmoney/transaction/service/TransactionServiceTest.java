@@ -337,89 +337,6 @@ class TransactionServiceTest {
   }
 
   @Test
-  void getBill_shouldReturnBillResponseDTO() {
-    var currentUser = UserEntityFactory.defaultUser();
-    var accountId = currentUser.getAccount().getAccountId();
-
-    var transaction1 = new TransactionEntity();
-    var transaction2 = new TransactionEntity();
-    var transaction3 = new TransactionEntity();
-
-    transaction1.setAmount(BigDecimal.valueOf(100));
-    transaction2.setAmount(BigDecimal.valueOf(100));
-    transaction3.setAmount(BigDecimal.valueOf(100));
-
-    LocalDateTime baseDate = LocalDate.now().atStartOfDay();
-
-
-    var day1 = baseDate.minusDays(8);
-    transaction1.setTransactionDate(day1);
-
-    var day2 = baseDate.plusDays(2);
-    transaction2.setTransactionDate(day2);
-
-    var day3 = baseDate.plusDays(8);
-    transaction3.setTransactionDate(day3);
-
-    CategoryEntity category = new CategoryEntity(1, "bill", "anyColor");
-
-    transaction1.setCategory(category);
-    transaction2.setCategory(category);
-    transaction3.setCategory(category);
-
-    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(transaction1, transaction2));
-
-    var result = transactionService.getBill(currentUser);
-
-    assertNotNull(result);
-    assertEquals(BigDecimal.valueOf(100), result.totalUpcoming());
-    assertEquals(BigDecimal.valueOf(100), result.bill());
-    assertEquals(BigDecimal.valueOf(100), result.bueSoon());
-  }
-
-  @Test
-  void getBill_shouldReturnEmptyBillResponseDTOWhenNoBills() {
-    UserEntity currentUser = UserEntityFactory.defaultUser();
-
-    var accountId = currentUser.getAccount().getAccountId();
-
-    var transaction1 = new TransactionEntity();
-    var transaction2 = new TransactionEntity();
-    var transaction3 = new TransactionEntity();
-
-    transaction1.setAmount(BigDecimal.valueOf(100));
-    transaction2.setAmount(BigDecimal.valueOf(100));
-    transaction3.setAmount(BigDecimal.valueOf(100));
-
-    LocalDateTime baseDate = LocalDate.now().atStartOfDay();
-
-
-    var day1 = baseDate.minusDays(8);
-    transaction1.setTransactionDate(day1);
-
-    var day2 = baseDate.plusDays(2);
-    transaction2.setTransactionDate(day2);
-
-    var day3 = baseDate.plusDays(8);
-    transaction3.setTransactionDate(day3);
-
-    CategoryEntity category = new CategoryEntity(1, "otherCategory", "anyColor");
-
-    transaction1.setCategory(category);
-    transaction2.setCategory(category);
-    transaction3.setCategory(category);
-
-    when(transactionRepository.findAllByAccountId(accountId)).thenReturn(List.of(transaction1, transaction2));
-
-    var result = transactionService.getBill(currentUser);
-
-    assertNotNull(result);
-    assertEquals(BigDecimal.valueOf(0), result.totalUpcoming());
-    assertEquals(BigDecimal.valueOf(0), result.bill());
-    assertEquals(BigDecimal.valueOf(0), result.bueSoon());
-  }
-
-  @Test
   void shouldReturnPaginatedTransactions() {
     Pageable pageable = PageRequest.of(0, 5);
     UserEntity user = UserEntityFactory.defaultUser();
@@ -564,8 +481,6 @@ class TransactionServiceTest {
     LocalDateTime endOfNow = LocalDateTime.now();
 
     TransactionEntity currentMonthTransaction = TransactionEntityFactory.defaultExpenseNow();
-    TransactionEntity lastMonthTransaction = TransactionEntityFactory.expenseLastMonth(BigDecimal.valueOf(50), "Last month");
-    TransactionEntity nextMonthTransaction = TransactionEntityFactory.expenseNextMonth(BigDecimal.valueOf(50), "Next month");
 
     List<TransactionEntity> expectedResult = List.of(currentMonthTransaction);
 

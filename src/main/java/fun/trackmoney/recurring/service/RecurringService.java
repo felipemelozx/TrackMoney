@@ -4,11 +4,13 @@ import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.Frequency;
+import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
 import fun.trackmoney.recurring.dtos.RecurringResponse;
 import fun.trackmoney.recurring.entity.RecurringEntity;
 import fun.trackmoney.recurring.mapper.RecurringMapper;
 import fun.trackmoney.recurring.repository.RecurringRepository;
+import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
@@ -18,10 +20,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -141,6 +146,44 @@ public class RecurringService {
   public List<RecurringResponse> findAll(UserEntity currentUser) {
     Integer accountId = currentUser.getAccount().getAccountId();
     return recurringMapper.toResponse(recurringRepository.findAllByAccountId(accountId));
+  }
+
+  public BillResponseDTO getBill(UserEntity currentUser) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+    var result = recurringRepository.findAllByAccountId(accountId);
+
+    BigDecimal totalBillsBeforeToday = result.stream()
+        .filter(recurring ->
+            recurring.getNextDate().toLocalDate().isBefore(LocalDate.now())
+                && recurring.getTransactionType().equals(TransactionType.EXPENSE)
+        )
+        .map(RecurringEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+    BigDecimal totalUpComing = result.stream()
+        .filter(recurring ->
+            recurring.getNextDate().toLocalDate().isAfter(LocalDate.now())
+                && recurring.getTransactionType().equals(TransactionType.EXPENSE)
+        )
+        .map(RecurringEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal totalBueSoon = result.stream()
+        .filter(recurring -> {
+          LocalDate date = recurring.getNextDate().toLocalDate();
+          return !date.isBefore(LocalDate.now())
+              && !date.isAfter(LocalDate.now().plusDays(7))
+              && recurring.getTransactionType().equals(TransactionType.EXPENSE);
+        })
+        .map(RecurringEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+    return new BillResponseDTO(totalBillsBeforeToday, totalUpComing, totalBueSoon);
   }
 
   @Transactional

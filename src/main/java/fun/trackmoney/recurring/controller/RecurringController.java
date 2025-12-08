@@ -3,6 +3,7 @@ package fun.trackmoney.recurring.controller;
 import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
 import fun.trackmoney.recurring.dtos.RecurringResponse;
 import fun.trackmoney.recurring.service.RecurringService;
+import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -103,5 +104,14 @@ public class RecurringController {
   ) {
     recurringService.delete(id, currentUser);
     return ResponseEntity.ok().body(ApiResponse.<Void>successWithNoContent().build());
+  }
+
+  @GetMapping("/bills")
+  public ResponseEntity<ApiResponse<BillResponseDTO>> getBills(@AuthenticationPrincipal UserEntity currentUser) {
+    BillResponseDTO bills = recurringService.getBill(currentUser);
+    return ResponseEntity.ok().body(ApiResponse.<BillResponseDTO>success()
+        .message("Successfully retrieved all bills")
+        .data(bills)
+        .build());
   }
 }

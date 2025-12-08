@@ -5,7 +5,6 @@ import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
@@ -184,46 +183,6 @@ public class TransactionService {
     }
     return transactionRepository.findAllByFilters(accountId, name, categoryId, startDate, endDate, pageable)
         .map(transactionMapper::toResponseDTO);
-  }
-
-  //TODO: remove this method and implementations other logic with new Entity: Bills
-  public BillResponseDTO getBill(UserEntity currentUser) {
-    Integer accountId = currentUser.getAccount().getAccountId();
-    var result = transactionRepository.findAllByAccountId(accountId);
-
-    BigDecimal totalBillsBeforeToday = result.stream()
-        .filter(transaction ->
-            transaction.getCategory().getName().equalsIgnoreCase("bill") &&
-                transaction.getTransactionDate().toLocalDate().isBefore(LocalDate.now())
-        )
-        .map(TransactionEntity::getAmount)
-        .filter(Objects::nonNull)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-
-    BigDecimal totalUpComing = result.stream()
-        .filter(transaction ->
-            transaction.getCategory().getName().equalsIgnoreCase("bill") &&
-                transaction.getTransactionDate().toLocalDate().isAfter(LocalDate.now())
-        )
-        .map(TransactionEntity::getAmount)
-        .filter(Objects::nonNull)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-    BigDecimal totalBueSoon = result.stream()
-        .filter(transaction -> {
-          LocalDate date = transaction.getTransactionDate().toLocalDate();
-          return transaction.getCategory().getName().equalsIgnoreCase("bill")
-              && !date.isBefore(LocalDate.now())
-              && !date.isAfter(LocalDate.now().plusDays(7));
-        })
-
-        .map(TransactionEntity::getAmount)
-        .filter(Objects::nonNull)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-
-    return new BillResponseDTO(totalBillsBeforeToday, totalUpComing, totalBueSoon);
   }
 
   public Map<CategoryEntity, List<TransactionResponseDTO>> getLast5TransactionsPerCategory(Integer accountId) {
