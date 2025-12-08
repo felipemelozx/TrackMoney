@@ -182,7 +182,6 @@ public class RecurringService {
         .filter(Objects::nonNull)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-
     return new BillResponseDTO(totalBillsBeforeToday, totalUpComing, totalBueSoon);
   }
 

@@ -6,6 +6,7 @@ import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.testutils.CreateRecurringRequestFactory;
 import fun.trackmoney.testutils.RecurringResponseFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
+import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -179,5 +181,24 @@ class RecurringControllerTest {
     assertEquals(null, body.getData(), "O campo data deve ser nulo para sucesso sem conteúdo.");
 
     verify(recurringService, times(1)).delete(1l, mockUser);
+  }
+
+  @Test
+  void getBills_shouldReturn200AndSuccessWithBillsResponse_whenGetBillIsSuccessful() {
+    UserEntity mockUser = UserEntityFactory.defaultUser();
+    BillResponseDTO billsResume = new BillResponseDTO(BigDecimal.TEN, BigDecimal.TEN, BigDecimal.TEN);
+    when(recurringService.getBill(mockUser)).thenReturn(billsResume);
+
+    ResponseEntity<ApiResponse<BillResponseDTO>> response = recurringController.getBills(mockUser);
+
+    assertNotNull(response);
+    assertEquals(HttpStatus.OK, response.getStatusCode(), "O Status HTTP deve ser 200 OK.");
+
+    ApiResponse<BillResponseDTO> body = response.getBody();
+    assertNotNull(body, "O corpo da resposta não deve ser nulo.");
+    assertTrue(body.isSuccess(), "O status da API deve ser SUCCESS.");
+    assertEquals(billsResume, body.getData(), "O campo data deve ser nulo para sucesso sem conteúdo.");
+
+    verify(recurringService, times(1)).getBill(mockUser);
   }
 }

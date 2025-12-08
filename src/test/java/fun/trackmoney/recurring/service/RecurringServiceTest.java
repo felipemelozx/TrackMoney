@@ -3,6 +3,7 @@ package fun.trackmoney.recurring.service;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.Frequency;
+import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
 import fun.trackmoney.recurring.dtos.RecurringResponse;
 import fun.trackmoney.recurring.entity.RecurringEntity;
@@ -29,9 +30,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.EmptyResultDataAccessException;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Collections;
@@ -408,5 +410,41 @@ class RecurringServiceTest {
     recurringService.delete(RECURRING_ID, currentUser);
 
     verify(recurringRepository, times(1)).deleteByIdAndAccountId(RECURRING_ID, accountId);
+  }
+
+  @Test
+  void getBill_shouldReturnBillResponseDTO() {
+    var currentUser = UserEntityFactory.defaultUser();
+    var accountId = currentUser.getAccount().getAccountId();
+
+    var recurring1 = new RecurringEntity();
+    var recurring2 = new RecurringEntity();
+    var recurring3 = new RecurringEntity();
+
+    recurring1.setAmount(BigDecimal.valueOf(100));
+    recurring2.setAmount(BigDecimal.valueOf(100));
+    recurring3.setAmount(BigDecimal.valueOf(100));
+
+    recurring1.setTransactionType(TransactionType.EXPENSE);
+    recurring2.setTransactionType(TransactionType.EXPENSE);
+    recurring3.setTransactionType(TransactionType.EXPENSE);
+
+    LocalDateTime baseDate = LocalDate.now().atStartOfDay();
+
+    recurring1.setNextDate(baseDate.minusDays(8));
+
+    recurring2.setNextDate(baseDate.plusDays(2));
+
+    recurring3.setNextDate(baseDate.plusDays(5));
+
+    when(recurringRepository.findAllByAccountId(accountId))
+        .thenReturn(List.of(recurring1, recurring2, recurring3));
+
+    var result = recurringService.getBill(currentUser);
+
+    assertNotNull(result);
+    assertEquals(BigDecimal.valueOf(200), result.totalUpcoming());
+    assertEquals(BigDecimal.valueOf(100), result.bill());
+    assertEquals(BigDecimal.valueOf(200), result.bueSoon());
   }
 }
