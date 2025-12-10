@@ -17,13 +17,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-
   private final SecurityFilterConfig securityFilter;
 
   public SecurityConfig(SecurityFilterConfig securityFilter) {
     this.securityFilter = securityFilter;
   }
-
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -42,7 +40,11 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.GET, "/auth/verify").hasAnyAuthority("USER_UNVERIFIED",
                 "RESET_PASSWORD",
                 "USER_ROLES")
-            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+            .requestMatchers(
+                "/swagger-ui.html",
+                "/swagger-ui/**",
+                "/v3/api-docs/**"
+            ).denyAll()
             .anyRequest().hasAuthority("USER_ROLES")
         )
         .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);

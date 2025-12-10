@@ -6,6 +6,7 @@ import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public class CreateTransactionDTOBuilder {
   public static CreateTransactionDTO defaultTransaction() {
@@ -15,7 +16,7 @@ public class CreateTransactionDTOBuilder {
         TransactionType.EXPENSE,
         BigDecimal.valueOf(100.00),
         "Compra no supermercado",
-        Timestamp.from(Instant.now())
+        LocalDateTime.now()
     );
   }
 
@@ -26,7 +27,7 @@ public class CreateTransactionDTOBuilder {
         TransactionType.INCOME,
         BigDecimal.valueOf(2500.00),
         "Recebimento de salário",
-        Timestamp.from(Instant.now())
+        LocalDateTime.now()
     );
   }
 
@@ -35,7 +36,7 @@ public class CreateTransactionDTOBuilder {
       TransactionType transactionType,
       BigDecimal amount,
       String description,
-      Timestamp transactionDate
+      LocalDateTime transactionDate
   ) {
     return new CreateTransactionDTO("", categoryId, transactionType, amount, description, transactionDate);
   }
