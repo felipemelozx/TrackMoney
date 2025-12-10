@@ -1,6 +1,5 @@
 package fun.trackmoney.transaction.controller;
 
-import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
@@ -135,17 +134,6 @@ public class TransactionController {
     var body = ApiResponse.<BigDecimal>success()
         .message("Get expense")
         .data(result)
-        .build();
-    return ResponseEntity.ok().body(body);
-  }
-
-  @GetMapping("/bill")
-  public ResponseEntity<ApiResponse<BillResponseDTO>> getBill(@AuthenticationPrincipal
-                                                              UserEntity currentUser) {
-    BillResponseDTO response = transactionService.getBill(currentUser);
-    var body = ApiResponse.<BillResponseDTO>success()
-        .message("Get bill")
-        .data(response)
         .build();
     return ResponseEntity.ok().body(body);
   }

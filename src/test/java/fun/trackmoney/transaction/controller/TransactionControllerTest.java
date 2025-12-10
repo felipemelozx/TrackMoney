@@ -4,7 +4,6 @@ import fun.trackmoney.testutils.CreateTransactionDTOBuilder;
 import fun.trackmoney.testutils.TransactionResponseDTOFactory;
 import fun.trackmoney.testutils.TransactionUpdateDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
-import fun.trackmoney.transaction.dto.BillResponseDTO;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
@@ -196,26 +195,6 @@ class TransactionControllerTest {
     assertTrue(body.isSuccess());
     assertEquals("Get expense", body.getMessage());
     assertEquals(expense, body.getData());
-    assertTrue(body.getErrors().isEmpty());
-  }
-
-  @Test
-  void getBill_shouldReturnBill() {
-    BillResponseDTO billResponseDTO = new BillResponseDTO(
-        BigDecimal.valueOf(800), BigDecimal.valueOf(800), BigDecimal.valueOf(800));
-    UserEntity currentUser = UserEntityFactory.defaultUser();
-    when(transactionService.getBill(currentUser)).thenReturn(billResponseDTO);
-
-    var response = transactionController.getBill(currentUser);
-
-    assertNotNull(response);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-
-    ApiResponse<BillResponseDTO> body = response.getBody();
-    assertNotNull(body);
-    assertTrue(body.isSuccess());
-    assertEquals("Get bill", body.getMessage());
-    assertEquals(billResponseDTO, body.getData());
     assertTrue(body.getErrors().isEmpty());
   }
 
