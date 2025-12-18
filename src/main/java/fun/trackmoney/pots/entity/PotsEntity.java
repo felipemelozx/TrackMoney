@@ -29,7 +29,7 @@ public class PotsEntity {
   private String name;
 
   private BigDecimal targetAmount;
-  private BigDecimal currentAmount;
+  private BigDecimal currentAmount = BigDecimal.ZERO;
 
   @ManyToOne
   @JoinColumn(name = "account_id")
