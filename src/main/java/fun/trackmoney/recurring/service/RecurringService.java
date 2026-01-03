@@ -103,24 +103,20 @@ public class RecurringService {
     };
   }
 
-  @Scheduled(cron = "0 0 0 * * *", zone = "Europe/London")
-  protected void recurringTransactions() {
-    while (true) {
-      List<RecurringEntity> recurrences = recurringRepository.findByNextDateBefore();
+  @Scheduled(cron = "0 0 0 * * *")
+  @Transactional
+  public void recurringTransactions() {
 
-      if (recurrences.isEmpty()) {
-        break;
-      }
+    List<RecurringEntity> recurrences =
+        recurringRepository.findByNextDateBefore(LocalDateTime.now());
 
-      for (RecurringEntity recurring : recurrences) {
-        processRecurring(recurring);
-      }
+    for (RecurringEntity recurring : recurrences) {
+      processRecurring(recurring);
     }
   }
 
-  @Transactional
-  protected void processRecurring(RecurringEntity recurring) {
 
+  protected void processRecurring(RecurringEntity recurring) {
     CreateTransactionDTO dto = new CreateTransactionDTO(
         recurring.getTransactionName(),
         recurring.getCategory().getCategoryId(),
@@ -130,18 +126,21 @@ public class RecurringService {
         recurring.getNextDate()
     );
 
-    TransactionResult result = transactionService.createTransaction(dto, recurring.getAccount().getUser());
+    TransactionResult result =
+        transactionService.createTransaction(dto, recurring.getAccount().getUser());
 
     if (result instanceof TransactionFailure failure) {
-      throw new RuntimeException("Failed to create transaction: " + failure.error());
+      throw new IllegalStateException("Failed to create transaction: " + failure.error());
     }
 
-    LocalDateTime next = calculateNextRun(recurring.getFrequency(), recurring.getNextDate());
+    LocalDateTime next = calculateNextRun(
+        recurring.getFrequency(), recurring.getNextDate());
+
     recurring.setLastDate(recurring.getNextDate());
     recurring.setNextDate(next);
-
     recurringRepository.save(recurring);
   }
+
 
   public List<RecurringResponse> findAll(UserEntity currentUser) {
     Integer accountId = currentUser.getAccount().getAccountId();

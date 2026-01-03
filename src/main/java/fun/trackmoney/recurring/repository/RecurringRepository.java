@@ -6,16 +6,18 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface RecurringRepository extends JpaRepository<RecurringEntity, Long> {
 
-  @Query(
-      value = "SELECT * FROM tb_recurring r WHERE DATE(r.next_date) <= CURRENT_DATE",
-      nativeQuery = true
-  )
-  List<RecurringEntity> findByNextDateBefore();
+  @Query("""
+        SELECT r
+        FROM RecurringEntity r 
+        WHERE r.nextDate <= :currentDate
+      """)
+  List<RecurringEntity> findByNextDateBefore(@Param("currentDate") LocalDateTime currentDate);
 
   @Query("SELECT r FROM RecurringEntity r WHERE r.id = :id AND r.account.id = :accountId")
   Optional<RecurringEntity> findByIdAndAccount(@Param("id") Long id, @Param("accountId") Integer accountId);
