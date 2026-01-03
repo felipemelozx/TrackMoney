@@ -250,15 +250,14 @@ class RecurringServiceTest {
     RecurringEntity recurring2 = RecurringEntityFactory.defaultEntity();
     List<RecurringEntity> recurrences = List.of(recurring1, recurring2);
 
-    when(recurringRepository.findByNextDateBefore())
-        .thenReturn(recurrences)
-        .thenReturn(Collections.emptyList());
+    when(recurringRepository.findByNextDateBefore(any(LocalDateTime.class)))
+        .thenReturn(recurrences);
 
     doNothing().when(spyService).processRecurring(any(RecurringEntity.class));
 
     spyService.recurringTransactions();
 
-    verify(recurringRepository, times(2)).findByNextDateBefore();
+    verify(recurringRepository, times(1)).findByNextDateBefore(any(LocalDateTime.class));
 
     verify(spyService, times(1)).processRecurring(recurring1);
     verify(spyService, times(1)).processRecurring(recurring2);
