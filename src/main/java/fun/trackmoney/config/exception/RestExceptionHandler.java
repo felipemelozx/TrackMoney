@@ -3,7 +3,6 @@ package fun.trackmoney.config.exception;
 import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.budget.exception.BudgetsNotFoundException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
-import fun.trackmoney.goal.exception.GoalsNotFoundException;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
@@ -104,18 +103,6 @@ public class RestExceptionHandler {
 
   @ExceptionHandler(TransactionNotFoundException.class)
   public ResponseEntity<ApiResponse<List<CustomFieldError>>> transactionNotFound(TransactionNotFoundException ex) {
-    return ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(
-            ApiResponse.<List<CustomFieldError>>failure()
-                .message(ex.getMessage())
-                .errors(ex.getErrors())
-                .build()
-        );
-  }
-
-  @ExceptionHandler(GoalsNotFoundException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> goalsNotFound(GoalsNotFoundException ex) {
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
         .body(
