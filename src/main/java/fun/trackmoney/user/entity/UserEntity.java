@@ -1,5 +1,6 @@
 package fun.trackmoney.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fun.trackmoney.account.entity.AccountEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "tb_user")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class UserEntity {
 
   @Id

@@ -1,5 +1,6 @@
 package fun.trackmoney.transaction.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tb_transaction")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TransactionEntity {
 
   @Id

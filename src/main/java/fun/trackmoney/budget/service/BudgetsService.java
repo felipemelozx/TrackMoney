@@ -34,7 +34,8 @@ public class BudgetsService {
   public BudgetsService(BudgetsRepository budgetsRepository,
                         BudgetMapper budgetMapper,
                         CategoryService categoryService,
-                        TransactionService transactionService, AccountMapper accountMapper) {
+                        TransactionService transactionService,
+                        AccountMapper accountMapper) {
     this.budgetsRepository = budgetsRepository;
     this.budgetMapper = budgetMapper;
     this.categoryService = categoryService;
@@ -159,7 +160,6 @@ public class BudgetsService {
   public void deleteById(Integer id, UserEntity currentUser) {
     budgetsRepository.deleteByBudgetIdAndAccount(id, currentUser.getAccount());
   }
-
 
   public int getCurrentAmountWested(CategoryEntity category, List<TransactionEntity> transactions) {
     int sum = 0;

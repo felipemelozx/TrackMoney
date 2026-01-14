@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -70,4 +71,33 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
       "WHERE t.transactionDate >= :startDate " +
       "AND t.transactionDate <= :endDate")
   List<TransactionEntity> findAllBetweenDates(LocalDateTime startDate, LocalDateTime endDate);
+
+  @Query("""
+      SELECT t FROM TransactionEntity t
+      WHERE t.account.accountId = :accountId
+        AND t.transactionDate >= :startDate
+        AND t.transactionDate <= :endDate
+      ORDER BY t.transactionDate ASC
+      """)
+  List<TransactionEntity> findAllByAccountIdAndDateRange(
+      @Param("accountId") Integer accountId,
+      @Param("startDate") LocalDateTime startDate,
+      @Param("endDate") LocalDateTime endDate
+  );
+
+  @Query("""
+      SELECT COALESCE(SUM(t.amount), 0)
+      FROM TransactionEntity t
+      WHERE t.account.accountId = :accountId
+        AND t.category.categoryId = :categoryId
+        AND t.transactionType = 'EXPENSE'
+        AND t.transactionDate >= :startDate
+        AND t.transactionDate <= :endDate
+      """)
+  BigDecimal sumExpensesByCategoryAndDateRange(
+      @Param("accountId") Integer accountId,
+      @Param("categoryId") Integer categoryId,
+      @Param("startDate") LocalDateTime startDate,
+      @Param("endDate") LocalDateTime endDate
+  );
 }
