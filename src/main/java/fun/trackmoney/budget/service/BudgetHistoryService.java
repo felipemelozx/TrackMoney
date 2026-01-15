@@ -1,13 +1,16 @@
 package fun.trackmoney.budget.service;
 
+import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
+import fun.trackmoney.budget.mapper.BudgetHistoryMapper;
 import fun.trackmoney.budget.repository.BudgetHistoryRepository;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.transaction.entity.TransactionEntity;
+import fun.trackmoney.transaction.mapper.TransactionSimpleMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.entity.UserEntity;
 import org.slf4j.Logger;
@@ -33,14 +36,20 @@ public class BudgetHistoryService {
   private final BudgetHistoryRepository budgetHistoryRepository;
   private final BudgetsRepository budgetsRepository;
   private final TransactionRepository transactionRepository;
+  private final TransactionSimpleMapper transactionSimpleMapper;
+  private final BudgetHistoryMapper budgetHistoryMapper;
 
   public BudgetHistoryService(
       BudgetHistoryRepository budgetHistoryRepository,
       BudgetsRepository budgetsRepository,
-      TransactionRepository transactionRepository) {
+      TransactionRepository transactionRepository,
+      TransactionSimpleMapper transactionSimpleMapper,
+      BudgetHistoryMapper budgetHistoryMapper) {
     this.budgetHistoryRepository = budgetHistoryRepository;
     this.budgetsRepository = budgetsRepository;
     this.transactionRepository = transactionRepository;
+    this.transactionSimpleMapper = transactionSimpleMapper;
+    this.budgetHistoryMapper = budgetHistoryMapper;
   }
 
   /**
@@ -202,11 +211,10 @@ public class BudgetHistoryService {
     BigDecimal targetAmount = calculateTargetAmount(totalIncome, percent);
     BigDecimal spentAmount = getSpentAmount(accountId, category, startDate, endDate);
     BigDecimal remainingAmount = calculateRemainingAmount(targetAmount, spentAmount);
-    BigDecimal percentageUsed = calculatePercentageUsed(spentAmount, targetAmount);
     BudgetStatus status = determineBudgetStatus(spentAmount, targetAmount);
 
     return buildBudgetHistoryEntity(budget, category, month, year, percent,
-        targetAmount, spentAmount, remainingAmount, totalIncome, percentageUsed, status);
+        targetAmount, spentAmount, remainingAmount, totalIncome, status);
   }
 
   private BigDecimal calculateTargetAmount(BigDecimal totalIncome, short percent) {
@@ -230,15 +238,6 @@ public class BudgetHistoryService {
     return targetAmount.subtract(spentAmount);
   }
 
-  private BigDecimal calculatePercentageUsed(BigDecimal spentAmount, BigDecimal targetAmount) {
-    if (targetAmount.compareTo(BigDecimal.ZERO) > 0) {
-      return spentAmount
-          .multiply(HUNDRED)
-          .divide(targetAmount, 2, RoundingMode.HALF_UP);
-    }
-    return BigDecimal.ZERO;
-  }
-
   private BudgetStatus determineBudgetStatus(BigDecimal spentAmount, BigDecimal targetAmount) {
     return spentAmount.compareTo(targetAmount) > 0
         ? BudgetStatus.EXCEEDED
@@ -255,7 +254,6 @@ public class BudgetHistoryService {
       BigDecimal spentAmount,
       BigDecimal remainingAmount,
       BigDecimal totalIncome,
-      BigDecimal percentageUsed,
       BudgetStatus status) {
     return new BudgetHistoryEntity()
         .setBudget(budget)
@@ -268,7 +266,6 @@ public class BudgetHistoryService {
         .setSpentAmount(spentAmount)
         .setRemainingAmount(remainingAmount)
         .setTotalIncome(totalIncome)
-        .setPercentageUsed(percentageUsed)
         .setStatus(status);
   }
 
@@ -302,5 +299,62 @@ public class BudgetHistoryService {
     // For now, just return current year - 1 as a safe starting point
     // In a real implementation, you might want to track when budgets were created
     return LocalDate.now().minusMonths(1);
+  }
+
+  /**
+   * Get expense transactions for a specific category and date range
+   * These transactions contribute to the spentAmount in budget history
+   */
+  private List<TransactionEntity> getExpenseTransactionsForBudget(
+      Integer accountId,
+      Integer categoryId,
+      LocalDateTime startDate,
+      LocalDateTime endDate) {
+    return transactionRepository.findExpensesByCategoryAndDateRange(
+        accountId, categoryId, startDate, endDate
+    );
+  }
+
+  /**
+   * Enrich budget history entities with their associated transactions
+   */
+  public List<BudgetHistoryResponseDTO> enrichWithTransactions(
+      List<BudgetHistoryEntity> historyEntities) {
+
+    return historyEntities.stream()
+        .map(entity -> {
+          LocalDateTime startDate = LocalDateTime.of(
+              entity.getReferenceYear(), entity.getReferenceMonth(), 1, 0, 0);
+          LocalDateTime endDate = YearMonth.of(
+              entity.getReferenceYear(), entity.getReferenceMonth())
+              .atEndOfMonth().atTime(23, 59, 59);
+
+          List<TransactionEntity> transactions = getExpenseTransactionsForBudget(
+              entity.getAccount().getAccountId(),
+              entity.getCategory().getCategoryId(),
+              startDate, endDate
+          ).stream()
+              .limit(5)
+              .toList();
+
+          BudgetHistoryResponseDTO dto = budgetHistoryMapper.entityToResponseDTO(entity);
+
+          return new BudgetHistoryResponseDTO(
+              dto.historyId(),
+              dto.budgetId(),
+              dto.category(),
+              dto.referenceMonth(),
+              dto.referenceYear(),
+              dto.percent(),
+              dto.targetAmount(),
+              dto.spentAmount(),
+              dto.remainingAmount(),
+              dto.totalIncome(),
+              transactionSimpleMapper.entityListToSimpleDTOList(transactions),
+              dto.status(),
+              dto.createdAt()
+          );
+        })
+        .toList();
   }
 }

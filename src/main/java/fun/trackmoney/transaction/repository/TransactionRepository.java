@@ -100,4 +100,20 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate
   );
+
+  @Query("""
+      SELECT t FROM TransactionEntity t
+      WHERE t.account.accountId = :accountId
+        AND t.category.categoryId = :categoryId
+        AND t.transactionType = 'EXPENSE'
+        AND t.transactionDate >= :startDate
+        AND t.transactionDate <= :endDate
+      ORDER BY t.transactionDate DESC
+      """)
+  List<TransactionEntity> findExpensesByCategoryAndDateRange(
+      @Param("accountId") Integer accountId,
+      @Param("categoryId") Integer categoryId,
+      @Param("startDate") LocalDateTime startDate,
+      @Param("endDate") LocalDateTime endDate
+  );
 }

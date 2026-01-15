@@ -5,7 +5,6 @@ import fun.trackmoney.budget.dtos.BudgetHistoryGenerationResponse;
 import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
-import fun.trackmoney.budget.mapper.BudgetHistoryMapper;
 import fun.trackmoney.budget.service.BudgetHistoryService;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.testutils.CategoryEntityFactory;
@@ -36,9 +35,6 @@ class BudgetHistoryControllerTest {
   @Mock
   private BudgetHistoryService budgetHistoryService;
 
-  @Mock
-  private BudgetHistoryMapper budgetHistoryMapper;
-
   @InjectMocks
   private BudgetHistoryController budgetHistoryController;
 
@@ -60,7 +56,6 @@ class BudgetHistoryControllerTest {
         .setSpentAmount(BigDecimal.valueOf(800))
         .setRemainingAmount(BigDecimal.valueOf(200))
         .setTotalIncome(BigDecimal.valueOf(5000))
-        .setPercentageUsed(BigDecimal.valueOf(80.00))
         .setStatus(BudgetStatus.WITHIN_LIMIT)
         .setCategory(category);
 
@@ -75,7 +70,7 @@ class BudgetHistoryControllerTest {
         BigDecimal.valueOf(800),
         BigDecimal.valueOf(200),
         BigDecimal.valueOf(5000),
-        BigDecimal.valueOf(80.00),
+        List.of(),
         BudgetStatus.WITHIN_LIMIT,
         null
     );
@@ -121,7 +116,7 @@ class BudgetHistoryControllerTest {
     List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
 
     when(budgetHistoryService.getAllHistory(mockUser)).thenReturn(historyList);
-    when(budgetHistoryMapper.entityListToResponseList(historyList)).thenReturn(dtoList);
+    when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
         budgetHistoryController.getHistory(mockUser, null, null, null, null);
@@ -131,7 +126,7 @@ class BudgetHistoryControllerTest {
     assertTrue(response.getBody().isSuccess());
     assertEquals(dtoList, response.getBody().getData());
     verify(budgetHistoryService, times(1)).getAllHistory(mockUser);
-    verify(budgetHistoryMapper, times(1)).entityListToResponseList(historyList);
+    verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
   }
 
   @Test
@@ -141,7 +136,7 @@ class BudgetHistoryControllerTest {
 
     when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 3, 2025))
         .thenReturn(historyList);
-    when(budgetHistoryMapper.entityListToResponseList(historyList)).thenReturn(dtoList);
+    when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
         budgetHistoryController.getHistory(mockUser, (short) 1, 2025, (short) 3, 2025);
@@ -151,7 +146,7 @@ class BudgetHistoryControllerTest {
     assertTrue(response.getBody().isSuccess());
     assertEquals(dtoList, response.getBody().getData());
     verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 3, 2025);
-    verify(budgetHistoryMapper, times(1)).entityListToResponseList(historyList);
+    verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
   }
 
   @Test
@@ -161,7 +156,7 @@ class BudgetHistoryControllerTest {
 
     when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025))
         .thenReturn(historyList);
-    when(budgetHistoryMapper.entityListToResponseList(historyList)).thenReturn(dtoList);
+    when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
         budgetHistoryController.getHistoryByMonth((short) 1, 2025, mockUser);
@@ -172,14 +167,14 @@ class BudgetHistoryControllerTest {
     assertEquals("Retrieved budget history for 1/2025", response.getBody().getMessage());
     assertEquals(dtoList, response.getBody().getData());
     verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025);
-    verify(budgetHistoryMapper, times(1)).entityListToResponseList(historyList);
+    verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
   }
 
   @Test
   void getHistoryByMonth_shouldReturnEmptyList_whenNoHistoryFound() {
     when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025))
         .thenReturn(Collections.emptyList());
-    when(budgetHistoryMapper.entityListToResponseList(Collections.emptyList()))
+    when(budgetHistoryService.enrichWithTransactions(Collections.emptyList()))
         .thenReturn(Collections.emptyList());
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =

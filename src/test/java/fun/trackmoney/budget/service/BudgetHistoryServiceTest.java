@@ -1,8 +1,10 @@
 package fun.trackmoney.budget.service;
 
+import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
+import fun.trackmoney.budget.mapper.BudgetHistoryMapper;
 import fun.trackmoney.budget.repository.BudgetHistoryRepository;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.entity.CategoryEntity;
@@ -11,7 +13,9 @@ import fun.trackmoney.testutils.BudgetsEntityFactory;
 import fun.trackmoney.testutils.CategoryEntityFactory;
 import fun.trackmoney.testutils.TransactionEntityFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
+import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
 import fun.trackmoney.transaction.entity.TransactionEntity;
+import fun.trackmoney.transaction.mapper.TransactionSimpleMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.entity.UserEntity;
 import org.junit.jupiter.api.Test;
@@ -37,6 +41,10 @@ class BudgetHistoryServiceTest {
   private BudgetsRepository budgetsRepository;
   @Mock
   private TransactionRepository transactionRepository;
+  @Mock
+  private TransactionSimpleMapper transactionSimpleMapper;
+  @Mock
+  private BudgetHistoryMapper budgetHistoryMapper;
 
   @InjectMocks
   private BudgetHistoryService budgetHistoryService;
@@ -171,6 +179,76 @@ class BudgetHistoryServiceTest {
     assertDoesNotThrow(() -> budgetHistoryService.recoverMissingHistory());
   }
 
+  @Test
+  void enrichWithTransactions_shouldLimitTo5Transactions() {
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+    UserEntity user = UserEntityFactory.defaultUser();
+    BudgetHistoryEntity history = createMockHistory(1, (short) 1, 2025);
+
+    // Create 10 transactions
+    List<TransactionEntity> transactions = List.of(
+        new TransactionEntity(1, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 1", LocalDateTime.of(2025, 1, 15, 10, 0)),
+        new TransactionEntity(2, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 2", LocalDateTime.of(2025, 1, 14, 10, 0)),
+        new TransactionEntity(3, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 3", LocalDateTime.of(2025, 1, 13, 10, 0)),
+        new TransactionEntity(4, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 4", LocalDateTime.of(2025, 1, 12, 10, 0)),
+        new TransactionEntity(5, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 5", LocalDateTime.of(2025, 1, 11, 10, 0)),
+        new TransactionEntity(6, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 6", LocalDateTime.of(2025, 1, 10, 10, 0)),
+        new TransactionEntity(7, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 7", LocalDateTime.of(2025, 1, 9, 10, 0)),
+        new TransactionEntity(8, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 8", LocalDateTime.of(2025, 1, 8, 10, 0)),
+        new TransactionEntity(9, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 9", LocalDateTime.of(2025, 1, 7, 10, 0)),
+        new TransactionEntity(10, user.getAccount(), category, TransactionType.EXPENSE,
+            BigDecimal.valueOf(100), "Transaction 10", LocalDateTime.of(2025, 1, 6, 10, 0))
+    );
+
+    when(transactionRepository.findExpensesByCategoryAndDateRange(
+        anyInt(), anyInt(), any(), any()))
+        .thenReturn(transactions);
+
+    TransactionSimpleDTO dto1 = new TransactionSimpleDTO(1, "Transaction 1",
+        BigDecimal.valueOf(100), LocalDateTime.of(2025, 1, 15, 10, 0));
+    TransactionSimpleDTO dto2 = new TransactionSimpleDTO(2, "Transaction 2",
+        BigDecimal.valueOf(100), LocalDateTime.of(2025, 1, 14, 10, 0));
+    TransactionSimpleDTO dto3 = new TransactionSimpleDTO(3, "Transaction 3",
+        BigDecimal.valueOf(100), LocalDateTime.of(2025, 1, 13, 10, 0));
+    TransactionSimpleDTO dto4 = new TransactionSimpleDTO(4, "Transaction 4",
+        BigDecimal.valueOf(100), LocalDateTime.of(2025, 1, 12, 10, 0));
+    TransactionSimpleDTO dto5 = new TransactionSimpleDTO(5, "Transaction 5",
+        BigDecimal.valueOf(100), LocalDateTime.of(2025, 1, 11, 10, 0));
+
+    when(transactionSimpleMapper.entityListToSimpleDTOList(any()))
+        .thenReturn(List.of(dto1, dto2, dto3, dto4, dto5));
+
+    BudgetHistoryResponseDTO mockResponse = new BudgetHistoryResponseDTO(
+        1, 1, category, (short) 1, 2025, (short) 20,
+        BigDecimal.valueOf(1000), BigDecimal.valueOf(800), BigDecimal.valueOf(200),
+        BigDecimal.valueOf(5000), List.of(dto1, dto2, dto3, dto4, dto5),
+        BudgetStatus.WITHIN_LIMIT, null
+    );
+
+    when(budgetHistoryMapper.entityToResponseDTO(any())).thenReturn(mockResponse);
+
+    List<BudgetHistoryResponseDTO> result = budgetHistoryService.enrichWithTransactions(
+        List.of(history)
+    );
+
+    assertEquals(1, result.size());
+    assertEquals(5, result.get(0).transactions().size());
+    assertEquals("Transaction 1", result.get(0).transactions().get(0).transactionName());
+
+    // Verify that mapper was called with only 5 transactions (limited list)
+    verify(transactionSimpleMapper).entityListToSimpleDTOList(argThat(list ->
+        list != null && list.size() == 5));
+  }
+
   private BudgetHistoryEntity createMockHistory(Integer id, Short month, Integer year) {
     CategoryEntity category = CategoryEntityFactory.defaultCategory();
     UserEntity user = UserEntityFactory.defaultUser();
@@ -192,7 +270,6 @@ class BudgetHistoryServiceTest {
         .setSpentAmount(BigDecimal.valueOf(800))
         .setRemainingAmount(BigDecimal.valueOf(200))
         .setTotalIncome(BigDecimal.valueOf(5000))
-        .setPercentageUsed(BigDecimal.valueOf(80.00))
         .setStatus(BudgetStatus.WITHIN_LIMIT);
   }
 }

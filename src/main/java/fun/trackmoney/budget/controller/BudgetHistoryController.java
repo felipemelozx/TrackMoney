@@ -4,7 +4,6 @@ import fun.trackmoney.budget.dtos.BudgetHistoryGenerateDTO;
 import fun.trackmoney.budget.dtos.BudgetHistoryGenerationResponse;
 import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
-import fun.trackmoney.budget.mapper.BudgetHistoryMapper;
 import fun.trackmoney.budget.service.BudgetHistoryService;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -26,12 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class BudgetHistoryController {
 
   private final BudgetHistoryService budgetHistoryService;
-  private final BudgetHistoryMapper budgetHistoryMapper;
 
-  public BudgetHistoryController(BudgetHistoryService budgetHistoryService,
-                                   BudgetHistoryMapper budgetHistoryMapper) {
+  public BudgetHistoryController(BudgetHistoryService budgetHistoryService) {
     this.budgetHistoryService = budgetHistoryService;
-    this.budgetHistoryMapper = budgetHistoryMapper;
   }
 
   @PostMapping("/generate")
@@ -78,7 +74,7 @@ public class BudgetHistoryController {
       history = budgetHistoryService.getAllHistory(currentUser);
     }
 
-    List<BudgetHistoryResponseDTO> dtos = budgetHistoryMapper.entityListToResponseList(history);
+    List<BudgetHistoryResponseDTO> dtos = budgetHistoryService.enrichWithTransactions(history);
 
     return ResponseEntity.ok().body(
         ApiResponse.<List<BudgetHistoryResponseDTO>>success()
@@ -94,7 +90,7 @@ public class BudgetHistoryController {
       @PathVariable Integer year,
       @AuthenticationPrincipal UserEntity currentUser) {
 
-    List<BudgetHistoryResponseDTO> dtos = budgetHistoryMapper.entityListToResponseList(
+    List<BudgetHistoryResponseDTO> dtos = budgetHistoryService.enrichWithTransactions(
         budgetHistoryService.getHistoryByDateRange(
             currentUser, month, year, month, year
         )

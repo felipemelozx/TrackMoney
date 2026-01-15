@@ -62,9 +62,6 @@ public class BudgetHistoryEntity {
   @Column(name = "total_income", nullable = false, precision = 19, scale = 4)
   private BigDecimal totalIncome;
 
-  @Column(name = "percentage_used", nullable = false, precision = 5, scale = 2)
-  private BigDecimal percentageUsed;
-
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false, length = 20)
   private BudgetStatus status;
@@ -176,15 +173,6 @@ public class BudgetHistoryEntity {
 
   public BudgetHistoryEntity setTotalIncome(BigDecimal totalIncome) {
     this.totalIncome = totalIncome;
-    return this;
-  }
-
-  public BigDecimal getPercentageUsed() {
-    return percentageUsed;
-  }
-
-  public BudgetHistoryEntity setPercentageUsed(BigDecimal percentageUsed) {
-    this.percentageUsed = percentageUsed;
     return this;
   }
 

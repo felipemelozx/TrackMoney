@@ -2,8 +2,10 @@ package fun.trackmoney.budget.dtos;
 
 import fun.trackmoney.budget.enums.BudgetStatus;
 import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record BudgetHistoryResponseDTO(
     Integer historyId,
@@ -16,7 +18,7 @@ public record BudgetHistoryResponseDTO(
     BigDecimal spentAmount,
     BigDecimal remainingAmount,
     BigDecimal totalIncome,
-    BigDecimal percentageUsed,
+    List<TransactionSimpleDTO> transactions,
     BudgetStatus status,
     LocalDateTime createdAt
 ) {}
