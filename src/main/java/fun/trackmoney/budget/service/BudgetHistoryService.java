@@ -136,7 +136,7 @@ public class BudgetHistoryService {
 
     // Check if history already exists
     if (budgetHistoryRepository.existsHistoryForAccountAndMonth(accountId, (short) month, year)) {
-      LOG.info("History already exists for account {}", accountId);
+      LOG.info("History already exists for this account");
       return GenerationResultDTO.alreadyExists();
     }
 
@@ -159,11 +159,11 @@ public class BudgetHistoryService {
     );
 
     if (!hasTransactions) {
-      LOG.info("No transactions found for account {} in specified period", accountId);
+      LOG.info("No transactions found for this account in specified period");
       return GenerationResultDTO.noTransactions();
     }
 
-    LOG.info("Generating history for account {}", accountId);
+    LOG.info("Generating history for account");
     int count = generateHistoryForAccount(accountId, (short) month, year);
     return GenerationResultDTO.success(count);
   }
@@ -423,6 +423,6 @@ public class BudgetHistoryService {
     }
 
     budgetHistoryRepository.delete(history);
-    LOG.info("Deleted budget history entry with id: {}", historyId);
+    LOG.info("Deleted budget history entry");
   }
 }
