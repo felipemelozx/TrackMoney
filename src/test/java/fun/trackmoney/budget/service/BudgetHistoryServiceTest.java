@@ -10,9 +10,7 @@ import fun.trackmoney.budget.repository.BudgetHistoryRepository;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.testutils.BudgetsEntityFactory;
 import fun.trackmoney.testutils.CategoryEntityFactory;
-import fun.trackmoney.testutils.TransactionEntityFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
 import fun.trackmoney.transaction.entity.TransactionEntity;
@@ -151,10 +149,9 @@ class BudgetHistoryServiceTest {
 
   @Test
   void getAllHistory_shouldReturnListOfHistory() {
-    UserEntity user = UserEntityFactory.defaultUser();
-
     BudgetHistoryEntity history1 = createMockHistory(1, (short) 1, 2025);
     BudgetHistoryEntity history2 = createMockHistory(2, (short) 2, 2025);
+    UserEntity user = UserEntityFactory.defaultUser();
 
     when(budgetHistoryRepository
         .findByAccountAccountIdOrderByReferenceYearDescReferenceMonthDesc(user.getAccount().getAccountId()))
@@ -173,7 +170,6 @@ class BudgetHistoryServiceTest {
 
     BudgetHistoryEntity history1 = createMockHistory(1, (short) 1, 2025);
     BudgetHistoryEntity history2 = createMockHistory(2, (short) 2, 2025);
-    BudgetHistoryEntity history3 = createMockHistory(3, (short) 3, 2025);
 
     when(budgetHistoryRepository.findByAccountAndDateRange(
         user.getAccount().getAccountId(), 2025, (short) 1, 2025, (short) 2))
@@ -522,9 +518,6 @@ class BudgetHistoryServiceTest {
     when(budgetsRepository.findAllByAccountAccountId(user2.getAccount().getAccountId()))
         .thenReturn(List.of(budget2));
 
-    LocalDateTime startDate = LocalDateTime.of(year, month, 1, 0, 0);
-    LocalDateTime endDate = YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59);
-
     when(transactionRepository.findAllByAccountIdAndDateRange(anyInt(), any(), any()))
         .thenReturn(List.of(new TransactionEntity()
             .setAmount(BigDecimal.valueOf(5000))
@@ -683,7 +676,6 @@ class BudgetHistoryServiceTest {
   @Test
   void enrichWithTransactions_shouldHandleEmptyTransactionsList() {
     CategoryEntity category = CategoryEntityFactory.defaultCategory();
-    UserEntity user = UserEntityFactory.defaultUser();
     BudgetHistoryEntity history = createMockHistory(1, (short) 1, 2025);
 
     when(transactionRepository.findExpensesByCategoryAndDateRange(

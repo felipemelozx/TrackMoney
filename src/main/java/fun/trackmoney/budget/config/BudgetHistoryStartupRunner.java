@@ -1,12 +1,16 @@
 package fun.trackmoney.budget.config;
 
 import fun.trackmoney.budget.service.BudgetHistoryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BudgetHistoryStartupRunner implements ApplicationRunner {
+
+  private static final Logger LOG = LoggerFactory.getLogger(BudgetHistoryStartupRunner.class);
 
   private final BudgetHistoryService budgetHistoryService;
 
@@ -19,7 +23,7 @@ public class BudgetHistoryStartupRunner implements ApplicationRunner {
     try {
       budgetHistoryService.recoverMissingHistory();
     } catch (Exception e) {
-      System.err.println("Error recovering budget history on startup: " + e.getMessage());
+      LOG.error("Error recovering budget history on startup: {}", e.getMessage(), e);
     }
   }
 }

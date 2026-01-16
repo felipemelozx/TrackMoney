@@ -136,7 +136,7 @@ public class BudgetHistoryService {
 
     // Check if history already exists
     if (budgetHistoryRepository.existsHistoryForAccountAndMonth(accountId, (short) month, year)) {
-      LOG.info("History already exists for account {} and month {}/{}", accountId, month, year);
+      LOG.info("History already exists for account {}", accountId);
       return GenerationResultDTO.alreadyExists();
     }
 
@@ -144,7 +144,7 @@ public class BudgetHistoryService {
     YearMonth now = YearMonth.now();
     YearMonth targetMonth = YearMonth.of(year, month);
     if (targetMonth.equals(now)) {
-      LOG.info("Cannot generate history for current month {}/{}", month, year);
+      LOG.info("Cannot generate history for current month");
       return GenerationResultDTO.currentMonthNotAllowed();
     }
 
@@ -159,11 +159,11 @@ public class BudgetHistoryService {
     );
 
     if (!hasTransactions) {
-      LOG.info("No transactions found for account {} in month {}/{}", accountId, month, year);
+      LOG.info("No transactions found for account {} in specified period", accountId);
       return GenerationResultDTO.noTransactions();
     }
 
-    LOG.info("Generating history for account {} and month {}/{}", accountId, month, year);
+    LOG.info("Generating history for account {}", accountId);
     int count = generateHistoryForAccount(accountId, (short) month, year);
     return GenerationResultDTO.success(count);
   }
