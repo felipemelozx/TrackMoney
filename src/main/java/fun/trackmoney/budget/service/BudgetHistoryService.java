@@ -1,6 +1,7 @@
 package fun.trackmoney.budget.service;
 
 import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
+import fun.trackmoney.budget.dtos.GenerationResultDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
@@ -124,40 +125,86 @@ public class BudgetHistoryService {
 
   /**
    * Manual trigger - generates history for a specific month/year
+   * Only generates if:
+   * 1. History doesn't already exist for the month/year
+   * 2. The month/year is NOT the current month
+   * 3. There are transactions in the specified month/year
    */
   @Transactional
-  public int generateHistoryForMonth(UserEntity currentUser, int month, int year) {
+  public GenerationResultDTO generateHistoryForMonth(UserEntity currentUser, int month, int year) {
     Integer accountId = currentUser.getAccount().getAccountId();
 
+    // Check if history already exists
     if (budgetHistoryRepository.existsHistoryForAccountAndMonth(accountId, (short) month, year)) {
       LOG.info("History already exists for account {} and month {}/{}", accountId, month, year);
-      return 0;
+      return GenerationResultDTO.alreadyExists();
+    }
+
+    // Check if it's the current month
+    YearMonth now = YearMonth.now();
+    YearMonth targetMonth = YearMonth.of(year, month);
+    if (targetMonth.equals(now)) {
+      LOG.info("Cannot generate history for current month {}/{}", month, year);
+      return GenerationResultDTO.currentMonthNotAllowed();
+    }
+
+    // Check if there are transactions in the specified month
+    LocalDate monthStart = LocalDate.of(year, month, 1);
+    LocalDate monthEnd = targetMonth.atEndOfMonth();
+    LocalDateTime startDate = monthStart.atStartOfDay();
+    LocalDateTime endDate = monthEnd.atTime(23, 59, 59);
+
+    boolean hasTransactions = transactionRepository.existsByAccountIdAndDateRange(
+        accountId, startDate, endDate
+    );
+
+    if (!hasTransactions) {
+      LOG.info("No transactions found for account {} in month {}/{}", accountId, month, year);
+      return GenerationResultDTO.noTransactions();
     }
 
     LOG.info("Generating history for account {} and month {}/{}", accountId, month, year);
-    return generateHistoryForAccount(accountId, (short) month, year);
+    int count = generateHistoryForAccount(accountId, (short) month, year);
+    return GenerationResultDTO.success(count);
   }
 
   /**
    * Get all history for current user
+   * @param currentUser the authenticated user
+   * @param categoryId optional category filter
    */
-  public List<BudgetHistoryEntity> getAllHistory(UserEntity currentUser) {
+  public List<BudgetHistoryEntity> getAllHistory(UserEntity currentUser, Long categoryId) {
     Integer accountId = currentUser.getAccount().getAccountId();
-    return budgetHistoryRepository.findByAccountAccountIdOrderByReferenceYearDescReferenceMonthDesc(accountId);
+    if (categoryId == null) {
+      return budgetHistoryRepository.findByAccountAccountIdOrderByReferenceYearDescReferenceMonthDesc(accountId);
+    }
+    return budgetHistoryRepository.findByAccountAndOptionalCategoryId(accountId, categoryId);
   }
 
   /**
    * Get history by date range
+   * @param currentUser the authenticated user
+   * @param startMonth start month (inclusive)
+   * @param startYear start year (inclusive)
+   * @param endMonth end month (inclusive)
+   * @param endYear end year (inclusive)
+   * @param categoryId optional category filter
    */
   public List<BudgetHistoryEntity> getHistoryByDateRange(
       UserEntity currentUser,
       Short startMonth,
       Integer startYear,
       Short endMonth,
-      Integer endYear) {
+      Integer endYear,
+      Long categoryId) {
     Integer accountId = currentUser.getAccount().getAccountId();
-    return budgetHistoryRepository.findByAccountAndDateRange(
-        accountId, startYear, startMonth, endYear, endMonth
+    if (categoryId == null) {
+      return budgetHistoryRepository.findByAccountAndDateRange(
+          accountId, startYear, startMonth, endYear, endMonth
+      );
+    }
+    return budgetHistoryRepository.findByAccountAndDateRangeAndOptionalCategoryId(
+        accountId, startYear, startMonth, endYear, endMonth, categoryId
     );
   }
 
@@ -356,5 +403,26 @@ public class BudgetHistoryService {
           );
         })
         .toList();
+  }
+
+  /**
+   * Delete a budget history entry by ID
+   * Verifies that the history entry belongs to the current user's account
+   */
+  @Transactional
+  public void deleteHistoryById(UserEntity currentUser, Integer historyId) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    BudgetHistoryEntity history = budgetHistoryRepository.findById(historyId)
+        .orElseThrow(() -> new IllegalArgumentException(
+            "Budget history not found with id: " + historyId));
+
+    if (!history.getAccount().getAccountId().equals(accountId)) {
+      throw new IllegalArgumentException(
+          "Budget history does not belong to current user's account");
+    }
+
+    budgetHistoryRepository.delete(history);
+    LOG.info("Deleted budget history entry with id: {}", historyId);
   }
 }

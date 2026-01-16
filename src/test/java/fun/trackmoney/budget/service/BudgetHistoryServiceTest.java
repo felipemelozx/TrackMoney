@@ -1,6 +1,7 @@
 package fun.trackmoney.budget.service;
 
 import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
+import fun.trackmoney.budget.dtos.GenerationResultDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
@@ -59,9 +60,10 @@ class BudgetHistoryServiceTest {
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(true);
 
-    int result = budgetHistoryService.generateHistoryForMonth(user, month, year);
+    GenerationResultDTO result = budgetHistoryService.generateHistoryForMonth(user, month, year);
 
-    assertEquals(0, result);
+    assertTrue(result.isAlreadyExists());
+    assertEquals(0, result.generatedCount());
     verify(budgetHistoryRepository, never()).save(any());
   }
 
@@ -101,6 +103,10 @@ class BudgetHistoryServiceTest {
         user.getAccount().getAccountId(), startDate, endDate))
         .thenReturn(List.of(income, expense));
 
+    when(transactionRepository.existsByAccountIdAndDateRange(
+        user.getAccount().getAccountId(), startDate, endDate))
+        .thenReturn(true);
+
     when(transactionRepository.sumExpensesByCategoryAndDateRange(
         user.getAccount().getAccountId(), category.getCategoryId(), startDate, endDate))
         .thenReturn(BigDecimal.valueOf(800));
@@ -108,9 +114,10 @@ class BudgetHistoryServiceTest {
     when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    int result = budgetHistoryService.generateHistoryForMonth(user, month, year);
+    GenerationResultDTO result = budgetHistoryService.generateHistoryForMonth(user, month, year);
 
-    assertEquals(1, result);
+    assertTrue(result.isSuccess());
+    assertEquals(1, result.generatedCount());
     verify(budgetHistoryRepository).save(any(BudgetHistoryEntity.class));
   }
 
@@ -127,9 +134,16 @@ class BudgetHistoryServiceTest {
     when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
         .thenReturn(List.of());
 
-    int result = budgetHistoryService.generateHistoryForMonth(user, month, year);
+    LocalDateTime startDate = LocalDateTime.of(2025, 1, 1, 0, 0);
+    LocalDateTime endDate = LocalDateTime.of(2025, 1, 31, 23, 59, 59);
 
-    assertEquals(0, result);
+    when(transactionRepository.existsByAccountIdAndDateRange(
+        user.getAccount().getAccountId(), startDate, endDate))
+        .thenReturn(true);
+
+    GenerationResultDTO result = budgetHistoryService.generateHistoryForMonth(user, month, year);
+
+    assertEquals(0, result.generatedCount());
     verify(budgetHistoryRepository, never()).save(any());
   }
 
@@ -144,7 +158,7 @@ class BudgetHistoryServiceTest {
         .findByAccountAccountIdOrderByReferenceYearDescReferenceMonthDesc(user.getAccount().getAccountId()))
         .thenReturn(List.of(history2, history1));
 
-    List<BudgetHistoryEntity> result = budgetHistoryService.getAllHistory(user);
+    List<BudgetHistoryEntity> result = budgetHistoryService.getAllHistory(user, null);
 
     assertEquals(2, result.size());
     assertEquals(2025, result.get(0).getReferenceYear());
@@ -164,7 +178,7 @@ class BudgetHistoryServiceTest {
         .thenReturn(List.of(history2, history1));
 
     List<BudgetHistoryEntity> result = budgetHistoryService.getHistoryByDateRange(
-        user, (short) 1, 2025, (short) 2, 2025
+        user, (short) 1, 2025, (short) 2, 2025, null
     );
 
     assertEquals(2, result.size());

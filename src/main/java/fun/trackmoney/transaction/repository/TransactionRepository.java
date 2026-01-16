@@ -116,4 +116,17 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate
   );
+
+  @Query("""
+      SELECT COUNT(t) > 0
+      FROM TransactionEntity t
+      WHERE t.account.accountId = :accountId
+        AND t.transactionDate >= :startDate
+        AND t.transactionDate <= :endDate
+      """)
+  boolean existsByAccountIdAndDateRange(
+      @Param("accountId") Integer accountId,
+      @Param("startDate") LocalDateTime startDate,
+      @Param("endDate") LocalDateTime endDate
+  );
 }

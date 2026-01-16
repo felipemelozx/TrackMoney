@@ -50,5 +50,35 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
       @Param("year") Integer year
   );
 
+  @Query("""
+      SELECT bh FROM BudgetHistoryEntity bh
+      WHERE bh.account.accountId = :accountId
+        AND (:categoryId IS NULL OR bh.category.categoryId = :categoryId)
+      ORDER BY bh.referenceYear DESC, bh.referenceMonth DESC
+      """)
+  List<BudgetHistoryEntity> findByAccountAndOptionalCategoryId(
+      @Param("accountId") Integer accountId,
+      @Param("categoryId") Long categoryId
+  );
+
+  @Query("""
+      SELECT bh FROM BudgetHistoryEntity bh
+      WHERE bh.account.accountId = :accountId
+        AND bh.referenceYear >= :startYear
+        AND bh.referenceMonth >= :startMonth
+        AND bh.referenceYear <= :endYear
+        AND bh.referenceMonth <= :endMonth
+        AND (:categoryId IS NULL OR bh.category.categoryId = :categoryId)
+      ORDER BY bh.referenceYear DESC, bh.referenceMonth DESC
+      """)
+  List<BudgetHistoryEntity> findByAccountAndDateRangeAndOptionalCategoryId(
+      @Param("accountId") Integer accountId,
+      @Param("startYear") Integer startYear,
+      @Param("startMonth") Short startMonth,
+      @Param("endYear") Integer endYear,
+      @Param("endMonth") Short endMonth,
+      @Param("categoryId") Long categoryId
+  );
+
   void deleteByBudgetBudgetId(Integer budgetId);
 }

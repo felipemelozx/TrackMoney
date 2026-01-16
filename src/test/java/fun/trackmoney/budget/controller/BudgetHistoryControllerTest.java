@@ -3,6 +3,7 @@ package fun.trackmoney.budget.controller;
 import fun.trackmoney.budget.dtos.BudgetHistoryGenerateDTO;
 import fun.trackmoney.budget.dtos.BudgetHistoryGenerationResponse;
 import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
+import fun.trackmoney.budget.dtos.GenerationResultDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
 import fun.trackmoney.budget.service.BudgetHistoryService;
@@ -79,8 +80,9 @@ class BudgetHistoryControllerTest {
   @Test
   void generateHistory_shouldReturnCreated_whenHistoryGenerated() {
     BudgetHistoryGenerateDTO dto = new BudgetHistoryGenerateDTO(1, 2025);
+    GenerationResultDTO resultDTO = GenerationResultDTO.success(5);
     when(budgetHistoryService.generateHistoryForMonth(mockUser, dto.month(), dto.year()))
-        .thenReturn(5);
+        .thenReturn(resultDTO);
 
     ResponseEntity<ApiResponse<BudgetHistoryGenerationResponse>> response =
         budgetHistoryController.generateHistory(dto, mockUser);
@@ -96,8 +98,9 @@ class BudgetHistoryControllerTest {
   @Test
   void generateHistory_shouldReturnOk_whenHistoryAlreadyExists() {
     BudgetHistoryGenerateDTO dto = new BudgetHistoryGenerateDTO(1, 2025);
+    GenerationResultDTO resultDTO = GenerationResultDTO.alreadyExists();
     when(budgetHistoryService.generateHistoryForMonth(mockUser, dto.month(), dto.year()))
-        .thenReturn(0);
+        .thenReturn(resultDTO);
 
     ResponseEntity<ApiResponse<BudgetHistoryGenerationResponse>> response =
         budgetHistoryController.generateHistory(dto, mockUser);
@@ -105,7 +108,7 @@ class BudgetHistoryControllerTest {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
-    assertEquals("History already exists for this month or no budgets found", response.getBody().getMessage());
+    assertEquals("History already exists for this month", response.getBody().getMessage());
     assertEquals(0, response.getBody().getData().generatedCount());
     verify(budgetHistoryService, times(1)).generateHistoryForMonth(mockUser, dto.month(), dto.year());
   }
@@ -115,17 +118,17 @@ class BudgetHistoryControllerTest {
     List<BudgetHistoryEntity> historyList = Collections.singletonList(mockHistoryEntity);
     List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
 
-    when(budgetHistoryService.getAllHistory(mockUser)).thenReturn(historyList);
+    when(budgetHistoryService.getAllHistory(mockUser, null)).thenReturn(historyList);
     when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
-        budgetHistoryController.getHistory(mockUser, null, null, null, null);
+        budgetHistoryController.getHistory(mockUser, null, null, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals(dtoList, response.getBody().getData());
-    verify(budgetHistoryService, times(1)).getAllHistory(mockUser);
+    verify(budgetHistoryService, times(1)).getAllHistory(mockUser, null);
     verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
   }
 
@@ -134,18 +137,18 @@ class BudgetHistoryControllerTest {
     List<BudgetHistoryEntity> historyList = Collections.singletonList(mockHistoryEntity);
     List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
 
-    when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 3, 2025))
+    when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 3, 2025, null))
         .thenReturn(historyList);
     when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
-        budgetHistoryController.getHistory(mockUser, (short) 1, 2025, (short) 3, 2025);
+        budgetHistoryController.getHistory(mockUser, (short) 1, 2025, (short) 3, 2025, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals(dtoList, response.getBody().getData());
-    verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 3, 2025);
+    verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 3, 2025, null);
     verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
   }
 
@@ -154,36 +157,36 @@ class BudgetHistoryControllerTest {
     List<BudgetHistoryEntity> historyList = Collections.singletonList(mockHistoryEntity);
     List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
 
-    when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025))
+    when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, null))
         .thenReturn(historyList);
     when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
-        budgetHistoryController.getHistoryByMonth((short) 1, 2025, mockUser);
+        budgetHistoryController.getHistoryByMonth((short) 1, 2025, null, mockUser);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals("Retrieved budget history for 1/2025", response.getBody().getMessage());
     assertEquals(dtoList, response.getBody().getData());
-    verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025);
+    verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, null);
     verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
   }
 
   @Test
   void getHistoryByMonth_shouldReturnEmptyList_whenNoHistoryFound() {
-    when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025))
+    when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, null))
         .thenReturn(Collections.emptyList());
     when(budgetHistoryService.enrichWithTransactions(Collections.emptyList()))
         .thenReturn(Collections.emptyList());
 
     ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
-        budgetHistoryController.getHistoryByMonth((short) 1, 2025, mockUser);
+        budgetHistoryController.getHistoryByMonth((short) 1, 2025, null, mockUser);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertTrue(response.getBody().getData().isEmpty());
-    verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025);
+    verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, null);
   }
 }

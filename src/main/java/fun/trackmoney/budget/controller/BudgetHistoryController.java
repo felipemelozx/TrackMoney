@@ -3,6 +3,7 @@ package fun.trackmoney.budget.controller;
 import fun.trackmoney.budget.dtos.BudgetHistoryGenerateDTO;
 import fun.trackmoney.budget.dtos.BudgetHistoryGenerationResponse;
 import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
+import fun.trackmoney.budget.dtos.GenerationResultDTO;
 import fun.trackmoney.budget.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.service.BudgetHistoryService;
 import fun.trackmoney.user.entity.UserEntity;
@@ -12,6 +13,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,23 +37,56 @@ public class BudgetHistoryController {
       @RequestBody @Valid BudgetHistoryGenerateDTO dto,
       @AuthenticationPrincipal UserEntity currentUser) {
 
-    int generatedCount = budgetHistoryService.generateHistoryForMonth(
+    GenerationResultDTO result = budgetHistoryService.generateHistoryForMonth(
         currentUser, dto.month(), dto.year()
     );
 
-    if (generatedCount == 0) {
-      return ResponseEntity.status(HttpStatus.OK).body(
+    return buildGenerationResponse(result);
+  }
+
+  private ResponseEntity<ApiResponse<BudgetHistoryGenerationResponse>> buildGenerationResponse(
+      GenerationResultDTO result) {
+
+    if (result.isSuccess()) {
+      return ResponseEntity.status(HttpStatus.CREATED).body(
           ApiResponse.<BudgetHistoryGenerationResponse>success()
-              .message("History already exists for this month or no budgets found")
-              .data(new BudgetHistoryGenerationResponse(generatedCount))
+              .message("Generated " + result.generatedCount() + " budget history entries")
+              .data(new BudgetHistoryGenerationResponse(result.generatedCount()))
               .build()
       );
     }
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(
+    if (result.isAlreadyExists()) {
+      return ResponseEntity.status(HttpStatus.OK).body(
+          ApiResponse.<BudgetHistoryGenerationResponse>success()
+              .message("History already exists for this month")
+              .data(new BudgetHistoryGenerationResponse(result.generatedCount()))
+              .build()
+      );
+    }
+
+    if (result.isCurrentMonthNotAllowed()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+          ApiResponse.<BudgetHistoryGenerationResponse>failure()
+              .message("Cannot generate history for the current month")
+              .data(new BudgetHistoryGenerationResponse(result.generatedCount()))
+              .build()
+      );
+    }
+
+    if (result.isNoTransactions()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+          ApiResponse.<BudgetHistoryGenerationResponse>failure()
+              .message("Cannot generate history: no transactions found for this month")
+              .data(new BudgetHistoryGenerationResponse(result.generatedCount()))
+              .build()
+      );
+    }
+
+    return ResponseEntity.status(HttpStatus.OK).body(
         ApiResponse.<BudgetHistoryGenerationResponse>success()
-            .message("Generated " + generatedCount + " budget history entries")
-            .data(new BudgetHistoryGenerationResponse(generatedCount))
+            .message("No budget history entries generated")
+            .data(new BudgetHistoryGenerationResponse(result.generatedCount()))
             .build()
     );
   }
@@ -62,16 +97,17 @@ public class BudgetHistoryController {
       @RequestParam(required = false) Short startMonth,
       @RequestParam(required = false) Integer startYear,
       @RequestParam(required = false) Short endMonth,
-      @RequestParam(required = false) Integer endYear) {
+      @RequestParam(required = false) Integer endYear,
+      @RequestParam(required = false) Long categoryId) {
 
     List<BudgetHistoryEntity> history;
 
     if (startMonth != null && startYear != null && endMonth != null && endYear != null) {
       history = budgetHistoryService.getHistoryByDateRange(
-          currentUser, startMonth, startYear, endMonth, endYear
+          currentUser, startMonth, startYear, endMonth, endYear, categoryId
       );
     } else {
-      history = budgetHistoryService.getAllHistory(currentUser);
+      history = budgetHistoryService.getAllHistory(currentUser, categoryId);
     }
 
     List<BudgetHistoryResponseDTO> dtos = budgetHistoryService.enrichWithTransactions(history);
@@ -88,18 +124,33 @@ public class BudgetHistoryController {
   public ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> getHistoryByMonth(
       @PathVariable Short month,
       @PathVariable Integer year,
+      @RequestParam(required = false) Long categoryId,
       @AuthenticationPrincipal UserEntity currentUser) {
 
-    List<BudgetHistoryResponseDTO> dtos = budgetHistoryService.enrichWithTransactions(
-        budgetHistoryService.getHistoryByDateRange(
-            currentUser, month, year, month, year
-        )
+    List<BudgetHistoryEntity> history = budgetHistoryService.getHistoryByDateRange(
+        currentUser, month, year, month, year, categoryId
     );
+
+    List<BudgetHistoryResponseDTO> dtos = budgetHistoryService.enrichWithTransactions(history);
 
     return ResponseEntity.status(HttpStatus.OK).body(
         ApiResponse.<List<BudgetHistoryResponseDTO>>success()
             .message("Retrieved budget history for " + month + "/" + year)
             .data(dtos)
+            .build()
+    );
+  }
+
+  @DeleteMapping("/{historyId}")
+  public ResponseEntity<ApiResponse<Void>> deleteHistory(
+      @PathVariable Integer historyId,
+      @AuthenticationPrincipal UserEntity currentUser) {
+
+    budgetHistoryService.deleteHistoryById(currentUser, historyId);
+
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).body(
+        ApiResponse.<Void>success()
+            .message("Budget history deleted successfully")
             .build()
     );
   }
