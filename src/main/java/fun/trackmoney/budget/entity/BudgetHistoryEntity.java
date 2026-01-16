@@ -70,6 +70,7 @@ public class BudgetHistoryEntity {
   private LocalDateTime createdAt;
 
   public BudgetHistoryEntity() {
+    // Default constructor required by JPA/Hibernate for entity instantiation.
   }
 
   @PrePersist
