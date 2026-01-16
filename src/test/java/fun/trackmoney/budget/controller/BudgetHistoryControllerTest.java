@@ -26,8 +26,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -188,5 +190,135 @@ class BudgetHistoryControllerTest {
     assertTrue(response.getBody().isSuccess());
     assertTrue(response.getBody().getData().isEmpty());
     verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, null);
+  }
+
+  @Test
+  void generateHistory_shouldReturnBadRequest_whenCurrentMonthNotAllowed() {
+    BudgetHistoryGenerateDTO dto = new BudgetHistoryGenerateDTO(1, 2025);
+    GenerationResultDTO resultDTO = GenerationResultDTO.currentMonthNotAllowed();
+    when(budgetHistoryService.generateHistoryForMonth(mockUser, dto.month(), dto.year()))
+        .thenReturn(resultDTO);
+
+    ResponseEntity<ApiResponse<BudgetHistoryGenerationResponse>> response =
+        budgetHistoryController.generateHistory(dto, mockUser);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("Cannot generate history for the current month", response.getBody().getMessage());
+    assertEquals(0, response.getBody().getData().generatedCount());
+    verify(budgetHistoryService, times(1)).generateHistoryForMonth(mockUser, dto.month(), dto.year());
+  }
+
+  @Test
+  void generateHistory_shouldReturnBadRequest_whenNoTransactions() {
+    BudgetHistoryGenerateDTO dto = new BudgetHistoryGenerateDTO(1, 2025);
+    GenerationResultDTO resultDTO = GenerationResultDTO.noTransactions();
+    when(budgetHistoryService.generateHistoryForMonth(mockUser, dto.month(), dto.year()))
+        .thenReturn(resultDTO);
+
+    ResponseEntity<ApiResponse<BudgetHistoryGenerationResponse>> response =
+        budgetHistoryController.generateHistory(dto, mockUser);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("Cannot generate history: no transactions found for this month", response.getBody().getMessage());
+    assertEquals(0, response.getBody().getData().generatedCount());
+    verify(budgetHistoryService, times(1)).generateHistoryForMonth(mockUser, dto.month(), dto.year());
+  }
+
+  @Test
+  void generateHistory_shouldReturnOk_whenNoEntriesGenerated() {
+    BudgetHistoryGenerateDTO dto = new BudgetHistoryGenerateDTO(1, 2025);
+    GenerationResultDTO resultDTO = new GenerationResultDTO(0, "OTHER_REASON");
+    when(budgetHistoryService.generateHistoryForMonth(mockUser, dto.month(), dto.year()))
+        .thenReturn(resultDTO);
+
+    ResponseEntity<ApiResponse<BudgetHistoryGenerationResponse>> response =
+        budgetHistoryController.generateHistory(dto, mockUser);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals("No budget history entries generated", response.getBody().getMessage());
+    assertEquals(0, response.getBody().getData().generatedCount());
+    verify(budgetHistoryService, times(1)).generateHistoryForMonth(mockUser, dto.month(), dto.year());
+  }
+
+  @Test
+  void getHistory_shouldReturnFilteredHistory_whenCategoryIdProvided() {
+    List<BudgetHistoryEntity> historyList = Collections.singletonList(mockHistoryEntity);
+    List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
+
+    Long categoryId = 1L;
+
+    when(budgetHistoryService.getAllHistory(mockUser, categoryId)).thenReturn(historyList);
+    when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
+
+    ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
+        budgetHistoryController.getHistory(mockUser, null, null, null, null, categoryId);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(dtoList, response.getBody().getData());
+    verify(budgetHistoryService, times(1)).getAllHistory(mockUser, categoryId);
+    verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
+  }
+
+  @Test
+  void getHistoryByMonth_shouldReturnFilteredHistory_whenCategoryIdProvided() {
+    List<BudgetHistoryEntity> historyList = Collections.singletonList(mockHistoryEntity);
+    List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
+
+    Long categoryId = 1L;
+
+    when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, categoryId))
+        .thenReturn(historyList);
+    when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
+
+    ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> response =
+        budgetHistoryController.getHistoryByMonth((short) 1, 2025, categoryId, mockUser);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals("Retrieved budget history for 1/2025", response.getBody().getMessage());
+    assertEquals(dtoList, response.getBody().getData());
+    verify(budgetHistoryService, times(1)).getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, categoryId);
+    verify(budgetHistoryService, times(1)).enrichWithTransactions(historyList);
+  }
+
+  @Test
+  void deleteHistory_shouldReturnNoContent() {
+    Integer historyId = 1;
+
+    doNothing().when(budgetHistoryService).deleteHistoryById(mockUser, historyId);
+
+    ResponseEntity<ApiResponse<Void>> response =
+        budgetHistoryController.deleteHistory(historyId, mockUser);
+
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals("Budget history deleted successfully", response.getBody().getMessage());
+    verify(budgetHistoryService, times(1)).deleteHistoryById(mockUser, historyId);
+  }
+
+  @Test
+  void deleteHistory_shouldThrowException_whenServiceThrowsException() {
+    Integer historyId = 1;
+    String errorMessage = "Budget history not found with id: " + historyId;
+
+    doThrow(new IllegalArgumentException(errorMessage))
+        .when(budgetHistoryService).deleteHistoryById(mockUser, historyId);
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> budgetHistoryController.deleteHistory(historyId, mockUser)
+    );
+
+    verify(budgetHistoryService, times(1)).deleteHistoryById(mockUser, historyId);
   }
 }
