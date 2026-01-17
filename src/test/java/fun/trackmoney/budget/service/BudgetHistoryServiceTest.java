@@ -16,6 +16,7 @@ import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
 import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.mapper.TransactionSimpleMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
+import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.user.entity.UserEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +47,8 @@ class BudgetHistoryServiceTest {
   private TransactionSimpleMapper transactionSimpleMapper;
   @Mock
   private BudgetHistoryMapper budgetHistoryMapper;
+  @Mock
+  private RecurringService recurringService;
 
   @InjectMocks
   private BudgetHistoryService budgetHistoryService;
@@ -114,6 +117,9 @@ class BudgetHistoryServiceTest {
     when(transactionRepository.sumExpensesByCategoryAndDateRange(
         user.getAccount().getAccountId(), category.getCategoryId(), startDate, endDate))
         .thenReturn(BigDecimal.valueOf(800));
+
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
 
     when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
@@ -375,6 +381,9 @@ class BudgetHistoryServiceTest {
         user.getAccount().getAccountId(), category.getCategoryId(), startDate, endDate))
         .thenReturn(BigDecimal.valueOf(1500));
 
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
+
     when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -432,6 +441,9 @@ class BudgetHistoryServiceTest {
     when(transactionRepository.sumExpensesByCategoryAndDateRange(
         user.getAccount().getAccountId(), category.getCategoryId(), startDate, endDate))
         .thenReturn(null);
+
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
 
     when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
@@ -543,6 +555,9 @@ class BudgetHistoryServiceTest {
         anyInt(), anyInt(), any(), any()))
         .thenReturn(BigDecimal.valueOf(1000));
 
+    when(recurringService.getIncomeFromRecurring(anyInt()))
+        .thenReturn(BigDecimal.ZERO);
+
     when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -619,6 +634,9 @@ class BudgetHistoryServiceTest {
     when(transactionRepository.sumExpensesByCategoryAndDateRange(
         user.getAccount().getAccountId(), category.getCategoryId(), startDate, endDate))
         .thenReturn(BigDecimal.valueOf(1000));
+
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
 
     when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
