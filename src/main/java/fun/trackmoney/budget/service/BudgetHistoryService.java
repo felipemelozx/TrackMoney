@@ -13,6 +13,7 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.mapper.TransactionSimpleMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
+import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.user.entity.UserEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +40,21 @@ public class BudgetHistoryService {
   private final TransactionRepository transactionRepository;
   private final TransactionSimpleMapper transactionSimpleMapper;
   private final BudgetHistoryMapper budgetHistoryMapper;
+  private final RecurringService recurringService;
 
   public BudgetHistoryService(
       BudgetHistoryRepository budgetHistoryRepository,
       BudgetsRepository budgetsRepository,
       TransactionRepository transactionRepository,
       TransactionSimpleMapper transactionSimpleMapper,
-      BudgetHistoryMapper budgetHistoryMapper) {
+      BudgetHistoryMapper budgetHistoryMapper,
+      RecurringService recurringService) {
     this.budgetHistoryRepository = budgetHistoryRepository;
     this.budgetsRepository = budgetsRepository;
     this.transactionRepository = transactionRepository;
     this.transactionSimpleMapper = transactionSimpleMapper;
     this.budgetHistoryMapper = budgetHistoryMapper;
+    this.recurringService = recurringService;
   }
 
   /**
@@ -324,12 +328,21 @@ public class BudgetHistoryService {
 
   /**
    * Gets total income for an account within a date range
+   * First tries to get from recurring transactions, falls back to individual transactions
    */
   private BigDecimal getTotalIncomeForMonth(
       Integer accountId,
       LocalDateTime startDate,
       LocalDateTime endDate) {
 
+    // Try to get income from recurring transactions first
+    BigDecimal recurringIncome = recurringService.getIncomeFromRecurring(accountId);
+
+    if (recurringIncome.compareTo(BigDecimal.ZERO) > 0) {
+      return recurringIncome;
+    }
+
+    // Fall back to individual transactions if no recurring income found
     List<TransactionEntity> transactions = transactionRepository
         .findAllByAccountIdAndDateRange(accountId, startDate, endDate);
 

@@ -25,6 +25,13 @@ public interface RecurringRepository extends JpaRepository<RecurringEntity, Long
   @Query("SELECT r FROM RecurringEntity r WHERE r.account.accountId = :accountId")
   List<RecurringEntity> findAllByAccountId(@Param("accountId") Integer accountId);
 
+  @Query("""
+        SELECT r FROM RecurringEntity r
+        WHERE r.account.accountId = :accountId
+          AND r.transactionType = 'INCOME'
+      """)
+  List<RecurringEntity> findIncomeRecurringByAccount(@Param("accountId") Integer accountId);
+
   @Modifying
   @Query("DELETE FROM RecurringEntity r WHERE r.id = :id AND r.account.accountId = :accountId")
   void deleteByIdAndAccountId(Long id, Integer accountId);
