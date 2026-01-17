@@ -51,6 +51,19 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
   );
 
   @Query("""
+      SELECT (SELECT COUNT(b) FROM BudgetsEntity b WHERE b.account.accountId = :accountId) = COUNT(bh)
+      FROM BudgetHistoryEntity bh
+      WHERE bh.account.accountId = :accountId
+        AND bh.referenceMonth = :month
+        AND bh.referenceYear = :year
+      """)
+  boolean hasAllBudgetHistoriesForMonth(
+      @Param("accountId") Integer accountId,
+      @Param("month") Short month,
+      @Param("year") Integer year
+  );
+
+  @Query("""
       SELECT bh FROM BudgetHistoryEntity bh
       WHERE bh.account.accountId = :accountId
         AND (:categoryId IS NULL OR bh.category.categoryId = :categoryId)

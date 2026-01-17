@@ -135,7 +135,7 @@ public class BudgetHistoryService {
     Integer accountId = currentUser.getAccount().getAccountId();
 
     // Check if history already exists
-    if (budgetHistoryRepository.existsHistoryForAccountAndMonth(accountId, (short) month, year)) {
+    if (budgetHistoryRepository.hasAllBudgetHistoriesForMonth(accountId, (short) month, year)) {
       LOG.info("History already exists for this account");
       return GenerationResultDTO.alreadyExists();
     }
@@ -227,6 +227,12 @@ public class BudgetHistoryService {
 
     int count = 0;
     for (BudgetsEntity budget : budgets) {
+      // Check if history already exists for this budget/month/year
+      if (budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+          budget, month, year).isPresent()) {
+        continue;
+      }
+
       BudgetHistoryEntity history = calculateBudgetHistory(
           budget, month, year, startDate, endDate, totalIncome
       );

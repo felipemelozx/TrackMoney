@@ -56,7 +56,7 @@ class BudgetHistoryServiceTest {
     int month = 1;
     int year = 2025;
 
-    when(budgetHistoryRepository.existsHistoryForAccountAndMonth(
+    when(budgetHistoryRepository.hasAllBudgetHistoriesForMonth(
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(true);
 
@@ -80,12 +80,16 @@ class BudgetHistoryServiceTest {
     int month = 1;
     int year = 2025;
 
-    when(budgetHistoryRepository.existsHistoryForAccountAndMonth(
+    when(budgetHistoryRepository.hasAllBudgetHistoriesForMonth(
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(false);
 
     when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
         .thenReturn(List.of(budget));
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        budget, (short) month, year))
+        .thenReturn(Optional.empty());
 
     LocalDateTime startDate = LocalDateTime.of(2025, 1, 1, 0, 0);
     LocalDateTime endDate = LocalDateTime.of(2025, 1, 31, 23, 59, 59);
@@ -127,7 +131,7 @@ class BudgetHistoryServiceTest {
     int month = 1;
     int year = 2025;
 
-    when(budgetHistoryRepository.existsHistoryForAccountAndMonth(
+    when(budgetHistoryRepository.hasAllBudgetHistoriesForMonth(
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(false);
 
@@ -292,7 +296,7 @@ class BudgetHistoryServiceTest {
     int month = now.getMonthValue();
     int year = now.getYear();
 
-    when(budgetHistoryRepository.existsHistoryForAccountAndMonth(
+    when(budgetHistoryRepository.hasAllBudgetHistoriesForMonth(
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(false);
 
@@ -309,7 +313,7 @@ class BudgetHistoryServiceTest {
     int month = 1;
     int year = 2025;
 
-    when(budgetHistoryRepository.existsHistoryForAccountAndMonth(
+    when(budgetHistoryRepository.hasAllBudgetHistoriesForMonth(
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(false);
 
@@ -340,12 +344,16 @@ class BudgetHistoryServiceTest {
     int month = 1;
     int year = 2025;
 
-    when(budgetHistoryRepository.existsHistoryForAccountAndMonth(
+    when(budgetHistoryRepository.hasAllBudgetHistoriesForMonth(
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(false);
 
     when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
         .thenReturn(List.of(budget));
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        budget, (short) month, year))
+        .thenReturn(Optional.empty());
 
     LocalDateTime startDate = LocalDateTime.of(2025, 1, 1, 0, 0);
     LocalDateTime endDate = LocalDateTime.of(2025, 1, 31, 23, 59, 59);
@@ -394,12 +402,16 @@ class BudgetHistoryServiceTest {
     int month = 1;
     int year = 2025;
 
-    when(budgetHistoryRepository.existsHistoryForAccountAndMonth(
+    when(budgetHistoryRepository.hasAllBudgetHistoriesForMonth(
         user.getAccount().getAccountId(), (short) month, year))
         .thenReturn(false);
 
     when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
         .thenReturn(List.of(budget));
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        budget, (short) month, year))
+        .thenReturn(Optional.empty());
 
     LocalDateTime startDate = LocalDateTime.of(2025, 1, 1, 0, 0);
     LocalDateTime endDate = LocalDateTime.of(2025, 1, 31, 23, 59, 59);
@@ -518,6 +530,10 @@ class BudgetHistoryServiceTest {
     when(budgetsRepository.findAllByAccountAccountId(user2.getAccount().getAccountId()))
         .thenReturn(List.of(budget2));
 
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        any(), anyShort(), anyInt()))
+        .thenReturn(Optional.empty());
+
     when(transactionRepository.findAllByAccountIdAndDateRange(anyInt(), any(), any()))
         .thenReturn(List.of(new TransactionEntity()
             .setAmount(BigDecimal.valueOf(5000))
@@ -577,6 +593,10 @@ class BudgetHistoryServiceTest {
 
     when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
         .thenReturn(List.of(budget));
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        eq(budget), anyShort(), anyInt()))
+        .thenReturn(Optional.empty());
 
     LocalDate lastMonth = LocalDate.now().minusMonths(1);
     short lastMonthValue = (short) lastMonth.getMonthValue();
