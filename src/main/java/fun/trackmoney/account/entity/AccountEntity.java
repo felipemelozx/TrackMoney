@@ -1,5 +1,6 @@
 package fun.trackmoney.account.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fun.trackmoney.user.entity.UserEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "tb_account")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AccountEntity {
 
   @Id

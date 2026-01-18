@@ -14,7 +14,6 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.enums.DateFilterEnum;
 import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
@@ -24,7 +23,6 @@ import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.utils.DateFilterUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -349,7 +347,7 @@ class TransactionServiceTest {
     when(transactionRepository.findAllByFilters(user.getAccount().getAccountId(), "" ,null, null, null, pageable)).thenReturn(transactionPage);
     when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
 
-    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null);
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null, null);
 
     assertThat(result.getContent()).containsExactly(dto);
     verify(transactionRepository, times(1)).findAllByFilters(user.getAccount().getAccountId(), "" ,null, null, null, pageable);
@@ -376,7 +374,7 @@ class TransactionServiceTest {
 
     when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
 
-    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null);
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(pageable, user, null, null, null, null);
 
     assertThat(result.getContent()).containsExactly(dto);
     verify(transactionRepository, times(1)).findAllByFilters(
@@ -385,7 +383,7 @@ class TransactionServiceTest {
   }
 
   @Test
-  void shouldUseDateRangeWhenDateFilterIsProvided() {
+  void shouldConvertLocalDateToStartAndEndOfDay() {
     Pageable pageable = PageRequest.of(0, 5);
     UserEntity user = UserEntityFactory.defaultUser();
     TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
@@ -393,33 +391,28 @@ class TransactionServiceTest {
 
     Page<TransactionEntity> transactionPage = new PageImpl<>(List.of(transaction));
 
+    LocalDate startDate = LocalDate.of(2025, 1, 1);
+    LocalDate endDate = LocalDate.of(2025, 1, 31);
+    LocalDateTime expectedStart = startDate.atStartOfDay();
+    LocalDateTime expectedEnd = endDate.atTime(23, 59, 59);
 
-    LocalDateTime start = LocalDateTime.now().minusDays(7);
-    LocalDateTime end = LocalDateTime.now();
-    var mockDateRange = new DateFilterUtil.DateRange(start, end);
+    when(transactionRepository.findAllByFilters(
+        user.getAccount().getAccountId(),
+        "Food",
+        1L,
+        expectedStart,
+        expectedEnd,
+        pageable
+    )).thenReturn(transactionPage);
 
-    try (MockedStatic<DateFilterUtil> mocked = mockStatic(DateFilterUtil.class)) {
-      mocked.when(() -> DateFilterUtil.getDateRange(DateFilterEnum.LAST_MONTH))
-          .thenReturn(mockDateRange);
+    when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
 
-      when(transactionRepository.findAllByFilters(
-          user.getAccount().getAccountId(),
-          "Food",
-          1L,
-          start,
-          end,
-          pageable
-      )).thenReturn(transactionPage);
+    Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(
+        pageable, user, "Food", 1L, startDate, endDate);
 
-      when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
-
-      Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(
-          pageable, user, "Food", 1L, DateFilterEnum.LAST_MONTH);
-
-      assertThat(result.getContent()).containsExactly(dto);
-      verify(transactionRepository, times(1)).findAllByFilters(
-          user.getAccount().getAccountId(), "Food", 1L, start, end, pageable);
-    }
+    assertThat(result.getContent()).containsExactly(dto);
+    verify(transactionRepository, times(1)).findAllByFilters(
+        user.getAccount().getAccountId(), "Food", 1L, expectedStart, expectedEnd, pageable);
   }
 
   @Test

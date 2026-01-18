@@ -14,6 +14,7 @@ import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.service.TransactionService;
+import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.user.entity.UserEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,16 +31,20 @@ public class BudgetsService {
   private final CategoryService categoryService;
   private final TransactionService transactionService;
   private final AccountMapper accountMapper;
+  private final RecurringService recurringService;
 
   public BudgetsService(BudgetsRepository budgetsRepository,
                         BudgetMapper budgetMapper,
                         CategoryService categoryService,
-                        TransactionService transactionService, AccountMapper accountMapper) {
+                        TransactionService transactionService,
+                        AccountMapper accountMapper,
+                        RecurringService recurringService) {
     this.budgetsRepository = budgetsRepository;
     this.budgetMapper = budgetMapper;
     this.categoryService = categoryService;
     this.transactionService = transactionService;
     this.accountMapper = accountMapper;
+    this.recurringService = recurringService;
   }
 
   @Transactional
@@ -81,7 +86,11 @@ public class BudgetsService {
     List<BudgetResponseDTO> budgetDTOS = new ArrayList<>();
     List<TransactionEntity> currentMonthTransaction = transactionService.getCurrentMonthTransactions();
 
-    int income = transactionService.getIncome(currentUser.getUserId()).intValue();
+    // Try to get income from recurring transactions first, fall back to individual transactions
+    BigDecimal recurringIncome = recurringService.getIncomeFromRecurring(accountId);
+    int income = recurringIncome.compareTo(BigDecimal.ZERO) > 0
+        ? recurringIncome.intValue()
+        : transactionService.getIncome(currentUser.getUserId()).intValue();
 
     for(BudgetsEntity budget : budgets) {
       CategoryEntity category = budget.getCategory();
@@ -159,7 +168,6 @@ public class BudgetsService {
   public void deleteById(Integer id, UserEntity currentUser) {
     budgetsRepository.deleteByBudgetIdAndAccount(id, currentUser.getAccount());
   }
-
 
   public int getCurrentAmountWested(CategoryEntity category, List<TransactionEntity> transactions) {
     int sum = 0;

@@ -7,7 +7,6 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.enums.DateFilterEnum;
 import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
@@ -28,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -202,19 +202,21 @@ class TransactionControllerTest {
   void getTransactionPagination() {
     Pageable pageable = PageRequest.of(0, 10);
     UserEntity user = UserEntityFactory.defaultUser();
+    LocalDate startDate = LocalDate.of(2025, 1, 1);
+    LocalDate endDate = LocalDate.of(2025, 1, 31);
 
     TransactionResponseDTO transaction1 = TransactionResponseDTOFactory.defaultTransactionResponse();
     TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
     Page<TransactionResponseDTO> page = new PageImpl<>(List.of(transaction1, transaction2), pageable, 2);
 
-    when(transactionService.getPaginatedTransactions(pageable, user, "some name", 1l, DateFilterEnum.LAST_MONTH)).thenReturn(page);
+    when(transactionService.getPaginatedTransactions(pageable, user, "some name", 1l, startDate, endDate)).thenReturn(page);
 
-    var response = transactionController.getPaginatedTransactions(pageable, "some name", 1l,DateFilterEnum.LAST_MONTH, user);
+    var response = transactionController.getPaginatedTransactions(pageable, "some name", 1l, startDate, endDate, user);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertThat(response.getBody().getData()).hasSize(2);
     assertEquals("Paginated transactions", response.getBody().getMessage());
-    verify(transactionService, times(1)).getPaginatedTransactions(pageable, user, "some name", 1l, DateFilterEnum.LAST_MONTH);
+    verify(transactionService, times(1)).getPaginatedTransactions(pageable, user, "some name", 1l, startDate, endDate);
   }
 }

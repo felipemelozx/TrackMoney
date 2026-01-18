@@ -184,6 +184,25 @@ public class RecurringService {
     return new BillResponseDTO(totalBillsBeforeToday, totalUpComing, totalBueSoon);
   }
 
+  /**
+   * Calculates total income from all recurring INCOME transactions for an account.
+   * Used by budget services to determine expected income instead of actual transactions.
+   */
+  public BigDecimal getIncomeFromRecurring(Integer accountId) {
+    List<RecurringEntity> recurringIncomes = recurringRepository
+        .findIncomeRecurringByAccount(accountId);
+
+    if (recurringIncomes.isEmpty()) {
+      return BigDecimal.ZERO; // No recurring income found
+    }
+
+    // Sum all recurring INCOME amounts
+    return recurringIncomes.stream()
+        .map(RecurringEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
   @Transactional
   public void delete(Long id, UserEntity currentUser) {
     recurringRepository.deleteByIdAndAccountId(id, currentUser.getAccount().getAccountId());

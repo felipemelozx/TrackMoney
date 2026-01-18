@@ -27,6 +27,7 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.entity.TransactionEntity;
 import fun.trackmoney.transaction.service.TransactionService;
+import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.user.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
@@ -60,6 +61,8 @@ class BudgetsServiceTest {
   private AccountMapper accountMapper;
   @Mock
   private CategoryService categoryService;
+  @Mock
+  private RecurringService recurringService;
 
   @InjectMocks
   private BudgetsService budgetsService;
@@ -198,6 +201,9 @@ class BudgetsServiceTest {
     when(transactionService.getIncome(user.getUserId()))
         .thenReturn(BigDecimal.valueOf(1000));
 
+    when(recurringService.getIncomeFromRecurring(accountId))
+        .thenReturn(BigDecimal.ZERO);
+
     when(accountMapper.accountEntityToAccountResponse(user.getAccount()))
         .thenReturn(AccountResponseDTOFactory.defaultAccountResponse());
 
@@ -221,6 +227,7 @@ class BudgetsServiceTest {
         .thenReturn(List.of());
     when(transactionService.getLast5TransactionsPerCategory(accountId)).thenReturn(Map.of());
     when(transactionService.getIncome(user.getUserId())).thenReturn(BigDecimal.valueOf(100));
+    when(recurringService.getIncomeFromRecurring(accountId)).thenReturn(BigDecimal.ZERO);
 
     List<BudgetResponseDTO> result = budgetsService.findAllBudgets(user);
 
