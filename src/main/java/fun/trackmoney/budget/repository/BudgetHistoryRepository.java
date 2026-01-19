@@ -94,4 +94,76 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
   );
 
   void deleteByBudgetBudgetId(Integer budgetId);
+
+  // ===== Metrics Queries =====
+
+  /**
+   * Finds all budget histories for an account and year.
+   * Used for budget performance metrics.
+   *
+   * @param accountId the account ID
+   * @param year      the year
+   * @return list of budget histories
+   */
+  @Query("""
+      SELECT bh FROM BudgetHistoryEntity bh
+      WHERE bh.account.accountId = :accountId
+        AND bh.referenceYear = :year
+      ORDER BY bh.referenceMonth DESC
+      """)
+  List<BudgetHistoryEntity> findByAccountAndYear(
+      @Param("accountId") Integer accountId,
+      @Param("year") Integer year
+  );
+
+  /**
+   * Finds all budget histories for an account and date range.
+   * Used for budget performance metrics with flexible date ranges.
+   *
+   * @param accountId  the account ID
+   * @param startYear  the start year
+   * @param startMonth the start month
+   * @param endYear    the end year
+   * @param endMonth   the end month
+   * @return list of budget histories
+   */
+  @Query("""
+      SELECT bh FROM BudgetHistoryEntity bh
+      WHERE bh.account.accountId = :accountId
+        AND (
+          (bh.referenceYear = :startYear AND bh.referenceMonth >= :startMonth) OR
+          (bh.referenceYear > :startYear AND bh.referenceYear < :endYear) OR
+          (bh.referenceYear = :endYear AND bh.referenceMonth <= :endMonth)
+        )
+      ORDER BY bh.referenceYear DESC, bh.referenceMonth DESC
+      """)
+  List<BudgetHistoryEntity> findByAccountAndYearMonthRange(
+      @Param("accountId") Integer accountId,
+      @Param("startYear") Integer startYear,
+      @Param("startMonth") Short startMonth,
+      @Param("endYear") Integer endYear,
+      @Param("endMonth") Short endMonth
+  );
+
+  /**
+   * Finds all budget histories for an account, year, and month.
+   * Used for budget overview metrics.
+   *
+   * @param accountId the account ID
+   * @param year      the year
+   * @param month     the month
+   * @return list of budget histories
+   */
+  @Query("""
+      SELECT bh FROM BudgetHistoryEntity bh
+      WHERE bh.account.accountId = :accountId
+        AND bh.referenceYear = :year
+        AND bh.referenceMonth = :month
+      ORDER BY bh.category.name ASC
+      """)
+  List<BudgetHistoryEntity> findByAccountAndYearAndMonth(
+      @Param("accountId") Integer accountId,
+      @Param("year") Integer year,
+      @Param("month") Short month
+  );
 }
