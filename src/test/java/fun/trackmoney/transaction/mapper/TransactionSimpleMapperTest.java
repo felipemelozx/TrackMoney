@@ -2,10 +2,9 @@ package fun.trackmoney.transaction.mapper;
 
 import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
 import fun.trackmoney.transaction.entity.TransactionEntity;
+import fun.trackmoney.transaction.mapper.TransactionSimpleMapperImpl;
 import fun.trackmoney.testutils.TransactionEntityFactory;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,11 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@SpringBootTest
 class TransactionSimpleMapperTest {
 
-  @Autowired
-  private TransactionSimpleMapper mapper;
+  private final TransactionSimpleMapper mapper = new TransactionSimpleMapperImpl();
 
   @Test
   void entityToSimpleDTO_shouldMapAllFields() {
