@@ -6,11 +6,11 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.4.5</version>
-		<relativePath/> 
+		<relativePath/>
 	</parent>
 	<groupId>fun.TrackMoney</groupId>
 	<artifactId>TrackMoney</artifactId>
-	<version>0.0.3</version>
+	<version>1.0.0</version>
 	<name>TrackMoney</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>

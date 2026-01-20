@@ -3,7 +3,6 @@ package fun.trackmoney.transaction.controller;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.enums.DateFilterEnum;
 import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
@@ -29,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -93,11 +93,14 @@ public class TransactionController {
       @RequestParam(required = false)
       Long categoryId,
       @RequestParam(required = false)
-      DateFilterEnum date,
+      LocalDate startDate,
+      @RequestParam(required = false)
+      LocalDate endDate,
       @AuthenticationPrincipal
       UserEntity actualUser
   ) {
-    var data = transactionService.getPaginatedTransactions(pageable, actualUser, transactionName, categoryId, date);
+    var data = transactionService.getPaginatedTransactions(
+        pageable, actualUser, transactionName, categoryId, startDate, endDate);
     return ResponseEntity.ok().body(
         ApiResponse.<Page<TransactionResponseDTO>>success()
             .message("Paginated transactions")

@@ -1,5 +1,6 @@
 package fun.trackmoney.budget.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.category.entity.CategoryEntity;
 import jakarta.persistence.Column;
@@ -16,6 +17,7 @@ import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "tb_budget")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class BudgetsEntity {
 
   @Id

@@ -1,5 +1,6 @@
 package fun.trackmoney.pots.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fun.trackmoney.account.entity.AccountEntity;
 import fun.trackmoney.pots.enums.ColorPick;
 import jakarta.persistence.Column;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "tb_pots")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class PotsEntity {
 
   @Id

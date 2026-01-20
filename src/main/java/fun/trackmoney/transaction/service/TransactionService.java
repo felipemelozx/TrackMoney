@@ -8,7 +8,6 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
-import fun.trackmoney.transaction.enums.DateFilterEnum;
 import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
@@ -18,7 +17,6 @@ import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
 import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.utils.DateFilterUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -167,21 +165,21 @@ public class TransactionService {
                                                                UserEntity currentUser,
                                                                String name,
                                                                Long categoryId,
-                                                               DateFilterEnum dateFilter
+                                                               LocalDate startDate,
+                                                               LocalDate endDate
                                                                ) {
     Integer accountId = currentUser.getAccount().getAccountId();
 
-    LocalDateTime startDate = null;
-    LocalDateTime endDate = null;
-    if(dateFilter != null){
-      var dateRager = DateFilterUtil.getDateRange(dateFilter);
-      startDate = dateRager.start();
-      endDate = dateRager.end();
+    LocalDateTime startDateTime = null;
+    LocalDateTime endDateTime = null;
+    if (startDate != null && endDate != null) {
+      startDateTime = startDate.atStartOfDay();
+      endDateTime = endDate.atTime(23, 59, 59);
     }
     if(name == null){
       name = "";
     }
-    return transactionRepository.findAllByFilters(accountId, name, categoryId, startDate, endDate, pageable)
+    return transactionRepository.findAllByFilters(accountId, name, categoryId, startDateTime, endDateTime, pageable)
         .map(transactionMapper::toResponseDTO);
   }
 
