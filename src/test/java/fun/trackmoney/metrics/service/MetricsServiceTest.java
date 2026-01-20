@@ -382,4 +382,305 @@ class MetricsServiceTest {
 
     assertEquals("OK", result.monthlyPerformance().get(0).categories().get(0).status());
   }
+
+  // ===== DATE RANGE TESTS =====
+
+  @Test
+  void getMonthlySummary_withDateRange_shouldReturnAggregatedData() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    MonthAggregateProjection jan = new MonthAggregateProjection() {
+      @Override public int getMonth() { return 1; }
+      @Override public BigDecimal getIncome() { return new BigDecimal("5000"); }
+      @Override public BigDecimal getExpense() { return new BigDecimal("3000"); }
+    };
+
+    MonthAggregateProjection feb = new MonthAggregateProjection() {
+      @Override public int getMonth() { return 2; }
+      @Override public BigDecimal getIncome() { return new BigDecimal("5500"); }
+      @Override public BigDecimal getExpense() { return new BigDecimal("3500"); }
+    };
+
+    MonthAggregateProjection mar = new MonthAggregateProjection() {
+      @Override public int getMonth() { return 3; }
+      @Override public BigDecimal getIncome() { return new BigDecimal("6000"); }
+      @Override public BigDecimal getExpense() { return new BigDecimal("4000"); }
+    };
+
+    when(transactionRepository.sumByMonthAndTypeForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of(jan, feb, mar));
+
+    MonthlySummaryDTO result = metricsService.getMonthlySummary(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertEquals(3, result.months().size());
+    assertEquals(new BigDecimal("5000"), result.months().get(0).income());
+    assertEquals(new BigDecimal("5500"), result.months().get(1).income());
+    assertEquals(new BigDecimal("6000"), result.months().get(2).income());
+  }
+
+  @Test
+  void getMonthlySummary_withDateRange_shouldReturnEmptyListWhenNoData() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    when(transactionRepository.sumByMonthAndTypeForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of());
+
+    MonthlySummaryDTO result = metricsService.getMonthlySummary(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertTrue(result.months().isEmpty());
+  }
+
+  @Test
+  void getByCategory_withDateRange_shouldReturnCategoryBreakdown() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    CategoryAggregateProjection food = new CategoryAggregateProjection() {
+      @Override public Integer getCategoryId() { return 1; }
+      @Override public String getCategoryName() { return "Food"; }
+      @Override public String getColor() { return "#FF5733"; }
+      @Override public BigDecimal getAmount() { return new BigDecimal("1500"); }
+    };
+
+    CategoryAggregateProjection transport = new CategoryAggregateProjection() {
+      @Override public Integer getCategoryId() { return 2; }
+      @Override public String getCategoryName() { return "Transport"; }
+      @Override public String getColor() { return "#33FF57"; }
+      @Override public BigDecimal getAmount() { return new BigDecimal("900"); }
+    };
+
+    when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of(food, transport));
+
+    CategoryBreakdownDTO result = metricsService.getByCategory(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertEquals(2024, result.year());
+    assertEquals(1, result.month()); // Start month
+    assertEquals(new BigDecimal("2400"), result.totalExpense());
+    assertEquals(2, result.categories().size());
+
+    CategoryBreakdownDTO.CategoryBreakdown foodBreakdown = result.categories().get(0);
+    assertEquals("Food", foodBreakdown.categoryName());
+    assertEquals(new BigDecimal("1500"), foodBreakdown.amount());
+    assertEquals(new BigDecimal("62.5000"), foodBreakdown.percentage());
+  }
+
+  @Test
+  void getByCategory_withDateRange_shouldHandleZeroTotal() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of());
+
+    CategoryBreakdownDTO result = metricsService.getByCategory(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertEquals(BigDecimal.ZERO, result.totalExpense());
+    assertTrue(result.categories().isEmpty());
+  }
+
+  @Test
+  void getBudgetPerformance_withDateRange_shouldReturnPerformanceData() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    CategoryEntity food = CategoryEntityFactory.defaultCategory();
+
+    BudgetHistoryEntity historyJan = new BudgetHistoryEntity()
+        .setHistoryId(1)
+        .setAccount(AccountEntityFactory.defaultAccount())
+        .setCategory(food)
+        .setReferenceMonth((short) 1)
+        .setReferenceYear(2024)
+        .setTargetAmount(new BigDecimal("1000"))
+        .setSpentAmount(new BigDecimal("800"))
+        .setRemainingAmount(new BigDecimal("200"))
+        .setStatus(BudgetStatus.WITHIN_LIMIT);
+
+    BudgetHistoryEntity historyFeb = new BudgetHistoryEntity()
+        .setHistoryId(2)
+        .setAccount(AccountEntityFactory.defaultAccount())
+        .setCategory(food)
+        .setReferenceMonth((short) 2)
+        .setReferenceYear(2024)
+        .setTargetAmount(new BigDecimal("1000"))
+        .setSpentAmount(new BigDecimal("1050"))
+        .setRemainingAmount(new BigDecimal("-50"))
+        .setStatus(BudgetStatus.EXCEEDED);
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3)
+    )).thenReturn(List.of(historyJan, historyFeb));
+
+    BudgetPerformanceDTO result = metricsService.getBudgetPerformance(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertEquals(2024, result.year());
+    assertEquals(2, result.monthlyPerformance().size());
+    assertEquals(1, result.monthlyPerformance().get(0).month());
+    assertEquals(2, result.monthlyPerformance().get(1).month());
+  }
+
+  @Test
+  void getBudgetPerformance_withDateRange_shouldReturnEmptyListWhenNoData() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3)
+    )).thenReturn(List.of());
+
+    BudgetPerformanceDTO result = metricsService.getBudgetPerformance(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertEquals(2024, result.year());
+    assertTrue(result.monthlyPerformance().isEmpty());
+  }
+
+  @Test
+  void getOverview_withDateRange_shouldReturnAggregatedData() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    MonthAggregateProjection monthData = new MonthAggregateProjection() {
+      @Override public int getMonth() { return 1; }
+      @Override public BigDecimal getIncome() { return new BigDecimal("15000"); }
+      @Override public BigDecimal getExpense() { return new BigDecimal("9000"); }
+    };
+
+    CategoryEntity food = CategoryEntityFactory.defaultCategory();
+    food.setName("Food");
+    food.setColor("#FF5733");
+
+    CategoryAggregateProjection topCategory = new CategoryAggregateProjection() {
+      @Override public Integer getCategoryId() { return 1; }
+      @Override public String getCategoryName() { return "Food"; }
+      @Override public String getColor() { return "#FF5733"; }
+      @Override public BigDecimal getAmount() { return new BigDecimal("3000"); }
+    };
+
+    BudgetHistoryEntity exceededBudget = new BudgetHistoryEntity()
+        .setHistoryId(1)
+        .setAccount(AccountEntityFactory.defaultAccount())
+        .setCategory(food)
+        .setReferenceMonth((short) 1)
+        .setReferenceYear(2024)
+        .setStatus(BudgetStatus.EXCEEDED);
+
+    BudgetHistoryEntity onTrackBudget = new BudgetHistoryEntity()
+        .setHistoryId(2)
+        .setAccount(AccountEntityFactory.defaultAccount())
+        .setCategory(food)
+        .setReferenceMonth((short) 2)
+        .setReferenceYear(2024)
+        .setStatus(BudgetStatus.WITHIN_LIMIT);
+
+    when(transactionRepository.sumByMonthAndTypeForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of(monthData));
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3)
+    )).thenReturn(List.of(exceededBudget, onTrackBudget));
+
+    when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of(topCategory));
+
+    DashboardOverviewDTO result = metricsService.getOverview(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertEquals(new BigDecimal("15000"), result.totalIncome());
+    assertEquals(new BigDecimal("9000"), result.totalExpense());
+    assertEquals(new BigDecimal("6000"), result.totalBalance());
+    assertEquals(1, result.exceededBudgetsCount()); // Only January is within range
+    assertEquals(2, result.totalBudgetsCount()); // Both months within range
+    assertEquals("Food", result.topExpenseCategory());
+    assertEquals(new BigDecimal("3000"), result.topExpenseAmount());
+    assertEquals(1, result.periodStartMonth());
+    assertEquals(2024, result.periodStartYear());
+  }
+
+  @Test
+  void getOverview_withDateRange_shouldHandleNoData() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    when(transactionRepository.sumByMonthAndTypeForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of());
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3)
+    )).thenReturn(List.of());
+
+    when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of());
+
+    DashboardOverviewDTO result = metricsService.getOverview(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    assertEquals(BigDecimal.ZERO, result.totalIncome());
+    assertEquals(BigDecimal.ZERO, result.totalExpense());
+    assertEquals(BigDecimal.ZERO, result.totalBalance());
+    assertEquals(0, result.exceededBudgetsCount());
+    assertEquals(0, result.totalBudgetsCount());
+    assertEquals("N/A", result.topExpenseCategory());
+    assertEquals(BigDecimal.ZERO, result.topExpenseAmount());
+  }
+
+  @Test
+  void getOverview_withDateRange_shouldFilterBudgetsOutsideRange() {
+    int accountId = 1;
+    LocalDate startDate = LocalDate.of(2024, 2, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    CategoryEntity food = CategoryEntityFactory.defaultCategory();
+
+    // January budget - should be filtered out
+    BudgetHistoryEntity janBudget = new BudgetHistoryEntity()
+        .setHistoryId(1)
+        .setAccount(AccountEntityFactory.defaultAccount())
+        .setCategory(food)
+        .setReferenceMonth((short) 1)
+        .setReferenceYear(2024)
+        .setStatus(BudgetStatus.EXCEEDED);
+
+    // February budget - should be included
+    BudgetHistoryEntity febBudget = new BudgetHistoryEntity()
+        .setHistoryId(2)
+        .setAccount(AccountEntityFactory.defaultAccount())
+        .setCategory(food)
+        .setReferenceMonth((short) 2)
+        .setReferenceYear(2024)
+        .setStatus(BudgetStatus.EXCEEDED);
+
+    when(transactionRepository.sumByMonthAndTypeForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of());
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(accountId), eq(2024), eq((short) 2), eq(2024), eq((short) 3)
+    )).thenReturn(List.of(janBudget, febBudget));
+
+    when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any()))
+        .thenReturn(List.of());
+
+    DashboardOverviewDTO result = metricsService.getOverview(accountId, startDate, endDate);
+
+    assertNotNull(result);
+    // Only February budget should be counted (January is before start date)
+    assertEquals(1, result.totalBudgetsCount());
+    assertEquals(1, result.exceededBudgetsCount());
+  }
 }

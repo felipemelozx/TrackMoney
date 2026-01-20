@@ -240,4 +240,192 @@ class MetricsControllerTest {
     assertEquals(BigDecimal.ZERO, response.getBody().getData().totalIncome());
     assertEquals("N/A", response.getBody().getData().topExpenseCategory());
   }
+
+  // ===== DATE RANGE AND DEFAULT PARAMS TESTS =====
+
+  @Test
+  void getMonthlySummary_withDateRange_shouldCallServiceWithDateRange() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    MonthlySummaryDTO.MonthSummary jan = new MonthlySummaryDTO.MonthSummary(
+        1, new BigDecimal("5000"), new BigDecimal("3000"), new BigDecimal("2000")
+    );
+
+    MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of(jan));
+
+    when(metricsService.getMonthlySummary(accountId, startDate, endDate)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
+        metricsController.getMonthlySummary(mockUser, null, startDate, endDate);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(expectedDTO, response.getBody().getData());
+    verify(metricsService, times(1)).getMonthlySummary(accountId, startDate, endDate);
+    verify(metricsService, never()).getMonthlySummary(eq(accountId), anyInt());
+  }
+
+  @Test
+  void getMonthlySummary_withNoParams_shouldCallServiceWithCurrentYear() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate now = LocalDate.now();
+    int currentYear = now.getYear();
+
+    MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of());
+
+    when(metricsService.getMonthlySummary(accountId, currentYear)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
+        metricsController.getMonthlySummary(mockUser, null, null, null);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(metricsService, times(1)).getMonthlySummary(accountId, currentYear);
+  }
+
+  @Test
+  void getByCategory_withDateRange_shouldCallServiceWithDateRange() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    CategoryBreakdownDTO expectedDTO = new CategoryBreakdownDTO(
+        2024, 1, new BigDecimal("800"), List.of()
+    );
+
+    when(metricsService.getByCategory(accountId, startDate, endDate)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
+        metricsController.getByCategory(mockUser, null, null, startDate, endDate);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(expectedDTO, response.getBody().getData());
+    verify(metricsService, times(1)).getByCategory(accountId, startDate, endDate);
+    verify(metricsService, never()).getByCategory(eq(accountId), anyInt(), anyInt());
+  }
+
+  @Test
+  void getByCategory_withNoParams_shouldCallServiceWithCurrentMonth() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate now = LocalDate.now();
+    int currentMonth = now.getMonthValue();
+    int currentYear = now.getYear();
+
+    CategoryBreakdownDTO expectedDTO = new CategoryBreakdownDTO(
+        currentYear, currentMonth, BigDecimal.ZERO, List.of()
+    );
+
+    when(metricsService.getByCategory(accountId, currentYear, currentMonth)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
+        metricsController.getByCategory(mockUser, null, null, null, null);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(metricsService, times(1)).getByCategory(accountId, currentYear, currentMonth);
+  }
+
+  @Test
+  void getBudgetPerformance_withDateRange_shouldCallServiceWithDateRange() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    BudgetPerformanceDTO expectedDTO = new BudgetPerformanceDTO(2024, List.of());
+
+    when(metricsService.getBudgetPerformance(accountId, startDate, endDate)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<BudgetPerformanceDTO>> response =
+        metricsController.getBudgetPerformance(mockUser, null, startDate, endDate);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(expectedDTO, response.getBody().getData());
+    verify(metricsService, times(1)).getBudgetPerformance(accountId, startDate, endDate);
+    verify(metricsService, never()).getBudgetPerformance(eq(accountId), anyInt());
+  }
+
+  @Test
+  void getBudgetPerformance_withNoParams_shouldCallServiceWithCurrentYear() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate now = LocalDate.now();
+    int currentYear = now.getYear();
+
+    BudgetPerformanceDTO expectedDTO = new BudgetPerformanceDTO(currentYear, List.of());
+
+    when(metricsService.getBudgetPerformance(accountId, currentYear)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<BudgetPerformanceDTO>> response =
+        metricsController.getBudgetPerformance(mockUser, null, null, null);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(metricsService, times(1)).getBudgetPerformance(accountId, currentYear);
+  }
+
+  @Test
+  void getOverview_withDateRange_shouldCallServiceWithDateRange() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    DashboardOverviewDTO expectedDTO = new DashboardOverviewDTO(
+        new BigDecimal("5000"),
+        new BigDecimal("3000"),
+        new BigDecimal("2000"),
+        1,
+        3,
+        "Food",
+        new BigDecimal("500"),
+        1,
+        2024
+    );
+
+    when(metricsService.getOverview(accountId, startDate, endDate)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<DashboardOverviewDTO>> response =
+        metricsController.getOverview(mockUser, startDate, endDate);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertTrue(response.getBody().isSuccess());
+    assertEquals(expectedDTO, response.getBody().getData());
+    verify(metricsService, times(1)).getOverview(accountId, startDate, endDate);
+    verify(metricsService, never()).getOverview(eq(accountId));
+  }
+
+  @Test
+  void getMonthlySummary_withYearOnly_shouldPreferYearOverDefault() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    int year = 2023;
+
+    MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of());
+
+    when(metricsService.getMonthlySummary(accountId, year)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
+        metricsController.getMonthlySummary(mockUser, year, null, null);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(metricsService, times(1)).getMonthlySummary(accountId, year);
+  }
+
+  @Test
+  void getByCategory_withYearOnly_shouldUseCurrentMonth() {
+    Integer accountId = mockUser.getAccount().getAccountId();
+    LocalDate now = LocalDate.now();
+    int year = now.getYear(); // Use current year instead of hardcoded 2023
+    int currentMonth = now.getMonthValue();
+
+    CategoryBreakdownDTO expectedDTO = new CategoryBreakdownDTO(
+        year, currentMonth, BigDecimal.ZERO, List.of()
+    );
+
+    when(metricsService.getByCategory(accountId, year, currentMonth)).thenReturn(expectedDTO);
+
+    ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
+        metricsController.getByCategory(mockUser, year, null, null, null);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    verify(metricsService, times(1)).getByCategory(accountId, year, currentMonth);
+  }
 }
