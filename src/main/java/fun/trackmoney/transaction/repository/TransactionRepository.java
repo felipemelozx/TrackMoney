@@ -141,12 +141,13 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   @Query(
       value = """
           SELECT EXTRACT(MONTH FROM t.transaction_date) as month,
+                 EXTRACT(YEAR FROM t.transaction_date) as year,
                  COALESCE(SUM(CASE WHEN t.transaction_type = 'INCOME' THEN t.amount ELSE 0 END), 0) as income,
                  COALESCE(SUM(CASE WHEN t.transaction_type = 'EXPENSE' THEN t.amount ELSE 0 END), 0) as expense
           FROM tb_transaction t
           WHERE t.account_id = :accountId
             AND EXTRACT(YEAR FROM t.transaction_date) = :year
-          GROUP BY EXTRACT(MONTH FROM t.transaction_date)
+          GROUP BY EXTRACT(MONTH FROM t.transaction_date), EXTRACT(YEAR FROM t.transaction_date)
           ORDER BY EXTRACT(MONTH FROM t.transaction_date)
           """,
       nativeQuery = true

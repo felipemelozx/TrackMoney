@@ -50,6 +50,7 @@ public class MetricsService {
 
     List<MonthlySummaryDTO.MonthSummary> months = aggregates.stream()
         .map(agg -> new MonthlySummaryDTO.MonthSummary(
+            agg.getYear(),
             agg.getMonth(),
             agg.getIncome(),
             agg.getExpense(),
@@ -77,6 +78,7 @@ public class MetricsService {
 
     List<MonthlySummaryDTO.MonthSummary> months = aggregates.stream()
         .map(agg -> new MonthlySummaryDTO.MonthSummary(
+            agg.getYear(),
             agg.getMonth(),
             agg.getIncome(),
             agg.getExpense(),
@@ -287,6 +289,11 @@ public class MetricsService {
           @Override
           public int getMonth() {
             return month;
+          }
+
+          @Override
+          public Integer getYear() {
+            return year;
           }
 
           @Override

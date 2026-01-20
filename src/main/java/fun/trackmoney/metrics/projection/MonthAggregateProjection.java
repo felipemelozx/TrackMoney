@@ -20,9 +20,7 @@ public interface MonthAggregateProjection {
    *
    * @return the year
    */
-  default Integer getYear() {
-    return null;
-  }
+  Integer getYear();
 
   /**
    * Gets the total income for the month.
