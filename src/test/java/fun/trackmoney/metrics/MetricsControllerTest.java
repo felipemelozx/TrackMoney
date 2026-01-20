@@ -46,11 +46,11 @@ class MetricsControllerTest {
     Integer accountId = mockUser.getAccount().getAccountId();
 
     MonthlySummaryDTO.MonthSummary jan = new MonthlySummaryDTO.MonthSummary(
-        1, new BigDecimal("5000"), new BigDecimal("3000"), new BigDecimal("2000")
+        2024, 1, new BigDecimal("5000"), new BigDecimal("3000"), new BigDecimal("2000")
     );
 
     MonthlySummaryDTO.MonthSummary feb = new MonthlySummaryDTO.MonthSummary(
-        2, new BigDecimal("5500"), new BigDecimal("3500"), new BigDecimal("2000")
+        2024, 2, new BigDecimal("5500"), new BigDecimal("3500"), new BigDecimal("2000")
     );
 
     MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of(jan, feb));
@@ -250,7 +250,7 @@ class MetricsControllerTest {
     LocalDate endDate = LocalDate.of(2024, 3, 31);
 
     MonthlySummaryDTO.MonthSummary jan = new MonthlySummaryDTO.MonthSummary(
-        1, new BigDecimal("5000"), new BigDecimal("3000"), new BigDecimal("2000")
+        2024, 1, new BigDecimal("5000"), new BigDecimal("3000"), new BigDecimal("2000")
     );
 
     MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of(jan));

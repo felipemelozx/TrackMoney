@@ -45,12 +45,14 @@ class MetricsServiceTest {
 
     MonthAggregateProjection jan = new MonthAggregateProjection() {
       @Override public int getMonth() { return 1; }
+      @Override public Integer getYear() { return 2024; }
       @Override public BigDecimal getIncome() { return new BigDecimal("5000"); }
       @Override public BigDecimal getExpense() { return new BigDecimal("3000"); }
     };
 
     MonthAggregateProjection feb = new MonthAggregateProjection() {
       @Override public int getMonth() { return 2; }
+      @Override public Integer getYear() { return 2024; }
       @Override public BigDecimal getIncome() { return new BigDecimal("5500"); }
       @Override public BigDecimal getExpense() { return new BigDecimal("3500"); }
     };
@@ -64,12 +66,14 @@ class MetricsServiceTest {
     assertEquals(2, result.months().size());
 
     MonthlySummaryDTO.MonthSummary janSummary = result.months().get(0);
+    assertEquals(2024, janSummary.year());
     assertEquals(1, janSummary.month());
     assertEquals(new BigDecimal("5000"), janSummary.income());
     assertEquals(new BigDecimal("3000"), janSummary.expense());
     assertEquals(new BigDecimal("2000"), janSummary.balance());
 
     MonthlySummaryDTO.MonthSummary febSummary = result.months().get(1);
+    assertEquals(2024, febSummary.year());
     assertEquals(2, febSummary.month());
     assertEquals(new BigDecimal("5500"), febSummary.income());
     assertEquals(new BigDecimal("3500"), febSummary.expense());
@@ -225,6 +229,7 @@ class MetricsServiceTest {
 
     MonthAggregateProjection monthData = new MonthAggregateProjection() {
       @Override public int getMonth() { return currentMonth; }
+      @Override public Integer getYear() { return currentYear; }
       @Override public BigDecimal getIncome() { return new BigDecimal("5000"); }
       @Override public BigDecimal getExpense() { return new BigDecimal("3000"); }
     };
@@ -393,18 +398,21 @@ class MetricsServiceTest {
 
     MonthAggregateProjection jan = new MonthAggregateProjection() {
       @Override public int getMonth() { return 1; }
+      @Override public Integer getYear() { return 2024; }
       @Override public BigDecimal getIncome() { return new BigDecimal("5000"); }
       @Override public BigDecimal getExpense() { return new BigDecimal("3000"); }
     };
 
     MonthAggregateProjection feb = new MonthAggregateProjection() {
       @Override public int getMonth() { return 2; }
+      @Override public Integer getYear() { return 2024; }
       @Override public BigDecimal getIncome() { return new BigDecimal("5500"); }
       @Override public BigDecimal getExpense() { return new BigDecimal("3500"); }
     };
 
     MonthAggregateProjection mar = new MonthAggregateProjection() {
       @Override public int getMonth() { return 3; }
+      @Override public Integer getYear() { return 2024; }
       @Override public BigDecimal getIncome() { return new BigDecimal("6000"); }
       @Override public BigDecimal getExpense() { return new BigDecimal("4000"); }
     };
@@ -416,6 +424,9 @@ class MetricsServiceTest {
 
     assertNotNull(result);
     assertEquals(3, result.months().size());
+    assertEquals(2024, result.months().get(0).year());
+    assertEquals(2024, result.months().get(1).year());
+    assertEquals(2024, result.months().get(2).year());
     assertEquals(new BigDecimal("5000"), result.months().get(0).income());
     assertEquals(new BigDecimal("5500"), result.months().get(1).income());
     assertEquals(new BigDecimal("6000"), result.months().get(2).income());
@@ -557,6 +568,7 @@ class MetricsServiceTest {
 
     MonthAggregateProjection monthData = new MonthAggregateProjection() {
       @Override public int getMonth() { return 1; }
+      @Override public Integer getYear() { return 2024; }
       @Override public BigDecimal getIncome() { return new BigDecimal("15000"); }
       @Override public BigDecimal getExpense() { return new BigDecimal("9000"); }
     };
