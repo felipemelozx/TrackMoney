@@ -55,17 +55,17 @@ class MetricsControllerTest {
 
     MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of(jan, feb));
 
-    when(metricsService.getMonthlySummary(accountId, year)).thenReturn(expectedDTO);
+    when(metricsService.getMonthlySummary(accountId, year, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
-        metricsController.getMonthlySummary(mockUser, year, null, null);
+        metricsController.getMonthlySummary(mockUser, year, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals("Monthly summary retrieved successfully", response.getBody().getMessage());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getMonthlySummary(accountId, year);
+    verify(metricsService, times(1)).getMonthlySummary(accountId, year, null);
   }
 
   @Test
@@ -75,10 +75,10 @@ class MetricsControllerTest {
 
     MonthlySummaryDTO emptyDTO = new MonthlySummaryDTO(List.of());
 
-    when(metricsService.getMonthlySummary(accountId, year)).thenReturn(emptyDTO);
+    when(metricsService.getMonthlySummary(accountId, year, null)).thenReturn(emptyDTO);
 
     ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
-        metricsController.getMonthlySummary(mockUser, year, null, null);
+        metricsController.getMonthlySummary(mockUser, year, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(response.getBody().isSuccess());
@@ -103,17 +103,17 @@ class MetricsControllerTest {
         year, month, new BigDecimal("800"), List.of(food, transport)
     );
 
-    when(metricsService.getByCategory(accountId, year, month)).thenReturn(expectedDTO);
+    when(metricsService.getByCategory(accountId, year, month, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
-        metricsController.getByCategory(mockUser, year, month, null, null);
+        metricsController.getByCategory(mockUser, year, month, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals("Category breakdown retrieved successfully", response.getBody().getMessage());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getByCategory(accountId, year, month);
+    verify(metricsService, times(1)).getByCategory(accountId, year, month, null);
   }
 
   @Test
@@ -126,10 +126,10 @@ class MetricsControllerTest {
         year, month, BigDecimal.ZERO, List.of()
     );
 
-    when(metricsService.getByCategory(accountId, year, month)).thenReturn(emptyDTO);
+    when(metricsService.getByCategory(accountId, year, month, null)).thenReturn(emptyDTO);
 
     ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
-        metricsController.getByCategory(mockUser, year, month, null, null);
+        metricsController.getByCategory(mockUser, year, month, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(response.getBody().getData().categories().isEmpty());
@@ -151,17 +151,17 @@ class MetricsControllerTest {
 
     BudgetPerformanceDTO expectedDTO = new BudgetPerformanceDTO(year, List.of(month));
 
-    when(metricsService.getBudgetPerformance(accountId, year)).thenReturn(expectedDTO);
+    when(metricsService.getBudgetPerformance(accountId, year, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<BudgetPerformanceDTO>> response =
-        metricsController.getBudgetPerformance(mockUser, year, null, null);
+        metricsController.getBudgetPerformance(mockUser, year, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals("Budget performance retrieved successfully", response.getBody().getMessage());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getBudgetPerformance(accountId, year);
+    verify(metricsService, times(1)).getBudgetPerformance(accountId, year, null);
   }
 
   @Test
@@ -171,10 +171,10 @@ class MetricsControllerTest {
 
     BudgetPerformanceDTO emptyDTO = new BudgetPerformanceDTO(year, List.of());
 
-    when(metricsService.getBudgetPerformance(accountId, year)).thenReturn(emptyDTO);
+    when(metricsService.getBudgetPerformance(accountId, year, null)).thenReturn(emptyDTO);
 
     ResponseEntity<ApiResponse<BudgetPerformanceDTO>> response =
-        metricsController.getBudgetPerformance(mockUser, year, null, null);
+        metricsController.getBudgetPerformance(mockUser, year, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(response.getBody().getData().monthlyPerformance().isEmpty());
@@ -199,17 +199,17 @@ class MetricsControllerTest {
         currentYear
     );
 
-    when(metricsService.getOverview(accountId)).thenReturn(expectedDTO);
+    when(metricsService.getOverview(accountId, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<DashboardOverviewDTO>> response =
-        metricsController.getOverview(mockUser, null, null);
+        metricsController.getOverview(mockUser, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertTrue(response.getBody().isSuccess());
     assertEquals("Dashboard overview retrieved successfully", response.getBody().getMessage());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getOverview(accountId);
+    verify(metricsService, times(1)).getOverview(accountId, null);
   }
 
   @Test
@@ -231,10 +231,10 @@ class MetricsControllerTest {
         currentYear
     );
 
-    when(metricsService.getOverview(accountId)).thenReturn(emptyDTO);
+    when(metricsService.getOverview(accountId, null)).thenReturn(emptyDTO);
 
     ResponseEntity<ApiResponse<DashboardOverviewDTO>> response =
-        metricsController.getOverview(mockUser, null, null);
+        metricsController.getOverview(mockUser, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(BigDecimal.ZERO, response.getBody().getData().totalIncome());
@@ -255,16 +255,16 @@ class MetricsControllerTest {
 
     MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of(jan));
 
-    when(metricsService.getMonthlySummary(accountId, startDate, endDate)).thenReturn(expectedDTO);
+    when(metricsService.getMonthlySummary(accountId, startDate, endDate, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
-        metricsController.getMonthlySummary(mockUser, null, startDate, endDate);
+        metricsController.getMonthlySummary(mockUser, null, startDate, endDate, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(response.getBody().isSuccess());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getMonthlySummary(accountId, startDate, endDate);
-    verify(metricsService, never()).getMonthlySummary(eq(accountId), anyInt());
+    verify(metricsService, times(1)).getMonthlySummary(accountId, startDate, endDate, null);
+    verify(metricsService, never()).getMonthlySummary(eq(accountId), anyInt(), isNull());
   }
 
   @Test
@@ -275,13 +275,13 @@ class MetricsControllerTest {
 
     MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of());
 
-    when(metricsService.getMonthlySummary(accountId, currentYear)).thenReturn(expectedDTO);
+    when(metricsService.getMonthlySummary(accountId, currentYear, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
-        metricsController.getMonthlySummary(mockUser, null, null, null);
+        metricsController.getMonthlySummary(mockUser, null, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(metricsService, times(1)).getMonthlySummary(accountId, currentYear);
+    verify(metricsService, times(1)).getMonthlySummary(accountId, currentYear, null);
   }
 
   @Test
@@ -294,16 +294,16 @@ class MetricsControllerTest {
         2024, 1, new BigDecimal("800"), List.of()
     );
 
-    when(metricsService.getByCategory(accountId, startDate, endDate)).thenReturn(expectedDTO);
+    when(metricsService.getByCategory(accountId, startDate, endDate, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
-        metricsController.getByCategory(mockUser, null, null, startDate, endDate);
+        metricsController.getByCategory(mockUser, null, null, startDate, endDate, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(response.getBody().isSuccess());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getByCategory(accountId, startDate, endDate);
-    verify(metricsService, never()).getByCategory(eq(accountId), anyInt(), anyInt());
+    verify(metricsService, times(1)).getByCategory(accountId, startDate, endDate, null);
+    verify(metricsService, never()).getByCategory(eq(accountId), anyInt(), anyInt(), isNull());
   }
 
   @Test
@@ -317,13 +317,13 @@ class MetricsControllerTest {
         currentYear, currentMonth, BigDecimal.ZERO, List.of()
     );
 
-    when(metricsService.getByCategory(accountId, currentYear, currentMonth)).thenReturn(expectedDTO);
+    when(metricsService.getByCategory(accountId, currentYear, currentMonth, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
-        metricsController.getByCategory(mockUser, null, null, null, null);
+        metricsController.getByCategory(mockUser, null, null, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(metricsService, times(1)).getByCategory(accountId, currentYear, currentMonth);
+    verify(metricsService, times(1)).getByCategory(accountId, currentYear, currentMonth, null);
   }
 
   @Test
@@ -334,16 +334,16 @@ class MetricsControllerTest {
 
     BudgetPerformanceDTO expectedDTO = new BudgetPerformanceDTO(2024, List.of());
 
-    when(metricsService.getBudgetPerformance(accountId, startDate, endDate)).thenReturn(expectedDTO);
+    when(metricsService.getBudgetPerformance(accountId, startDate, endDate, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<BudgetPerformanceDTO>> response =
-        metricsController.getBudgetPerformance(mockUser, null, startDate, endDate);
+        metricsController.getBudgetPerformance(mockUser, null, startDate, endDate, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(response.getBody().isSuccess());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getBudgetPerformance(accountId, startDate, endDate);
-    verify(metricsService, never()).getBudgetPerformance(eq(accountId), anyInt());
+    verify(metricsService, times(1)).getBudgetPerformance(accountId, startDate, endDate, null);
+    verify(metricsService, never()).getBudgetPerformance(eq(accountId), anyInt(), isNull());
   }
 
   @Test
@@ -354,13 +354,13 @@ class MetricsControllerTest {
 
     BudgetPerformanceDTO expectedDTO = new BudgetPerformanceDTO(currentYear, List.of());
 
-    when(metricsService.getBudgetPerformance(accountId, currentYear)).thenReturn(expectedDTO);
+    when(metricsService.getBudgetPerformance(accountId, currentYear, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<BudgetPerformanceDTO>> response =
-        metricsController.getBudgetPerformance(mockUser, null, null, null);
+        metricsController.getBudgetPerformance(mockUser, null, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(metricsService, times(1)).getBudgetPerformance(accountId, currentYear);
+    verify(metricsService, times(1)).getBudgetPerformance(accountId, currentYear, null);
   }
 
   @Test
@@ -381,16 +381,16 @@ class MetricsControllerTest {
         2024
     );
 
-    when(metricsService.getOverview(accountId, startDate, endDate)).thenReturn(expectedDTO);
+    when(metricsService.getOverview(accountId, startDate, endDate, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<DashboardOverviewDTO>> response =
-        metricsController.getOverview(mockUser, startDate, endDate);
+        metricsController.getOverview(mockUser, startDate, endDate, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(response.getBody().isSuccess());
     assertEquals(expectedDTO, response.getBody().getData());
-    verify(metricsService, times(1)).getOverview(accountId, startDate, endDate);
-    verify(metricsService, never()).getOverview(eq(accountId));
+    verify(metricsService, times(1)).getOverview(accountId, startDate, endDate, null);
+    verify(metricsService, never()).getOverview(eq(accountId), isNull());
   }
 
   @Test
@@ -400,13 +400,13 @@ class MetricsControllerTest {
 
     MonthlySummaryDTO expectedDTO = new MonthlySummaryDTO(List.of());
 
-    when(metricsService.getMonthlySummary(accountId, year)).thenReturn(expectedDTO);
+    when(metricsService.getMonthlySummary(accountId, year, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<MonthlySummaryDTO>> response =
-        metricsController.getMonthlySummary(mockUser, year, null, null);
+        metricsController.getMonthlySummary(mockUser, year, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(metricsService, times(1)).getMonthlySummary(accountId, year);
+    verify(metricsService, times(1)).getMonthlySummary(accountId, year, null);
   }
 
   @Test
@@ -420,12 +420,12 @@ class MetricsControllerTest {
         year, currentMonth, BigDecimal.ZERO, List.of()
     );
 
-    when(metricsService.getByCategory(accountId, year, currentMonth)).thenReturn(expectedDTO);
+    when(metricsService.getByCategory(accountId, year, currentMonth, null)).thenReturn(expectedDTO);
 
     ResponseEntity<ApiResponse<CategoryBreakdownDTO>> response =
-        metricsController.getByCategory(mockUser, year, null, null, null);
+        metricsController.getByCategory(mockUser, year, null, null, null, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(metricsService, times(1)).getByCategory(accountId, year, currentMonth);
+    verify(metricsService, times(1)).getByCategory(accountId, year, currentMonth, null);
   }
 }
