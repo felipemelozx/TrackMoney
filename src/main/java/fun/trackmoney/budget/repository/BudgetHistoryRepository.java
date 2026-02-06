@@ -71,7 +71,7 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
       """)
   List<BudgetHistoryEntity> findByAccountAndOptionalCategoryId(
       @Param("accountId") Integer accountId,
-      @Param("categoryId") Long categoryId
+      @Param("categoryId") Integer categoryId
   );
 
   @Query("""
@@ -90,7 +90,7 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
       @Param("startMonth") Short startMonth,
       @Param("endYear") Integer endYear,
       @Param("endMonth") Short endMonth,
-      @Param("categoryId") Long categoryId
+      @Param("categoryId") Integer categoryId
   );
 
   void deleteByBudgetBudgetId(Integer budgetId);
@@ -109,11 +109,13 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
       SELECT bh FROM BudgetHistoryEntity bh
       WHERE bh.account.accountId = :accountId
         AND bh.referenceYear = :year
+        AND (:categoryId IS NULL OR bh.category.categoryId = :categoryId)
       ORDER BY bh.referenceMonth DESC
       """)
   List<BudgetHistoryEntity> findByAccountAndYear(
       @Param("accountId") Integer accountId,
-      @Param("year") Integer year
+      @Param("year") Integer year,
+      @Param("categoryId") Integer categoryId
   );
 
   /**
@@ -135,6 +137,7 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
           (bh.referenceYear > :startYear AND bh.referenceYear < :endYear) OR
           (bh.referenceYear = :endYear AND bh.referenceMonth <= :endMonth)
         )
+        AND (:categoryId IS NULL OR bh.category.categoryId = :categoryId)
       ORDER BY bh.referenceYear DESC, bh.referenceMonth DESC
       """)
   List<BudgetHistoryEntity> findByAccountAndYearMonthRange(
@@ -142,7 +145,8 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
       @Param("startYear") Integer startYear,
       @Param("startMonth") Short startMonth,
       @Param("endYear") Integer endYear,
-      @Param("endMonth") Short endMonth
+      @Param("endMonth") Short endMonth,
+      @Param("categoryId") Integer categoryId
   );
 
   /**
@@ -159,11 +163,13 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
       WHERE bh.account.accountId = :accountId
         AND bh.referenceYear = :year
         AND bh.referenceMonth = :month
+        AND (:categoryId IS NULL OR bh.category.categoryId = :categoryId)
       ORDER BY bh.category.name ASC
       """)
   List<BudgetHistoryEntity> findByAccountAndYearAndMonth(
       @Param("accountId") Integer accountId,
       @Param("year") Integer year,
-      @Param("month") Short month
+      @Param("month") Short month,
+      @Param("categoryId") Integer categoryId
   );
 }
