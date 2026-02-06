@@ -177,7 +177,7 @@ public class BudgetHistoryService {
    * @param currentUser the authenticated user
    * @param categoryId optional category filter
    */
-  public List<BudgetHistoryEntity> getAllHistory(UserEntity currentUser, Long categoryId) {
+  public List<BudgetHistoryEntity> getAllHistory(UserEntity currentUser, Integer categoryId) {
     Integer accountId = currentUser.getAccount().getAccountId();
     if (categoryId == null) {
       return budgetHistoryRepository.findByAccountAccountIdOrderByReferenceYearDescReferenceMonthDesc(accountId);
@@ -200,7 +200,7 @@ public class BudgetHistoryService {
       Integer startYear,
       Short endMonth,
       Integer endYear,
-      Long categoryId) {
+      Integer categoryId) {
     Integer accountId = currentUser.getAccount().getAccountId();
     if (categoryId == null) {
       return budgetHistoryRepository.findByAccountAndDateRange(

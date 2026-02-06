@@ -91,7 +91,7 @@ public class TransactionController {
       @RequestParam(required = false)
       String transactionName,
       @RequestParam(required = false)
-      Long categoryId,
+      Integer categoryId,
       @RequestParam(required = false)
       LocalDate startDate,
       @RequestParam(required = false)

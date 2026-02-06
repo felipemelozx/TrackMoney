@@ -98,7 +98,7 @@ public class BudgetHistoryController {
       @RequestParam(required = false) Integer startYear,
       @RequestParam(required = false) Short endMonth,
       @RequestParam(required = false) Integer endYear,
-      @RequestParam(required = false) Long categoryId) {
+      @RequestParam(required = false) Integer categoryId) {
 
     List<BudgetHistoryEntity> history;
 
@@ -124,7 +124,7 @@ public class BudgetHistoryController {
   public ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> getHistoryByMonth(
       @PathVariable Short month,
       @PathVariable Integer year,
-      @RequestParam(required = false) Long categoryId,
+      @RequestParam(required = false) Integer categoryId,
       @AuthenticationPrincipal UserEntity currentUser) {
 
     List<BudgetHistoryEntity> history = budgetHistoryService.getHistoryByDateRange(

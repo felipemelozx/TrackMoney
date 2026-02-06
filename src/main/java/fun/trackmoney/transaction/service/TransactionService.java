@@ -164,7 +164,7 @@ public class TransactionService {
   public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable,
                                                                UserEntity currentUser,
                                                                String name,
-                                                               Long categoryId,
+                                                               Integer categoryId,
                                                                LocalDate startDate,
                                                                LocalDate endDate
                                                                ) {
