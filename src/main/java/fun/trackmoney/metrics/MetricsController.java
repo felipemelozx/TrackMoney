@@ -52,18 +52,19 @@ public class MetricsController {
       @AuthenticationPrincipal UserEntity currentUser,
       @RequestParam(required = false) @Min(2000) @Max(2100) Integer year,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) @Min(1) Integer categoryId
   ) {
     Integer accountId = currentUser.getAccount().getAccountId();
     MonthlySummaryDTO result;
 
     if (startDate != null && endDate != null) {
-      result = metricsService.getMonthlySummary(accountId, startDate, endDate);
+      result = metricsService.getMonthlySummary(accountId, startDate, endDate, categoryId);
     } else if (year != null) {
-      result = metricsService.getMonthlySummary(accountId, year);
+      result = metricsService.getMonthlySummary(accountId, year, categoryId);
     } else {
       // Default to current year if no parameters provided
-      result = metricsService.getMonthlySummary(accountId, LocalDate.now().getYear());
+      result = metricsService.getMonthlySummary(accountId, LocalDate.now().getYear(), categoryId);
     }
 
     ApiResponse<MonthlySummaryDTO> body = ApiResponse.<MonthlySummaryDTO>success()
@@ -92,19 +93,20 @@ public class MetricsController {
       @RequestParam(required = false) @Min(2000) @Max(2100) Integer year,
       @RequestParam(required = false) @Min(1) @Max(12) Integer month,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) @Min(1) Integer categoryId
   ) {
     Integer accountId = currentUser.getAccount().getAccountId();
     CategoryBreakdownDTO result;
 
     if (startDate != null && endDate != null) {
-      result = metricsService.getByCategory(accountId, startDate, endDate);
+      result = metricsService.getByCategory(accountId, startDate, endDate, categoryId);
     } else if (year != null && month != null) {
-      result = metricsService.getByCategory(accountId, year, month);
+      result = metricsService.getByCategory(accountId, year, month, categoryId);
     } else {
       // Default to current month if no parameters provided
       LocalDate now = LocalDate.now();
-      result = metricsService.getByCategory(accountId, now.getYear(), now.getMonthValue());
+      result = metricsService.getByCategory(accountId, now.getYear(), now.getMonthValue(), categoryId);
     }
 
     ApiResponse<CategoryBreakdownDTO> body = ApiResponse.<CategoryBreakdownDTO>success()
@@ -131,18 +133,19 @@ public class MetricsController {
       @AuthenticationPrincipal UserEntity currentUser,
       @RequestParam(required = false) @Min(2000) @Max(2100) Integer year,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) @Min(1) Integer categoryId
   ) {
     Integer accountId = currentUser.getAccount().getAccountId();
     BudgetPerformanceDTO result;
 
     if (startDate != null && endDate != null) {
-      result = metricsService.getBudgetPerformance(accountId, startDate, endDate);
+      result = metricsService.getBudgetPerformance(accountId, startDate, endDate, categoryId);
     } else if (year != null) {
-      result = metricsService.getBudgetPerformance(accountId, year);
+      result = metricsService.getBudgetPerformance(accountId, year, categoryId);
     } else {
       // Default to current year if no parameters provided
-      result = metricsService.getBudgetPerformance(accountId, LocalDate.now().getYear());
+      result = metricsService.getBudgetPerformance(accountId, LocalDate.now().getYear(), categoryId);
     }
 
     ApiResponse<BudgetPerformanceDTO> body = ApiResponse.<BudgetPerformanceDTO>success()
@@ -167,16 +170,17 @@ public class MetricsController {
   public ResponseEntity<ApiResponse<DashboardOverviewDTO>> getOverview(
       @AuthenticationPrincipal UserEntity currentUser,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false) @Min(1) Integer categoryId
   ) {
     Integer accountId = currentUser.getAccount().getAccountId();
     DashboardOverviewDTO result;
 
     if (startDate != null && endDate != null) {
-      result = metricsService.getOverview(accountId, startDate, endDate);
+      result = metricsService.getOverview(accountId, startDate, endDate, categoryId);
     } else {
       // Default to current month if no parameters provided
-      result = metricsService.getOverview(accountId);
+      result = metricsService.getOverview(accountId, categoryId);
     }
 
     ApiResponse<DashboardOverviewDTO> body = ApiResponse.<DashboardOverviewDTO>success()
