@@ -38,7 +38,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   Page<TransactionEntity> findAllByFilters(
       @Param("accountId") Integer accountId,
       @Param("transactionName") String transactionName,
-      @Param("categoryId") Long categoryId,
+      @Param("categoryId") Integer categoryId,
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate,
       Pageable pageable
@@ -147,6 +147,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
           FROM tb_transaction t
           WHERE t.account_id = :accountId
             AND EXTRACT(YEAR FROM t.transaction_date) = :year
+            AND (:categoryId IS NULL OR t.category_id = :categoryId)
           GROUP BY EXTRACT(MONTH FROM t.transaction_date), EXTRACT(YEAR FROM t.transaction_date)
           ORDER BY EXTRACT(MONTH FROM t.transaction_date)
           """,
@@ -154,7 +155,8 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   )
   List<MonthAggregateProjection> sumByMonthAndType(
       @Param("accountId") Integer accountId,
-      @Param("year") int year
+      @Param("year") int year,
+      @Param("categoryId") Integer categoryId
   );
 
   /**
@@ -171,6 +173,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
           WHERE t.account_id = :accountId
             AND t.transaction_date >= :startDate
             AND t.transaction_date <= :endDate
+            AND (:categoryId IS NULL OR t.category_id = :categoryId)
           GROUP BY EXTRACT(MONTH FROM t.transaction_date), EXTRACT(YEAR FROM t.transaction_date)
           ORDER BY EXTRACT(YEAR FROM t.transaction_date), EXTRACT(MONTH FROM t.transaction_date)
           """,
@@ -179,7 +182,8 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   List<MonthAggregateProjection> sumByMonthAndTypeForDateRange(
       @Param("accountId") Integer accountId,
       @Param("startDate") LocalDateTime startDate,
-      @Param("endDate") LocalDateTime endDate
+      @Param("endDate") LocalDateTime endDate,
+      @Param("categoryId") Integer categoryId
   );
 
   /**
@@ -198,6 +202,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
               AND t.transaction_type = 'EXPENSE'
               AND EXTRACT(YEAR FROM t.transaction_date) = :year
               AND EXTRACT(MONTH FROM t.transaction_date) = :month
+              AND (:categoryId IS NULL OR c.category_id = :categoryId)
           GROUP BY c.category_id, c.name, c.color
           ORDER BY COALESCE(SUM(t.amount), 0) DESC
           """,
@@ -206,7 +211,8 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   List<CategoryAggregateProjection> sumByCategoryForMonth(
       @Param("accountId") Integer accountId,
       @Param("year") int year,
-      @Param("month") int month
+      @Param("month") int month,
+      @Param("categoryId") Integer categoryId
   );
 
   /**
@@ -225,6 +231,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
               AND t.transaction_type = 'EXPENSE'
               AND t.transaction_date >= :startDate
               AND t.transaction_date <= :endDate
+              AND (:categoryId IS NULL OR c.category_id = :categoryId)
           GROUP BY c.category_id, c.name, c.color
           ORDER BY COALESCE(SUM(t.amount), 0) DESC
           """,
@@ -233,6 +240,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   List<CategoryAggregateProjection> sumByCategoryForDateRange(
       @Param("accountId") Integer accountId,
       @Param("startDate") LocalDateTime startDate,
-      @Param("endDate") LocalDateTime endDate
+      @Param("endDate") LocalDateTime endDate,
+      @Param("categoryId") Integer categoryId
   );
 }
