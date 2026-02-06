@@ -209,14 +209,14 @@ class TransactionControllerTest {
     TransactionResponseDTO transaction2 = TransactionResponseDTOFactory.defaultTransactionResponse();
     Page<TransactionResponseDTO> page = new PageImpl<>(List.of(transaction1, transaction2), pageable, 2);
 
-    when(transactionService.getPaginatedTransactions(pageable, user, "some name", 1l, startDate, endDate)).thenReturn(page);
+    when(transactionService.getPaginatedTransactions(pageable, user, "some name", 1, startDate, endDate)).thenReturn(page);
 
-    var response = transactionController.getPaginatedTransactions(pageable, "some name", 1l, startDate, endDate, user);
+    var response = transactionController.getPaginatedTransactions(pageable, "some name", 1, startDate, endDate, user);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertThat(response.getBody().getData()).hasSize(2);
     assertEquals("Paginated transactions", response.getBody().getMessage());
-    verify(transactionService, times(1)).getPaginatedTransactions(pageable, user, "some name", 1l, startDate, endDate);
+    verify(transactionService, times(1)).getPaginatedTransactions(pageable, user, "some name", 1, startDate, endDate);
   }
 }

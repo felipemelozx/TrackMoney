@@ -462,7 +462,7 @@ class BudgetHistoryServiceTest {
   @Test
   void getAllHistory_shouldReturnFilteredHistory_whenCategoryIdProvided() {
     UserEntity user = UserEntityFactory.defaultUser();
-    Long categoryId = 1L;
+    Integer categoryId = 1;
 
     BudgetHistoryEntity history1 = createMockHistory(1, (short) 1, 2025);
     BudgetHistoryEntity history2 = createMockHistory(2, (short) 2, 2025);
@@ -483,7 +483,7 @@ class BudgetHistoryServiceTest {
   @Test
   void getHistoryByDateRange_shouldReturnFilteredHistory_whenCategoryIdProvided() {
     UserEntity user = UserEntityFactory.defaultUser();
-    Long categoryId = 1L;
+    Integer categoryId = 1;
 
     BudgetHistoryEntity history1 = createMockHistory(1, (short) 1, 2025);
     BudgetHistoryEntity history2 = createMockHistory(2, (short) 2, 2025);

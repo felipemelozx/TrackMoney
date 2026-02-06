@@ -251,7 +251,7 @@ class BudgetHistoryControllerTest {
     List<BudgetHistoryEntity> historyList = Collections.singletonList(mockHistoryEntity);
     List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
 
-    Long categoryId = 1L;
+    Integer categoryId = 1;
 
     when(budgetHistoryService.getAllHistory(mockUser, categoryId)).thenReturn(historyList);
     when(budgetHistoryService.enrichWithTransactions(historyList)).thenReturn(dtoList);
@@ -272,7 +272,7 @@ class BudgetHistoryControllerTest {
     List<BudgetHistoryEntity> historyList = Collections.singletonList(mockHistoryEntity);
     List<BudgetHistoryResponseDTO> dtoList = Collections.singletonList(mockResponseDTO);
 
-    Long categoryId = 1L;
+    Integer categoryId = 1;
 
     when(budgetHistoryService.getHistoryByDateRange(mockUser, (short) 1, 2025, (short) 1, 2025, categoryId))
         .thenReturn(historyList);

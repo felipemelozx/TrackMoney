@@ -399,7 +399,7 @@ class TransactionServiceTest {
     when(transactionRepository.findAllByFilters(
         user.getAccount().getAccountId(),
         "Food",
-        1L,
+        1,
         expectedStart,
         expectedEnd,
         pageable
@@ -408,11 +408,11 @@ class TransactionServiceTest {
     when(transactionMapper.toResponseDTO(transaction)).thenReturn(dto);
 
     Page<TransactionResponseDTO> result = transactionService.getPaginatedTransactions(
-        pageable, user, "Food", 1L, startDate, endDate);
+        pageable, user, "Food", 1, startDate, endDate);
 
     assertThat(result.getContent()).containsExactly(dto);
     verify(transactionRepository, times(1)).findAllByFilters(
-        user.getAccount().getAccountId(), "Food", 1L, expectedStart, expectedEnd, pageable);
+        user.getAccount().getAccountId(), "Food", 1, expectedStart, expectedEnd, pageable);
   }
 
   @Test
