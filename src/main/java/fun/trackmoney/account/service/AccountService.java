@@ -6,9 +6,9 @@ import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.account.exception.AccountNotFoundException;
 import fun.trackmoney.account.mapper.AccountMapper;
-import fun.trackmoney.account.repository.AccountRepository;
+import fun.trackmoney.repository.AccountRepository;
 import fun.trackmoney.user.exception.UserNotFoundException;
-import fun.trackmoney.user.repository.UserRepository;
+import fun.trackmoney.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

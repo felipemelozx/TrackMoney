@@ -9,7 +9,7 @@ import fun.trackmoney.budget.dtos.internal.BudgetSuccess;
 import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetError;
 import fun.trackmoney.budget.mapper.BudgetMapper;
-import fun.trackmoney.budget.repository.BudgetsRepository;
+import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.entity.TransactionEntity;

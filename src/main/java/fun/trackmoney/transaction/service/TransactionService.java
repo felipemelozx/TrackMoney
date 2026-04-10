@@ -15,7 +15,7 @@ import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
 import fun.trackmoney.entity.TransactionEntity;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
-import fun.trackmoney.transaction.repository.TransactionRepository;
+import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

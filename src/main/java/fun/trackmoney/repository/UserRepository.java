@@ -1,4 +1,4 @@
-package fun.trackmoney.user.repository;
+package fun.trackmoney.repository;
 
 import fun.trackmoney.entity.UserEntity;
 import java.util.Optional;

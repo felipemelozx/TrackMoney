@@ -1,4 +1,4 @@
-package fun.trackmoney.budget.repository;
+package fun.trackmoney.repository;
 
 public interface BudgetCheckProjection {
   boolean getCategoryExists();

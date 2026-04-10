@@ -9,7 +9,7 @@ import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.user.mapper.UserMapper;
-import fun.trackmoney.user.repository.UserRepository;
+import fun.trackmoney.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

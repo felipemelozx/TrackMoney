@@ -1,4 +1,4 @@
-package fun.trackmoney.transaction.repository;
+package fun.trackmoney.repository;
 
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.metrics.projection.CategoryAggregateProjection;

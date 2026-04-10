@@ -2,8 +2,8 @@ package fun.trackmoney.metrics.service;
 
 import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.entity.BudgetsEntity;
-import fun.trackmoney.budget.repository.BudgetHistoryRepository;
-import fun.trackmoney.budget.repository.BudgetsRepository;
+import fun.trackmoney.repository.BudgetHistoryRepository;
+import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.budget.enums.BudgetStatus;
 import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
@@ -13,7 +13,7 @@ import fun.trackmoney.metrics.dto.response.DashboardOverviewDTO;
 import fun.trackmoney.metrics.dto.response.MonthlySummaryDTO;
 import fun.trackmoney.metrics.projection.CategoryAggregateProjection;
 import fun.trackmoney.metrics.projection.MonthAggregateProjection;
-import fun.trackmoney.transaction.repository.TransactionRepository;
+import fun.trackmoney.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,4 +1,4 @@
-package fun.trackmoney.recurring.repository;
+package fun.trackmoney.repository;
 
 import fun.trackmoney.entity.RecurringEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
