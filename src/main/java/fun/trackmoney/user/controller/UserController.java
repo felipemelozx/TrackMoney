@@ -1,6 +1,6 @@
 package fun.trackmoney.user.controller;
 
-import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import fun.trackmoney.utils.AuthUtils;

@@ -1,9 +1,9 @@
 package fun.trackmoney.metrics;
 
-import fun.trackmoney.metrics.dto.response.BudgetPerformanceDTO;
-import fun.trackmoney.metrics.dto.response.CategoryBreakdownDTO;
-import fun.trackmoney.metrics.dto.response.DashboardOverviewDTO;
-import fun.trackmoney.metrics.dto.response.MonthlySummaryDTO;
+import fun.trackmoney.dto.metrics.response.BudgetPerformanceDTO;
+import fun.trackmoney.dto.metrics.response.CategoryBreakdownDTO;
+import fun.trackmoney.dto.metrics.response.DashboardOverviewDTO;
+import fun.trackmoney.dto.metrics.response.MonthlySummaryDTO;
 import fun.trackmoney.metrics.service.MetricsService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;

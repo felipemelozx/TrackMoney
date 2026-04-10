@@ -1,11 +1,11 @@
 package fun.trackmoney.pots.controller;
 
-import fun.trackmoney.pots.dtos.MoneyRequest;
-import fun.trackmoney.pots.dtos.CreatePotsDTO;
-import fun.trackmoney.pots.dtos.PotsResponseDTO;
-import fun.trackmoney.pots.dtos.internal.PotsFailure;
-import fun.trackmoney.pots.dtos.internal.PotsResult;
-import fun.trackmoney.pots.dtos.internal.PotsSuccess;
+import fun.trackmoney.dto.pots.MoneyRequest;
+import fun.trackmoney.dto.pots.CreatePotsDTO;
+import fun.trackmoney.dto.pots.PotsResponseDTO;
+import fun.trackmoney.dto.pots.internal.PotsFailure;
+import fun.trackmoney.dto.pots.internal.PotsResult;
+import fun.trackmoney.dto.pots.internal.PotsSuccess;
 import fun.trackmoney.pots.service.PotsService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;

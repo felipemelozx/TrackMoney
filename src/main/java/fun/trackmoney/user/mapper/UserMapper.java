@@ -1,7 +1,7 @@
 package fun.trackmoney.user.mapper;
 
-import fun.trackmoney.user.dtos.UserRequestDTO;
-import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.dto.user.UserRequestDTO;
+import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import org.mapstruct.Mapper;
 

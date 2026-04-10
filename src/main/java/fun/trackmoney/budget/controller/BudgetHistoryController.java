@@ -1,9 +1,9 @@
 package fun.trackmoney.budget.controller;
 
-import fun.trackmoney.budget.dtos.BudgetHistoryGenerateDTO;
-import fun.trackmoney.budget.dtos.BudgetHistoryGenerationResponse;
-import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
-import fun.trackmoney.budget.dtos.GenerationResultDTO;
+import fun.trackmoney.dto.budget.BudgetHistoryGenerateDTO;
+import fun.trackmoney.dto.budget.BudgetHistoryGenerationResponse;
+import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
+import fun.trackmoney.dto.budget.GenerationResultDTO;
 import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.service.BudgetHistoryService;
 import fun.trackmoney.entity.UserEntity;

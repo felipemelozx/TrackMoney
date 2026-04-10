@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.mapper;
 
-import fun.trackmoney.budget.dtos.BudgetCreateDTO;
-import fun.trackmoney.budget.dtos.BudgetResponseDTO;
+import fun.trackmoney.dto.budget.BudgetCreateDTO;
+import fun.trackmoney.dto.budget.BudgetResponseDTO;
 import fun.trackmoney.entity.BudgetsEntity;
 import org.mapstruct.Mapper;
 

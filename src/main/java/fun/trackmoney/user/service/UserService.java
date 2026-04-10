@@ -1,12 +1,12 @@
 package fun.trackmoney.user.service;
 
 import fun.trackmoney.entity.AccountEntity;
-import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
-import fun.trackmoney.user.dtos.UserRequestDTO;
-import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.dto.auth.internal.AuthError;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterFailure;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
+import fun.trackmoney.dto.user.UserRequestDTO;
+import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.repository.UserRepository;

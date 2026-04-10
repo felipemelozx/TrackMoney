@@ -1,12 +1,12 @@
 package fun.trackmoney.transaction.controller;
 
-import fun.trackmoney.transaction.dto.CreateTransactionDTO;
-import fun.trackmoney.transaction.dto.TransactionResponseDTO;
-import fun.trackmoney.transaction.dto.TransactionUpdateDTO;
+import fun.trackmoney.dto.transaction.CreateTransactionDTO;
+import fun.trackmoney.dto.transaction.TransactionResponseDTO;
+import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
 import fun.trackmoney.transaction.enums.TransactionsError;
-import fun.trackmoney.transaction.dto.internal.TransactionFailure;
-import fun.trackmoney.transaction.dto.internal.TransactionResult;
-import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
+import fun.trackmoney.dto.transaction.internal.TransactionFailure;
+import fun.trackmoney.dto.transaction.internal.TransactionResult;
+import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
 import fun.trackmoney.transaction.service.TransactionService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;

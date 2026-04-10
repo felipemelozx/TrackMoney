@@ -1,8 +1,8 @@
 package fun.trackmoney.account.mapper;
 
-import fun.trackmoney.account.dtos.AccountRequestDTO;
-import fun.trackmoney.account.dtos.AccountResponseDTO;
-import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
+import fun.trackmoney.dto.account.AccountRequestDTO;
+import fun.trackmoney.dto.account.AccountResponseDTO;
+import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
 import fun.trackmoney.entity.AccountEntity;
 import org.mapstruct.Mapper;
 

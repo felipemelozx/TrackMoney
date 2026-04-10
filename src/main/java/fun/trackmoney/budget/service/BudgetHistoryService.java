@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.service;
 
-import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
-import fun.trackmoney.budget.dtos.GenerationResultDTO;
+import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
+import fun.trackmoney.dto.budget.GenerationResultDTO;
 import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;

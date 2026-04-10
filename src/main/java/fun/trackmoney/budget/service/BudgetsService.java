@@ -1,11 +1,11 @@
 package fun.trackmoney.budget.service;
 
 import fun.trackmoney.account.mapper.AccountMapper;
-import fun.trackmoney.budget.dtos.BudgetCreateDTO;
-import fun.trackmoney.budget.dtos.BudgetResponseDTO;
-import fun.trackmoney.budget.dtos.internal.BudgetFailure;
-import fun.trackmoney.budget.dtos.internal.BudgetResult;
-import fun.trackmoney.budget.dtos.internal.BudgetSuccess;
+import fun.trackmoney.dto.budget.BudgetCreateDTO;
+import fun.trackmoney.dto.budget.BudgetResponseDTO;
+import fun.trackmoney.dto.budget.internal.BudgetFailure;
+import fun.trackmoney.dto.budget.internal.BudgetResult;
+import fun.trackmoney.dto.budget.internal.BudgetSuccess;
 import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetError;
 import fun.trackmoney.budget.mapper.BudgetMapper;

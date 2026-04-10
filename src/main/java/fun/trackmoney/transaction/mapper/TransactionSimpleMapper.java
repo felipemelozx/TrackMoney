@@ -1,6 +1,6 @@
 package fun.trackmoney.transaction.mapper;
 
-import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
+import fun.trackmoney.dto.transaction.TransactionSimpleDTO;
 import fun.trackmoney.entity.TransactionEntity;
 import org.mapstruct.Mapper;
 

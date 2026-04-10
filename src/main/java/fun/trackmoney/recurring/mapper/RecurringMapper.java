@@ -1,7 +1,7 @@
 package fun.trackmoney.recurring.mapper;
 
-import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
-import fun.trackmoney.recurring.dtos.RecurringResponse;
+import fun.trackmoney.dto.recurring.CreateRecurringRequest;
+import fun.trackmoney.dto.recurring.RecurringResponse;
 import fun.trackmoney.entity.RecurringEntity;
 import org.mapstruct.Mapper;
 
