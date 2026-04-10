@@ -1,4 +1,4 @@
-package fun.trackmoney.email;
+package fun.trackmoney.infra.email;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

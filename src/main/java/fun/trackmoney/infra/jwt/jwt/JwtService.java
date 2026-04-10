@@ -1,4 +1,4 @@
-package fun.trackmoney.auth.infra.jwt;
+package fun.trackmoney.infra.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

@@ -1,4 +1,4 @@
-package fun.trackmoney.auth.infra.config;
+package fun.trackmoney.infra.auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

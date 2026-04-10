@@ -1,7 +1,7 @@
-package fun.trackmoney.auth.infra.config;
+package fun.trackmoney.infra.auth.config;
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import fun.trackmoney.auth.infra.jwt.JwtService;
+import fun.trackmoney.infra.jwt.JwtService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.repository.UserRepository;
 import jakarta.servlet.FilterChain;

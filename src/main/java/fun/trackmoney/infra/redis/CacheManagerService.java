@@ -1,4 +1,4 @@
-package fun.trackmoney.redis;
+package fun.trackmoney.infra.redis;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
