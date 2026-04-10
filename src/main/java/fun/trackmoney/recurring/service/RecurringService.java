@@ -8,7 +8,7 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.recurring.CreateRecurringRequest;
 import fun.trackmoney.dto.recurring.RecurringResponse;
 import fun.trackmoney.entity.RecurringEntity;
-import fun.trackmoney.recurring.mapper.RecurringMapper;
+import fun.trackmoney.mapper.RecurringMapper;
 import fun.trackmoney.repository.RecurringRepository;
 import fun.trackmoney.dto.transaction.BillResponseDTO;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;

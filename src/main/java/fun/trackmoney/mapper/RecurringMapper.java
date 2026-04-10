@@ -1,4 +1,4 @@
-package fun.trackmoney.recurring.mapper;
+package fun.trackmoney.mapper;
 
 import fun.trackmoney.dto.recurring.CreateRecurringRequest;
 import fun.trackmoney.dto.recurring.RecurringResponse;

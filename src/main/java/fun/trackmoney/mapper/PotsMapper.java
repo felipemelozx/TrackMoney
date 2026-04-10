@@ -1,4 +1,4 @@
-package fun.trackmoney.pots.mapper;
+package fun.trackmoney.mapper;
 
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.PotsResponseDTO;

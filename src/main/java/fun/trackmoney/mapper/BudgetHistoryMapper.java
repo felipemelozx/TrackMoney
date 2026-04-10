@@ -1,4 +1,4 @@
-package fun.trackmoney.budget.mapper;
+package fun.trackmoney.mapper;
 
 import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
 import fun.trackmoney.entity.BudgetHistoryEntity;

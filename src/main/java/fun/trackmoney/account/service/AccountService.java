@@ -5,7 +5,7 @@ import fun.trackmoney.dto.account.AccountResponseDTO;
 import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.account.exception.AccountNotFoundException;
-import fun.trackmoney.account.mapper.AccountMapper;
+import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.repository.AccountRepository;
 import fun.trackmoney.user.exception.UserNotFoundException;
 import fun.trackmoney.repository.UserRepository;

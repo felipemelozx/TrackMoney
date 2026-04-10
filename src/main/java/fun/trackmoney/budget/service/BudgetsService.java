@@ -1,6 +1,6 @@
 package fun.trackmoney.budget.service;
 
-import fun.trackmoney.account.mapper.AccountMapper;
+import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
 import fun.trackmoney.dto.budget.internal.BudgetFailure;
@@ -8,7 +8,7 @@ import fun.trackmoney.dto.budget.internal.BudgetResult;
 import fun.trackmoney.dto.budget.internal.BudgetSuccess;
 import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.budget.enums.BudgetError;
-import fun.trackmoney.budget.mapper.BudgetMapper;
+import fun.trackmoney.mapper.BudgetMapper;
 import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;

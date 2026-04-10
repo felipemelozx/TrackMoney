@@ -1,4 +1,4 @@
-package fun.trackmoney.user.mapper;
+package fun.trackmoney.mapper;
 
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
