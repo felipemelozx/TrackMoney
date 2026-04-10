@@ -1,19 +1,19 @@
-package fun.trackmoney.user.exception;
+package fun.trackmoney.exception;
 
 import fun.trackmoney.utils.CustomFieldError;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserNotFoundException extends RuntimeException {
+public class TransactionNotFoundException extends RuntimeException {
   private final List<CustomFieldError> errors = new ArrayList<>();
 
-  public UserNotFoundException(String message) {
+  public TransactionNotFoundException(String message) {
     super(message);
-    this.errors.add(new CustomFieldError("Email: ", message));
+    this.errors.add(new CustomFieldError("Transaction", message));
   }
 
-  public UserNotFoundException(String message, List<CustomFieldError> errors) {
+  public TransactionNotFoundException(String message, List<CustomFieldError> errors) {
     super(message);
     this.errors.addAll(errors);
   }
@@ -22,3 +22,4 @@ public class UserNotFoundException extends RuntimeException {
     return errors;
   }
 }
+

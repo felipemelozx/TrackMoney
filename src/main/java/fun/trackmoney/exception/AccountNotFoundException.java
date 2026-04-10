@@ -1,4 +1,4 @@
-package fun.trackmoney.account.exception;
+package fun.trackmoney.exception;
 
 import fun.trackmoney.utils.CustomFieldError;
 

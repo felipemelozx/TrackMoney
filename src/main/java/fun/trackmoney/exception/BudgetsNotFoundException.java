@@ -1,4 +1,4 @@
-package fun.trackmoney.budget.exception;
+package fun.trackmoney.exception;
 
 import fun.trackmoney.utils.CustomFieldError;
 

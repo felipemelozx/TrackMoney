@@ -13,7 +13,7 @@ import fun.trackmoney.dto.transaction.internal.TransactionFailure;
 import fun.trackmoney.dto.transaction.internal.TransactionResult;
 import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
 import fun.trackmoney.entity.TransactionEntity;
-import fun.trackmoney.transaction.exception.TransactionNotFoundException;
+import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.mapper.TransactionMapper;
 import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.entity.UserEntity;

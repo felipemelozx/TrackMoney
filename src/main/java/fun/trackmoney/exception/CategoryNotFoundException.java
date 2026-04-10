@@ -1,4 +1,4 @@
-package fun.trackmoney.category.exception;
+package fun.trackmoney.exception;
 
 public class CategoryNotFoundException extends RuntimeException {
   public CategoryNotFoundException(String message) {
