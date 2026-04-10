@@ -1,4 +1,4 @@
-package fun.trackmoney.budget.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
 import fun.trackmoney.dto.budget.GenerationResultDTO;
@@ -13,7 +13,6 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.entity.TransactionEntity;
 import fun.trackmoney.mapper.TransactionSimpleMapper;
 import fun.trackmoney.repository.TransactionRepository;
-import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.entity.UserEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

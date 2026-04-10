@@ -6,7 +6,7 @@ import fun.trackmoney.dto.pots.PotsResponseDTO;
 import fun.trackmoney.dto.pots.internal.PotsFailure;
 import fun.trackmoney.dto.pots.internal.PotsResult;
 import fun.trackmoney.dto.pots.internal.PotsSuccess;
-import fun.trackmoney.pots.service.PotsService;
+import fun.trackmoney.service.PotsService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;

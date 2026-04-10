@@ -1,4 +1,4 @@
-package fun.trackmoney.metrics.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.entity.BudgetsEntity;

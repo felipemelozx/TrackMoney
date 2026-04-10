@@ -1,6 +1,5 @@
-package fun.trackmoney.pots.service;
+package fun.trackmoney.service;
 
-import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.MoneyRequest;

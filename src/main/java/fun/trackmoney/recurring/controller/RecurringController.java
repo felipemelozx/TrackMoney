@@ -2,7 +2,7 @@ package fun.trackmoney.recurring.controller;
 
 import fun.trackmoney.dto.recurring.CreateRecurringRequest;
 import fun.trackmoney.dto.recurring.RecurringResponse;
-import fun.trackmoney.recurring.service.RecurringService;
+import fun.trackmoney.service.RecurringService;
 import fun.trackmoney.dto.transaction.BillResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;

@@ -1,9 +1,7 @@
-package fun.trackmoney.transaction.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.entity.AccountEntity;
-import fun.trackmoney.account.service.AccountService;
 import fun.trackmoney.entity.CategoryEntity;
-import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;

@@ -1,6 +1,6 @@
 package fun.trackmoney.budget.config;
 
-import fun.trackmoney.budget.service.BudgetHistoryService;
+import fun.trackmoney.service.BudgetHistoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;

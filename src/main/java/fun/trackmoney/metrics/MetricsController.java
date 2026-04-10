@@ -4,7 +4,7 @@ import fun.trackmoney.dto.metrics.response.BudgetPerformanceDTO;
 import fun.trackmoney.dto.metrics.response.CategoryBreakdownDTO;
 import fun.trackmoney.dto.metrics.response.DashboardOverviewDTO;
 import fun.trackmoney.dto.metrics.response.MonthlySummaryDTO;
-import fun.trackmoney.metrics.service.MetricsService;
+import fun.trackmoney.service.MetricsService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

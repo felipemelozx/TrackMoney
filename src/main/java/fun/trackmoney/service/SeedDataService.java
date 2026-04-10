@@ -1,4 +1,4 @@
-package fun.trackmoney.seed.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.entity.BudgetsEntity;

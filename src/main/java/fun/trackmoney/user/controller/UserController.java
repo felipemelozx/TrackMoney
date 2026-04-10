@@ -2,7 +2,7 @@ package fun.trackmoney.user.controller;
 
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
-import fun.trackmoney.user.service.UserService;
+import fun.trackmoney.service.UserService;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.springframework.http.ResponseEntity;

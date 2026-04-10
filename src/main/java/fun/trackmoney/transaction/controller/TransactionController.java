@@ -7,7 +7,7 @@ import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.dto.transaction.internal.TransactionFailure;
 import fun.trackmoney.dto.transaction.internal.TransactionResult;
 import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
-import fun.trackmoney.transaction.service.TransactionService;
+import fun.trackmoney.service.TransactionService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;

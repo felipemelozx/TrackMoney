@@ -1,6 +1,6 @@
 package fun.trackmoney.seed.config;
 
-import fun.trackmoney.seed.service.SeedDataService;
+import fun.trackmoney.service.SeedDataService;
 import fun.trackmoney.seed.service.model.SeedDataSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

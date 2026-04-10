@@ -1,4 +1,4 @@
-package fun.trackmoney.budget.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
@@ -11,10 +11,7 @@ import fun.trackmoney.budget.enums.BudgetError;
 import fun.trackmoney.mapper.BudgetMapper;
 import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.entity.CategoryEntity;
-import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.entity.TransactionEntity;
-import fun.trackmoney.transaction.service.TransactionService;
-import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.entity.UserEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

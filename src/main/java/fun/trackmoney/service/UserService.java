@@ -1,4 +1,4 @@
-package fun.trackmoney.user.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.dto.auth.internal.AuthError;

@@ -1,4 +1,4 @@
-package fun.trackmoney.auth.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.dto.auth.LoginRequestDTO;
 import fun.trackmoney.dto.auth.LoginResponseDTO;
@@ -19,7 +19,6 @@ import fun.trackmoney.email.EmailService;
 import fun.trackmoney.redis.CacheManagerService;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.entity.UserEntity;
-import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -18,7 +18,7 @@ import fun.trackmoney.dto.auth.internal.login.LoginSuccess;
 import fun.trackmoney.dto.auth.internal.register.UserRegisterFailure;
 import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
 import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
-import fun.trackmoney.auth.service.AuthService;
+import fun.trackmoney.service.AuthService;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;

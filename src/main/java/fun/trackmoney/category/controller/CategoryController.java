@@ -1,7 +1,7 @@
 package fun.trackmoney.category.controller;
 
 import fun.trackmoney.entity.CategoryEntity;
-import fun.trackmoney.category.service.CategoryService;
+import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

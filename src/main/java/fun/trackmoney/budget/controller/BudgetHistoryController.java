@@ -5,7 +5,7 @@ import fun.trackmoney.dto.budget.BudgetHistoryGenerationResponse;
 import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
 import fun.trackmoney.dto.budget.GenerationResultDTO;
 import fun.trackmoney.entity.BudgetHistoryEntity;
-import fun.trackmoney.budget.service.BudgetHistoryService;
+import fun.trackmoney.service.BudgetHistoryService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;

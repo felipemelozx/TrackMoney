@@ -4,7 +4,7 @@ import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
 import fun.trackmoney.dto.budget.internal.BudgetFailure;
 import fun.trackmoney.dto.budget.internal.BudgetSuccess;
-import fun.trackmoney.budget.service.BudgetsService;
+import fun.trackmoney.service.BudgetsService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;

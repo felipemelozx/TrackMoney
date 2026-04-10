@@ -1,4 +1,4 @@
-package fun.trackmoney.account.service;
+package fun.trackmoney.service;
 
 import fun.trackmoney.dto.account.AccountRequestDTO;
 import fun.trackmoney.dto.account.AccountResponseDTO;
