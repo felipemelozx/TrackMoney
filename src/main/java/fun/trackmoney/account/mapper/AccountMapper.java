@@ -3,7 +3,7 @@ package fun.trackmoney.account.mapper;
 import fun.trackmoney.account.dtos.AccountRequestDTO;
 import fun.trackmoney.account.dtos.AccountResponseDTO;
 import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
-import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.entity.AccountEntity;
 import org.mapstruct.Mapper;
 
 import java.util.List;

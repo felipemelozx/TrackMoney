@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.repository;
 
-import fun.trackmoney.budget.entity.BudgetHistoryEntity;
-import fun.trackmoney.budget.entity.BudgetsEntity;
+import fun.trackmoney.entity.BudgetHistoryEntity;
+import fun.trackmoney.entity.BudgetsEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

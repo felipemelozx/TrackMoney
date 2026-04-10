@@ -1,7 +1,7 @@
 package fun.trackmoney.pots.repository;
 
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.pots.entity.PotsEntity;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.PotsEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

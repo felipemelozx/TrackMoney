@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.mapper;
 
 import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
-import fun.trackmoney.budget.entity.BudgetHistoryEntity;
+import fun.trackmoney.entity.BudgetHistoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

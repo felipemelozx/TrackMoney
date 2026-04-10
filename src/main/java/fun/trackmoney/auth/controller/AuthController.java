@@ -21,7 +21,7 @@ import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.auth.service.AuthService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;

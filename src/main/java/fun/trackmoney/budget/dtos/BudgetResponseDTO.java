@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.dtos;
 
 import fun.trackmoney.account.dtos.AccountResponseDTO;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.transaction.dto.TransactionResponseDTO;
 
 import java.math.BigDecimal;

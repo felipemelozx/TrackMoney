@@ -1,8 +1,6 @@
-package fun.trackmoney.budget.entity;
+package fun.trackmoney.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.category.entity.CategoryEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

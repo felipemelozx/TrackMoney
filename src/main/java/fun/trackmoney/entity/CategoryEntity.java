@@ -1,4 +1,4 @@
-package fun.trackmoney.category.entity;
+package fun.trackmoney.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Entity;

@@ -8,7 +8,7 @@ import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
 import fun.trackmoney.transaction.service.TransactionService;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;

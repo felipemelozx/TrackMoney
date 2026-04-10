@@ -18,7 +18,7 @@ import fun.trackmoney.auth.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
 import fun.trackmoney.redis.CacheManagerService;
 import fun.trackmoney.user.dtos.UserRequestDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.user.service.UserService;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;

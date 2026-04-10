@@ -2,7 +2,7 @@ package fun.trackmoney.pots.mapper;
 
 import fun.trackmoney.pots.dtos.CreatePotsDTO;
 import fun.trackmoney.pots.dtos.PotsResponseDTO;
-import fun.trackmoney.pots.entity.PotsEntity;
+import fun.trackmoney.entity.PotsEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

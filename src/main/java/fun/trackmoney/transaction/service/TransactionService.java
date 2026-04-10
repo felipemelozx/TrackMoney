@@ -1,8 +1,8 @@
 package fun.trackmoney.transaction.service;
 
-import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.account.service.AccountService;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.transaction.dto.CreateTransactionDTO;
@@ -12,11 +12,11 @@ import fun.trackmoney.transaction.enums.TransactionsError;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.dto.internal.TransactionSuccess;
-import fun.trackmoney.transaction.entity.TransactionEntity;
+import fun.trackmoney.entity.TransactionEntity;
 import fun.trackmoney.transaction.exception.TransactionNotFoundException;
 import fun.trackmoney.transaction.mapper.TransactionMapper;
 import fun.trackmoney.transaction.repository.TransactionRepository;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

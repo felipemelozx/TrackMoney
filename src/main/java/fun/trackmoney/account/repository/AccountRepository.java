@@ -1,6 +1,6 @@
 package fun.trackmoney.account.repository;
 
-import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.entity.AccountEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.dtos;
 
 import fun.trackmoney.budget.enums.BudgetStatus;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

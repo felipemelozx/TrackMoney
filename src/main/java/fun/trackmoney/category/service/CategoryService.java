@@ -1,6 +1,6 @@
 package fun.trackmoney.category.service;
 
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.category.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 

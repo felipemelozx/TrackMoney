@@ -1,11 +1,11 @@
 package fun.trackmoney.metrics.service;
 
-import fun.trackmoney.budget.entity.BudgetHistoryEntity;
-import fun.trackmoney.budget.entity.BudgetsEntity;
+import fun.trackmoney.entity.BudgetHistoryEntity;
+import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.budget.repository.BudgetHistoryRepository;
 import fun.trackmoney.budget.repository.BudgetsRepository;
 import fun.trackmoney.budget.enums.BudgetStatus;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.metrics.dto.response.BudgetPerformanceDTO;
 import fun.trackmoney.metrics.dto.response.CategoryBreakdownDTO;
@@ -787,12 +787,12 @@ public class MetricsService {
       LocalDateTime startDate,
       LocalDateTime endDate) {
 
-    List<fun.trackmoney.transaction.entity.TransactionEntity> transactions =
+    List<fun.trackmoney.entity.TransactionEntity> transactions =
         transactionRepository.findAllByAccountIdAndDateRange(accountId, startDate, endDate);
 
     return transactions.stream()
         .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
-        .map(fun.trackmoney.transaction.entity.TransactionEntity::getAmount)
+        .map(fun.trackmoney.entity.TransactionEntity::getAmount)
         .filter(amount -> amount != null)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }

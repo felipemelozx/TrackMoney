@@ -4,7 +4,7 @@ import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
 import fun.trackmoney.recurring.dtos.RecurringResponse;
 import fun.trackmoney.recurring.service.RecurringService;
 import fun.trackmoney.transaction.dto.BillResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;

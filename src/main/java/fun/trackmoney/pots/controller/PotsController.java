@@ -7,7 +7,7 @@ import fun.trackmoney.pots.dtos.internal.PotsFailure;
 import fun.trackmoney.pots.dtos.internal.PotsResult;
 import fun.trackmoney.pots.dtos.internal.PotsSuccess;
 import fun.trackmoney.pots.service.PotsService;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;

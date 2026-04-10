@@ -1,9 +1,7 @@
-package fun.trackmoney.recurring.entity;
+package fun.trackmoney.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.category.entity.CategoryEntity;
 import fun.trackmoney.enums.Frequency;
 import fun.trackmoney.enums.TransactionType;
 import jakarta.persistence.Column;

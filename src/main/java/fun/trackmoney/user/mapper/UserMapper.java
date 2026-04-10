@@ -2,7 +2,7 @@ package fun.trackmoney.user.mapper;
 
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

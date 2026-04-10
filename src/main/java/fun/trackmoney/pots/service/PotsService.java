@@ -8,11 +8,11 @@ import fun.trackmoney.pots.dtos.PotsResponseDTO;
 import fun.trackmoney.pots.dtos.internal.PotsFailure;
 import fun.trackmoney.pots.dtos.internal.PotsResult;
 import fun.trackmoney.pots.dtos.internal.PotsSuccess;
-import fun.trackmoney.pots.entity.PotsEntity;
+import fun.trackmoney.entity.PotsEntity;
 import fun.trackmoney.pots.enums.PotsErrorType;
 import fun.trackmoney.pots.mapper.PotsMapper;
 import fun.trackmoney.pots.repository.PotsRepository;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

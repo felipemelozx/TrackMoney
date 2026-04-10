@@ -5,7 +5,7 @@ import fun.trackmoney.budget.dtos.BudgetResponseDTO;
 import fun.trackmoney.budget.dtos.internal.BudgetFailure;
 import fun.trackmoney.budget.dtos.internal.BudgetSuccess;
 import fun.trackmoney.budget.service.BudgetsService;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;

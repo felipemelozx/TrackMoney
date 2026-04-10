@@ -1,10 +1,10 @@
 package fun.trackmoney.seed.service.generator;
 
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.enums.Frequency;
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.recurring.entity.RecurringEntity;
+import fun.trackmoney.entity.RecurringEntity;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

@@ -1,13 +1,13 @@
 package fun.trackmoney.recurring.service;
 
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.category.service.CategoryService;
 import fun.trackmoney.enums.Frequency;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
 import fun.trackmoney.recurring.dtos.RecurringResponse;
-import fun.trackmoney.recurring.entity.RecurringEntity;
+import fun.trackmoney.entity.RecurringEntity;
 import fun.trackmoney.recurring.mapper.RecurringMapper;
 import fun.trackmoney.recurring.repository.RecurringRepository;
 import fun.trackmoney.transaction.dto.BillResponseDTO;
@@ -15,7 +15,7 @@ import fun.trackmoney.transaction.dto.CreateTransactionDTO;
 import fun.trackmoney.transaction.dto.internal.TransactionFailure;
 import fun.trackmoney.transaction.dto.internal.TransactionResult;
 import fun.trackmoney.transaction.service.TransactionService;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

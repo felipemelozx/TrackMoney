@@ -1,13 +1,13 @@
 package fun.trackmoney.user.service;
 
-import fun.trackmoney.account.entity.AccountEntity;
+import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
 import fun.trackmoney.user.dtos.UserRequestDTO;
 import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.user.mapper.UserMapper;
 import fun.trackmoney.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -77,5 +77,17 @@ public class UserService {
 
   public void update(UserEntity user) {
     userRepository.save(user);
+  }
+
+  public boolean deleteUser(UserEntity currentUser) {
+    Optional<UserEntity> userExist = userRepository.findByEmail(currentUser.getEmail());
+
+    if(userExist.isEmpty()) {
+      return false;
+    }
+    userExist.get().deletedUser();
+
+    userRepository.save(userExist.get());
+    return true;
   }
 }

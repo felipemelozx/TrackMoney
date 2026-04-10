@@ -1,7 +1,6 @@
-package fun.trackmoney.user.entity;
+package fun.trackmoney.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import fun.trackmoney.account.entity.AccountEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,6 +44,8 @@ public class UserEntity {
   @Column(name = "is_active", nullable = false)
   private boolean isActive = false;
 
+  @Column(name = "is_delete", nullable = false)
+  private boolean isDelete = false;
 
   public UserEntity() {
   }
@@ -109,6 +110,14 @@ public class UserEntity {
   public UserEntity setPassword(String password) {
     this.password = password;
     return this;
+  }
+
+  public boolean isDeleted() {
+    return this.isDelete;
+  }
+
+  public void deletedUser() {
+    this.isDelete = true;
   }
 
   public boolean isActive() {
