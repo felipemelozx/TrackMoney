@@ -1,14 +1,15 @@
 package fun.trackmoney.account.service;
 
-import fun.trackmoney.account.dtos.AccountRequestDTO;
-import fun.trackmoney.account.dtos.AccountResponseDTO;
-import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.account.exception.AccountNotFoundException;
-import fun.trackmoney.account.mapper.AccountMapper;
-import fun.trackmoney.account.repository.AccountRepository;
-import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.repository.UserRepository;
+import fun.trackmoney.service.CategoryService;
+import fun.trackmoney.dto.account.AccountRequestDTO;
+import fun.trackmoney.dto.account.AccountResponseDTO;
+import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.exception.AccountNotFoundException;
+import fun.trackmoney.mapper.AccountMapper;
+import fun.trackmoney.repository.AccountRepository;
+import fun.trackmoney.entity.UserEntity;
+import fun.trackmoney.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

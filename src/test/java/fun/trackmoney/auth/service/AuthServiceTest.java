@@ -1,5 +1,6 @@
 package fun.trackmoney.auth.service;
 
+import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.auth.dto.LoginRequestDTO;
 import fun.trackmoney.auth.dto.LoginResponseDTO;
 import fun.trackmoney.auth.dto.internal.AuthError;
@@ -15,13 +16,13 @@ import fun.trackmoney.auth.dto.internal.login.LoginSuccess;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
-import fun.trackmoney.auth.infra.jwt.JwtService;
+import fun.trackmoney.infra.jwt.JwtService;
 import fun.trackmoney.email.EmailService;
-import fun.trackmoney.redis.CacheManagerService;
-import fun.trackmoney.user.dtos.UserRequestDTO;
-import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.service.UserService;
+import fun.trackmoney.infra.redis.CacheManagerService;
+import fun.trackmoney.dto.user.UserRequestDTO;
+import fun.trackmoney.dto.user.UserResponseDTO;
+import fun.trackmoney.entity.UserEntity;
+import fun.trackmoney.service.UserService;
 import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

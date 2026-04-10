@@ -1,6 +1,6 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.pots.dtos.CreatePotsDTO;
+import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.pots.enums.ColorPick;
 
 import java.math.BigDecimal;

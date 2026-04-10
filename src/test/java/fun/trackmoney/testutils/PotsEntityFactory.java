@@ -1,7 +1,7 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.pots.entity.PotsEntity;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.PotsEntity;
 import fun.trackmoney.pots.enums.ColorPick;
 
 import java.math.BigDecimal;

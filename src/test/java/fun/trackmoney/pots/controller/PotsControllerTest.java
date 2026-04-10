@@ -1,17 +1,17 @@
 package fun.trackmoney.pots.controller;
 
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.pots.dtos.CreatePotsDTO;
-import fun.trackmoney.pots.dtos.MoneyRequest;
-import fun.trackmoney.pots.dtos.PotsResponseDTO;
-import fun.trackmoney.pots.dtos.internal.PotsFailure;
-import fun.trackmoney.pots.dtos.internal.PotsSuccess;
+import fun.trackmoney.dto.pots.CreatePotsDTO;
+import fun.trackmoney.dto.pots.MoneyRequest;
+import fun.trackmoney.dto.pots.PotsResponseDTO;
+import fun.trackmoney.dto.pots.internal.PotsFailure;
+import fun.trackmoney.dto.pots.internal.PotsSuccess;
 import fun.trackmoney.pots.enums.PotsErrorType;
-import fun.trackmoney.pots.service.PotsService;
+import fun.trackmoney.service.PotsService;
 import fun.trackmoney.testutils.CreatePotsDTOFactory;
 import fun.trackmoney.testutils.PotsResponseDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

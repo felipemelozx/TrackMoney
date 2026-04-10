@@ -1,10 +1,10 @@
 package fun.trackmoney.config.exception;
 
-import fun.trackmoney.account.exception.AccountNotFoundException;
-import fun.trackmoney.budget.exception.BudgetsNotFoundException;
+import fun.trackmoney.exception.AccountNotFoundException;
+import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.category.exception.CategoryNotFoundException;
-import fun.trackmoney.transaction.exception.TransactionNotFoundException;
-import fun.trackmoney.user.exception.UserNotFoundException;
+import fun.trackmoney.exception.TransactionNotFoundException;
+import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;

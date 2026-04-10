@@ -1,8 +1,8 @@
 package fun.trackmoney.transaction.mapper;
 
-import fun.trackmoney.transaction.dto.TransactionSimpleDTO;
-import fun.trackmoney.transaction.entity.TransactionEntity;
-import fun.trackmoney.transaction.mapper.TransactionSimpleMapperImpl;
+import fun.trackmoney.dto.transaction.TransactionSimpleDTO;
+import fun.trackmoney.entity.TransactionEntity;
+import fun.trackmoney.mapper.TransactionSimpleMapperImpl;
 import fun.trackmoney.testutils.TransactionEntityFactory;
 import org.junit.jupiter.api.Test;
 

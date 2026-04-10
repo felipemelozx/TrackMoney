@@ -5,7 +5,7 @@ import fun.trackmoney.metrics.dto.response.CategoryBreakdownDTO;
 import fun.trackmoney.metrics.dto.response.DashboardOverviewDTO;
 import fun.trackmoney.metrics.dto.response.MonthlySummaryDTO;
 import fun.trackmoney.metrics.service.MetricsService;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import fun.trackmoney.testutils.UserEntityFactory;
 import org.junit.jupiter.api.BeforeEach;

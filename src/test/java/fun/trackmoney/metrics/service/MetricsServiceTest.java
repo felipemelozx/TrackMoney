@@ -1,9 +1,12 @@
 package fun.trackmoney.metrics.service;
+import fun.trackmoney.service.CategoryService;
+import fun.trackmoney.service.MetricsService;
 
-import fun.trackmoney.budget.entity.BudgetHistoryEntity;
+
+import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
-import fun.trackmoney.budget.repository.BudgetHistoryRepository;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.repository.BudgetHistoryRepository;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.metrics.dto.response.BudgetPerformanceDTO;
 import fun.trackmoney.metrics.dto.response.CategoryBreakdownDTO;
 import fun.trackmoney.metrics.dto.response.DashboardOverviewDTO;
@@ -12,7 +15,7 @@ import fun.trackmoney.metrics.projection.CategoryAggregateProjection;
 import fun.trackmoney.metrics.projection.MonthAggregateProjection;
 import fun.trackmoney.testutils.AccountEntityFactory;
 import fun.trackmoney.testutils.CategoryEntityFactory;
-import fun.trackmoney.transaction.repository.TransactionRepository;
+import fun.trackmoney.repository.TransactionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

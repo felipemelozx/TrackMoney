@@ -1,5 +1,6 @@
 package fun.trackmoney.email;
 
+import fun.trackmoney.service.CategoryService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;

@@ -2,7 +2,7 @@ package fun.trackmoney.testutils;
 
 import fun.trackmoney.enums.Frequency;
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
+import fun.trackmoney.dto.recurring.CreateRecurringRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

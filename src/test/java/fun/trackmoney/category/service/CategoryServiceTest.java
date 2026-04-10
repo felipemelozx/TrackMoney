@@ -1,7 +1,10 @@
 package fun.trackmoney.category.service;
+import fun.trackmoney.service.CategoryService;
+import fun.trackmoney.service.CategoryService;
 
-import fun.trackmoney.category.entity.CategoryEntity;
-import fun.trackmoney.category.repository.CategoryRepository;
+
+import fun.trackmoney.entity.CategoryEntity;
+import fun.trackmoney.repository.CategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

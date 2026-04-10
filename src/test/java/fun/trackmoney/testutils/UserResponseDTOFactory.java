@@ -1,6 +1,6 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.user.dtos.UserResponseDTO;
+import fun.trackmoney.dto.user.UserResponseDTO;
 
 import java.util.UUID;
 

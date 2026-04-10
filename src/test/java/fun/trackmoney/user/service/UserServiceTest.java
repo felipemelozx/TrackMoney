@@ -1,14 +1,17 @@
 package fun.trackmoney.user.service;
+import fun.trackmoney.service.CategoryService;
+import fun.trackmoney.service.UserService;
+
 
 import fun.trackmoney.auth.dto.internal.AuthError;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
 import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
-import fun.trackmoney.user.dtos.UserRequestDTO;
-import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.mapper.UserMapper;
-import fun.trackmoney.user.repository.UserRepository;
+import fun.trackmoney.dto.user.UserRequestDTO;
+import fun.trackmoney.dto.user.UserResponseDTO;
+import fun.trackmoney.entity.UserEntity;
+import fun.trackmoney.mapper.UserMapper;
+import fun.trackmoney.repository.UserRepository;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

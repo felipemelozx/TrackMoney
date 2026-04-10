@@ -1,13 +1,13 @@
 package fun.trackmoney.recurring.controller;
 
-import fun.trackmoney.recurring.dtos.CreateRecurringRequest;
-import fun.trackmoney.recurring.dtos.RecurringResponse;
-import fun.trackmoney.recurring.service.RecurringService;
+import fun.trackmoney.dto.recurring.CreateRecurringRequest;
+import fun.trackmoney.dto.recurring.RecurringResponse;
+import fun.trackmoney.service.RecurringService;
 import fun.trackmoney.testutils.CreateRecurringRequestFactory;
 import fun.trackmoney.testutils.RecurringResponseFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
-import fun.trackmoney.transaction.dto.BillResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.dto.transaction.BillResponseDTO;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

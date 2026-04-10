@@ -1,16 +1,16 @@
 package fun.trackmoney.budget.controller;
 
-import fun.trackmoney.budget.dtos.BudgetHistoryGenerateDTO;
-import fun.trackmoney.budget.dtos.BudgetHistoryGenerationResponse;
-import fun.trackmoney.budget.dtos.BudgetHistoryResponseDTO;
-import fun.trackmoney.budget.dtos.GenerationResultDTO;
-import fun.trackmoney.budget.entity.BudgetHistoryEntity;
+import fun.trackmoney.dto.budget.BudgetHistoryGenerateDTO;
+import fun.trackmoney.dto.budget.BudgetHistoryGenerationResponse;
+import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
+import fun.trackmoney.dto.budget.GenerationResultDTO;
+import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.budget.enums.BudgetStatus;
-import fun.trackmoney.budget.service.BudgetHistoryService;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.service.BudgetHistoryService;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.testutils.CategoryEntityFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,11 +1,11 @@
 package fun.trackmoney.account.controller;
 
-import fun.trackmoney.account.dtos.AccountRequestDTO;
-import fun.trackmoney.account.dtos.AccountResponseDTO;
-import fun.trackmoney.account.dtos.AccountUpdateRequestDTO;
-import fun.trackmoney.account.service.AccountService;
-import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.dto.account.AccountRequestDTO;
+import fun.trackmoney.dto.account.AccountResponseDTO;
+import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
+import fun.trackmoney.service.AccountService;
+import fun.trackmoney.dto.user.UserResponseDTO;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;

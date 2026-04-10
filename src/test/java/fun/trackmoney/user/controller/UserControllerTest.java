@@ -1,7 +1,7 @@
 package fun.trackmoney.user.controller;
 
-import fun.trackmoney.user.dtos.UserResponseDTO;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.dto.user.UserResponseDTO;
+import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
