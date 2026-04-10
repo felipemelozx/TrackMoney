@@ -1,4 +1,4 @@
-package fun.trackmoney.category.controller;
+package fun.trackmoney.controller;
 
 import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.service.CategoryService;

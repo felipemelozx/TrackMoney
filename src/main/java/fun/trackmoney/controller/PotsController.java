@@ -1,4 +1,4 @@
-package fun.trackmoney.pots.controller;
+package fun.trackmoney.controller;
 
 import fun.trackmoney.dto.pots.MoneyRequest;
 import fun.trackmoney.dto.pots.CreatePotsDTO;

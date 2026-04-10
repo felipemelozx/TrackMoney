@@ -1,4 +1,4 @@
-package fun.trackmoney.user.controller;
+package fun.trackmoney.controller;
 
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;

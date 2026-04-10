@@ -1,4 +1,4 @@
-package fun.trackmoney.metrics;
+package fun.trackmoney.controller;
 
 import fun.trackmoney.dto.metrics.response.BudgetPerformanceDTO;
 import fun.trackmoney.dto.metrics.response.CategoryBreakdownDTO;

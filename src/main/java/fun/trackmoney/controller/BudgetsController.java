@@ -1,4 +1,4 @@
-package fun.trackmoney.budget.controller;
+package fun.trackmoney.controller;
 
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
