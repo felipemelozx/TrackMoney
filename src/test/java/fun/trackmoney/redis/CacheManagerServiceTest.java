@@ -1,6 +1,6 @@
 package fun.trackmoney.redis;
 
-import fun.trackmoney.service.CategoryService;
+import fun.trackmoney.infra.redis.CacheManagerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

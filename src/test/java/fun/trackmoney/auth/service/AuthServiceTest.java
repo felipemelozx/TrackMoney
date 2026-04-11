@@ -1,23 +1,24 @@
 package fun.trackmoney.auth.service;
+import fun.trackmoney.service.AuthService;
 
 import fun.trackmoney.service.CategoryService;
-import fun.trackmoney.auth.dto.LoginRequestDTO;
-import fun.trackmoney.auth.dto.LoginResponseDTO;
-import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.ForgotPasswordFailure;
-import fun.trackmoney.auth.dto.internal.ForgotPasswordResult;
-import fun.trackmoney.auth.dto.internal.ForgotPasswordSuccess;
-import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailFailure;
-import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailResult;
-import fun.trackmoney.auth.dto.internal.email.verification.VerificationEmailSuccess;
-import fun.trackmoney.auth.dto.internal.login.LoginFailure;
-import fun.trackmoney.auth.dto.internal.login.LoginResult;
-import fun.trackmoney.auth.dto.internal.login.LoginSuccess;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
+import fun.trackmoney.dto.auth.LoginRequestDTO;
+import fun.trackmoney.dto.auth.LoginResponseDTO;
+import fun.trackmoney.dto.auth.internal.AuthError;
+import fun.trackmoney.dto.auth.internal.ForgotPasswordFailure;
+import fun.trackmoney.dto.auth.internal.ForgotPasswordResult;
+import fun.trackmoney.dto.auth.internal.ForgotPasswordSuccess;
+import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailFailure;
+import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailResult;
+import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailSuccess;
+import fun.trackmoney.dto.auth.internal.login.LoginFailure;
+import fun.trackmoney.dto.auth.internal.login.LoginResult;
+import fun.trackmoney.dto.auth.internal.login.LoginSuccess;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterFailure;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
 import fun.trackmoney.infra.jwt.JwtService;
-import fun.trackmoney.email.EmailService;
+import fun.trackmoney.infra.email.EmailService;
 import fun.trackmoney.infra.redis.CacheManagerService;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
@@ -93,20 +94,17 @@ class AuthServiceTest {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserResponseDTO responseDTO = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
     UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(responseDTO);
-    Integer code = 1234;
 
     when(userService.register(registerDto)).thenReturn(userRegisterSuccess);
-    doReturn(code).when(authService).generateVerificationCode();
-    doReturn(true).when(authService).saveCode(code, registerDto.email());
+    when(cacheManagerService.put(eq(CACHE_NAME), anyInt(), eq(registerDto.email()))).thenReturn(true);
     doNothing().when(emailService)
-        .sendEmailToVerifyEmail(registerDto.email(), registerDto.name(), code);
+        .sendEmailToVerifyEmail(eq(registerDto.email()), eq(registerDto.name()), anyInt());
 
     UserRegisterResult actualResponse = authService.register(registerDto);
 
     assertInstanceOf(UserRegisterSuccess.class, actualResponse);
-    verify(authService, times(1)).saveCode(code, responseDTO.email());
-    verify(emailService, times(1)).sendEmailToVerifyEmail(responseDTO.email(), responseDTO.name(), code);
-    verify(authService, times(1)).generateVerificationCode();
+    verify(emailService, times(1)).sendEmailToVerifyEmail(eq(responseDTO.email()), eq(responseDTO.name()), anyInt());
+    verify(cacheManagerService, times(1)).put(eq(CACHE_NAME), anyInt(), eq(responseDTO.email()));
     assertEquals(responseDTO, ((UserRegisterSuccess) actualResponse).user());
   }
 
@@ -115,20 +113,17 @@ class AuthServiceTest {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserResponseDTO responseDTO = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
     UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(responseDTO);
-    Integer code = 1234;
 
     when(userService.register(registerDto)).thenReturn(userRegisterSuccess);
-    doReturn(code).when(authService).generateVerificationCode();
-    doReturn(false,true).when(authService).saveCode(code, registerDto.email());
+    when(cacheManagerService.put(eq(CACHE_NAME), anyInt(), eq(registerDto.email()))).thenReturn(false, true);
     doNothing().when(emailService)
-        .sendEmailToVerifyEmail(registerDto.email(), registerDto.name(), code);
+        .sendEmailToVerifyEmail(eq(registerDto.email()), eq(registerDto.name()), anyInt());
 
     UserRegisterResult actualResponse = authService.register(registerDto);
 
     assertInstanceOf(UserRegisterSuccess.class, actualResponse);
-    verify(authService, times(2)).saveCode(code, responseDTO.email());
-    verify(emailService, times(1)).sendEmailToVerifyEmail(responseDTO.email(), responseDTO.name(), code);
-    verify(authService, times(2)).generateVerificationCode();
+    verify(emailService, times(1)).sendEmailToVerifyEmail(eq(responseDTO.email()), eq(responseDTO.name()), anyInt());
+    verify(cacheManagerService, times(2)).put(eq(CACHE_NAME), anyInt(), eq(responseDTO.email()));
     assertEquals(responseDTO, ((UserRegisterSuccess) actualResponse).user());
   }
 
@@ -137,22 +132,19 @@ class AuthServiceTest {
     UserRequestDTO registerDto = new UserRequestDTO("John Doe", "test@example.com", "Password1#");
     UserResponseDTO responseDTO = new UserResponseDTO(UUID.randomUUID(), "John Doe", "test@example.com");
     UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(responseDTO);
-    Integer code = 1234;
 
     when(userService.register(registerDto)).thenReturn(userRegisterSuccess);
-    doReturn(code).when(authService).generateVerificationCode();
-    doReturn(true).when(authService).saveCode(code, registerDto.email());
+    when(cacheManagerService.put(eq(CACHE_NAME), anyInt(), eq(registerDto.email()))).thenReturn(true);
     doThrow(new MessagingException()).when(emailService)
-        .sendEmailToVerifyEmail(registerDto.email(), registerDto.name(), code);
+        .sendEmailToVerifyEmail(eq(registerDto.email()), eq(registerDto.name()), anyInt());
 
     UserRegisterResult actualResponse;
 
     actualResponse = authService.register(registerDto);
 
     assertInstanceOf(UserRegisterSuccess.class, actualResponse);
-    verify(authService, times(1)).saveCode(code, responseDTO.email());
-    verify(emailService, times(1)).sendEmailToVerifyEmail(responseDTO.email(), responseDTO.name(), code);
-    verify(authService, times(1)).generateVerificationCode();
+    verify(emailService, times(1)).sendEmailToVerifyEmail(eq(responseDTO.email()), eq(responseDTO.name()), anyInt());
+    verify(cacheManagerService, times(1)).put(eq(CACHE_NAME), anyInt(), eq(responseDTO.email()));
     assertEquals(responseDTO, ((UserRegisterSuccess) actualResponse).user());
   }
 
@@ -166,16 +158,14 @@ class AuthServiceTest {
     UserRegisterResult actualResponse = authService.register(registerDto);
 
     assertInstanceOf(UserRegisterFailure.class, actualResponse);
-    verify(authService, times(0)).saveCode(any(), any());
     verify(emailService, times(0)).sendEmailToVerifyEmail(any(), any(), any());
-    verify(authService, times(0)).generateVerificationCode();
     verify(userService, times(1)).register(registerDto);
     assertEquals(userRegisterSuccess.errorList().getMessage(), ((UserRegisterFailure) actualResponse).errorList().getMessage());
   }
 
   @Test
   void shouldGenerateCodeBetween1000And9999_whenGeneratingVerificationCode() {
-    Integer code = authService.generateVerificationCode();
+    Integer code = ReflectionTestUtils.invokeMethod(authService, "generateVerificationCode");
     assertTrue(code >= 1000 && code <= 9999);
   }
 
@@ -183,7 +173,7 @@ class AuthServiceTest {
   void shouldReturnNull_whenVerificationCodeNotFoundInCache() {
     int code = 1234;
     when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(null);
-    String result = authService.getEmailByCode(code);
+    String result = ReflectionTestUtils.invokeMethod(authService, "getEmailByCode", code);
     assertNull(result);
   }
 
@@ -192,7 +182,7 @@ class AuthServiceTest {
     int code = 1234;
     String mockEmail = "mock@email.com";
     when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(mockEmail);
-    String result = authService.getEmailByCode(code);
+    String result = ReflectionTestUtils.invokeMethod(authService, "getEmailByCode", code);
     assertEquals(mockEmail, result);
   }
 
@@ -271,12 +261,12 @@ class AuthServiceTest {
     int code = 1234;
     String email = "mock@email.com";
 
-    when(authService.getEmailByCode(code)).thenReturn(null);
+    when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(null);
 
     boolean result = authService.activateUser(code, email);
 
     assertFalse(result);
-    verify(authService, times(1)).getEmailByCode(code);
+    verify(cacheManagerService, times(1)).get(CACHE_NAME, code, String.class);
   }
 
   @Test
@@ -285,12 +275,12 @@ class AuthServiceTest {
     String requestedEmail = "mock@email.com";
     String recoveredEmail = "other@email.com";
 
-    when(authService.getEmailByCode(code)).thenReturn(recoveredEmail);
+    when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(recoveredEmail);
 
     boolean result = authService.activateUser(code, requestedEmail);
 
     assertFalse(result);
-    verify(authService, times(1)).getEmailByCode(code);
+    verify(cacheManagerService, times(1)).get(CACHE_NAME, code, String.class);
   }
 
   @Test
@@ -298,13 +288,13 @@ class AuthServiceTest {
     int code = 1234;
     String email = "mock@email.com";
 
-    when(authService.getEmailByCode(code)).thenReturn(email);
+    when(cacheManagerService.get(CACHE_NAME, code, String.class)).thenReturn(email);
     when(userService.activateUser(email)).thenReturn(true);
 
     boolean result = authService.activateUser(code, email);
 
     assertTrue(result);
-    verify(authService, times(1)).getEmailByCode(code);
+    verify(cacheManagerService, times(1)).get(CACHE_NAME, code, String.class);
     verify(userService, times(1)).activateUser(email);
   }
 
@@ -322,11 +312,10 @@ class AuthServiceTest {
   @Test
   void shouldReturnFailureWhenEmailSendingThrowsException() throws Exception {
     UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
-    int code = 1234;
-    doReturn(true).when(authService).saveCode(code, user.getEmail());
-    doReturn(code).when(authService).generateVerificationCode();
+
+    when(cacheManagerService.put(eq(CACHE_NAME), anyInt(), eq(user.getEmail()))).thenReturn(true);
     doThrow(new MessagingException("fail")).when(emailService)
-        .sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
+        .sendEmailToVerifyEmail(eq(user.getEmail()), eq(user.getName()), anyInt());
 
     VerificationEmailResult result = authService.resendVerificationEmail(user);
 
@@ -339,7 +328,7 @@ class AuthServiceTest {
   void shouldResendVerificationEmailSuccessfully() throws Exception {
     UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
 
-    doReturn(true).when(authService).saveCode(anyInt(), eq(user.getEmail()));
+    when(cacheManagerService.put(eq(CACHE_NAME), anyInt(), eq(user.getEmail()))).thenReturn(true);
     doNothing().when(emailService)
         .sendEmailToVerifyEmail(eq(user.getEmail()), eq(user.getName()), anyInt());
 
@@ -352,7 +341,7 @@ class AuthServiceTest {
   void shouldRetryUntilCodeIsSavedSuccessfully() throws Exception {
     UserEntity user = new UserEntity(null, "John", "john@example.com", "123", false);
 
-    when(authService.saveCode(anyInt(), eq(user.getEmail())))
+    when(cacheManagerService.put(eq(CACHE_NAME), anyInt(), eq(user.getEmail())))
         .thenReturn(false)
         .thenReturn(true);
 
@@ -363,7 +352,7 @@ class AuthServiceTest {
 
     assertInstanceOf(VerificationEmailSuccess.class, result);
 
-    verify(authService, times(2)).saveCode(anyInt(), eq(user.getEmail()));
+    verify(cacheManagerService, times(2)).put(eq(CACHE_NAME), anyInt(), eq(user.getEmail()));
   }
 
   @Test

@@ -3,10 +3,10 @@ import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.service.UserService;
 
 
-import fun.trackmoney.auth.dto.internal.AuthError;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterFailure;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterResult;
-import fun.trackmoney.auth.dto.internal.register.UserRegisterSuccess;
+import fun.trackmoney.dto.auth.internal.AuthError;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterFailure;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;

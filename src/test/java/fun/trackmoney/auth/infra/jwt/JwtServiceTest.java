@@ -1,6 +1,6 @@
 package fun.trackmoney.auth.infra.jwt;
 
-import fun.trackmoney.service.CategoryService;
+import fun.trackmoney.infra.jwt.JwtService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.interfaces.DecodedJWT;

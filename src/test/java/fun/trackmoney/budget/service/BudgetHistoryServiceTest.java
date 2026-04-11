@@ -1,4 +1,5 @@
 package fun.trackmoney.budget.service;
+import fun.trackmoney.service.BudgetHistoryService;
 
 import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;

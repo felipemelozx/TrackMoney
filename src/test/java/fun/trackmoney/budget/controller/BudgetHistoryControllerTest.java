@@ -1,4 +1,5 @@
 package fun.trackmoney.budget.controller;
+import fun.trackmoney.controller.BudgetHistoryController;
 
 import fun.trackmoney.dto.budget.BudgetHistoryGenerateDTO;
 import fun.trackmoney.dto.budget.BudgetHistoryGenerationResponse;

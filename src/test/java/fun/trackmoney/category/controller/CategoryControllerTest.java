@@ -1,8 +1,9 @@
 package fun.trackmoney.category.controller;
+import fun.trackmoney.controller.CategoryController;
 
 import fun.trackmoney.entity.CategoryEntity;
-import fun.trackmoney.category.exception.CategoryNotFoundException;
-import fun.trackmoney.category.service.CategoryService;
+import fun.trackmoney.exception.CategoryNotFoundException;
+import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

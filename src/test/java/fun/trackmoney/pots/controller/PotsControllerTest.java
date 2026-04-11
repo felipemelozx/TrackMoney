@@ -1,4 +1,5 @@
 package fun.trackmoney.pots.controller;
+import fun.trackmoney.controller.PotsController;
 
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.pots.CreatePotsDTO;

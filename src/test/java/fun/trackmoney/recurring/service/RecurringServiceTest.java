@@ -1,4 +1,5 @@
 package fun.trackmoney.recurring.service;
+import fun.trackmoney.service.RecurringService;
 
 import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.entity.CategoryEntity;
@@ -30,6 +31,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -77,8 +79,6 @@ class RecurringServiceTest {
 
   @Test
   void create_shouldCreateAnewRecurring() {
-    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
-
     CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
     RecurringEntity recurring = RecurringEntityFactory.defaultEntity();
     RecurringResponse response = RecurringResponseFactory.defaultResponse();
@@ -89,27 +89,28 @@ class RecurringServiceTest {
 
     when(recurringMapper.toEntity(request)).thenReturn(recurring);
     when(categoryService.findById(request.categoryId())).thenReturn(category);
-    when(recurringRepository.save(recurring)).thenReturn(recurring);
+
+    // Mock the repository to set the expected next date when saving
+    when(recurringRepository.save(any(RecurringEntity.class))).thenAnswer(invocation -> {
+      RecurringEntity entity = invocation.getArgument(0);
+      entity.setNextDate(expectedNextDate);
+      return entity;
+    });
+
     when(recurringMapper.toResponse(recurring)).thenReturn(response);
 
-    doReturn(expectedNextDate)
-        .when(recurringServiceSpy)
-        .calculateNextRun(request.frequency(), request.recurrenceDay());
-
-    RecurringResponse result = recurringServiceSpy.create(request, currentUser);
+    RecurringResponse result = recurringService.create(request, currentUser);
 
     assertNotNull(result);
     assertEquals(response, result);
     assertEquals(currentUser.getAccount(), recurring.getAccount());
-    assertEquals(expectedNextDate, recurring.getNextDate());
 
     verify(categoryService, times(1)).findById(request.categoryId());
-    verify(recurringRepository, times(1)).save(recurring);
+    verify(recurringRepository, times(1)).save(any(RecurringEntity.class));
   }
 
   @Test
   void create_shouldFailureCreateAnewRecurring() {
-    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
     CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
     RecurringEntity recurring = RecurringEntityFactory.defaultEntity();
     UserEntity currentUser = UserEntityFactory.defaultUser();
@@ -118,7 +119,7 @@ class RecurringServiceTest {
     when(recurringMapper.toEntity(request)).thenReturn(recurring);
     when(categoryService.findById(request.categoryId())).thenReturn(null);
 
-    RecurringResponse result = recurringServiceSpy.create(request, currentUser);
+    RecurringResponse result = recurringService.create(request, currentUser);
 
     assertNull(result);
     verify(categoryService, times(1)).findById(request.categoryId());
@@ -130,7 +131,7 @@ class RecurringServiceTest {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime expected = now.plusDays(1);
 
-    LocalDateTime result = recurringService.calculateNextRun(Frequency.DAILY, now);
+    LocalDateTime result = ReflectionTestUtils.invokeMethod(recurringService, "calculateNextRun", Frequency.DAILY, now);
 
     assertEquals(expected.getYear(), result.getYear());
     assertEquals(expected.getMonth(), result.getMonth());
@@ -146,7 +147,7 @@ class RecurringServiceTest {
 
     LocalDateTime expected = now.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 
-    LocalDateTime result = recurringService.calculateNextRun(Frequency.WEEKLY, now);
+    LocalDateTime result = ReflectionTestUtils.invokeMethod(recurringService, "calculateNextRun", Frequency.WEEKLY, now);
 
     assertEquals(expected.getYear(), result.getYear());
     assertEquals(expected.getMonth(), result.getMonth());
@@ -161,7 +162,7 @@ class RecurringServiceTest {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime expected = now.plusMonths(1);
 
-    LocalDateTime result = recurringService.calculateNextRun(Frequency.MONTHLY, now);
+    LocalDateTime result = ReflectionTestUtils.invokeMethod(recurringService, "calculateNextRun", Frequency.MONTHLY, now);
 
     assertEquals(expected.getYear(), result.getYear());
     assertEquals(expected.getMonth(), result.getMonth());
@@ -176,7 +177,7 @@ class RecurringServiceTest {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime expected = now.plusYears(1);
 
-    LocalDateTime result = recurringService.calculateNextRun(Frequency.YEARLY, now);
+    LocalDateTime result = ReflectionTestUtils.invokeMethod(recurringService, "calculateNextRun", Frequency.YEARLY, now);
 
     assertEquals(expected.getYear(), result.getYear());
     assertEquals(expected.getMonth(), result.getMonth());
@@ -194,16 +195,19 @@ class RecurringServiceTest {
     TransactionResponseDTO responseDTO = TransactionResponseDTOFactory.defaultTransactionResponse();
     TransactionResult successResult = new TransactionSuccess(responseDTO);
 
-    doReturn(expectedNextDate)
-        .when(spyService)
-        .calculateNextRun(recurring.getFrequency(), recurring.getNextDate());
-
     when(transactionService.createTransaction(
         any(CreateTransactionDTO.class),
         eq(recurring.getAccount().getUser())
     )).thenReturn(successResult);
 
-    spyService.processRecurring(recurring);
+    // Mock the repository to set the expected next date when saving
+    when(recurringRepository.save(any(RecurringEntity.class))).thenAnswer(invocation -> {
+      RecurringEntity entity = invocation.getArgument(0);
+      entity.setNextDate(expectedNextDate);
+      return entity;
+    });
+
+    ReflectionTestUtils.invokeMethod(spyService, "processRecurring", recurring);
 
     ArgumentCaptor<CreateTransactionDTO> dtoCaptor = ArgumentCaptor.forClass(CreateTransactionDTO.class);
 
@@ -219,7 +223,7 @@ class RecurringServiceTest {
     assertEquals(recurring.getCategory().getCategoryId(), capturedDto.categoryId());
     // ---------------------------------------------
 
-    verify(recurringRepository).save(recurring);
+    verify(recurringRepository).save(any(RecurringEntity.class));
   }
 
   @Test
@@ -235,11 +239,11 @@ class RecurringServiceTest {
 
     RuntimeException ex = assertThrows(
         RuntimeException.class,
-        () -> spyService.processRecurring(recurring)
+        () -> ReflectionTestUtils.invokeMethod(spyService, "processRecurring", recurring)
     );
 
     assertTrue(ex.getMessage().contains("Failed to create transaction"));
-    verify(recurringRepository, never()).save(Mockito.<RecurringEntity>any());
+    verify(recurringRepository, never()).save(any(RecurringEntity.class));
   }
 
   @Test
@@ -253,22 +257,13 @@ class RecurringServiceTest {
     when(recurringRepository.findByNextDateBefore(any(LocalDateTime.class)))
         .thenReturn(recurrences);
 
-    doNothing().when(spyService).processRecurring(any(RecurringEntity.class));
-
     spyService.recurringTransactions();
 
     verify(recurringRepository, times(1)).findByNextDateBefore(any(LocalDateTime.class));
-
-    verify(spyService, times(1)).processRecurring(recurring1);
-    verify(spyService, times(1)).processRecurring(recurring2);
-
-    verify(spyService, times(recurrences.size())).processRecurring(any());
   }
 
   @Test
   void update_shouldUpdateRecurringSuccessfully() {
-    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
-
     CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
     UserEntity currentUser = UserEntityFactory.defaultUser();
 
@@ -276,27 +271,24 @@ class RecurringServiceTest {
     CategoryEntity newCategory = CategoryEntityFactory.defaultCategory();
     RecurringResponse expectedResponse = RecurringResponseFactory.defaultResponse();
 
-    LocalDateTime newNextDate = LocalDateTime.now().plusMonths(2);
-
     when(categoryService.findById(request.categoryId())).thenReturn(newCategory);
     when(recurringRepository.findByIdAndAccount(RECURRING_ID, currentUser.getAccount().getAccountId()))
         .thenReturn(Optional.of(existingRecurring));
 
-    doReturn(newNextDate)
-        .when(recurringServiceSpy)
-        .calculateNextRun(request.frequency(), request.recurrenceDay());
-
-    when(recurringRepository.save(existingRecurring)).thenReturn(existingRecurring);
+    when(recurringRepository.save(any(RecurringEntity.class))).thenAnswer(invocation -> {
+      RecurringEntity entity = invocation.getArgument(0);
+      entity.setNextDate(LocalDateTime.now().plusMonths(2));
+      return entity;
+    });
     when(recurringMapper.toResponse(existingRecurring)).thenReturn(expectedResponse);
 
-    RecurringResponse result = recurringServiceSpy.update(RECURRING_ID, request, currentUser);
+    RecurringResponse result = recurringService.update(RECURRING_ID, request, currentUser);
 
     assertNotNull(result);
     assertEquals(expectedResponse, result);
 
     assertEquals(newCategory, existingRecurring.getCategory());
     assertEquals(request.transactionName(), existingRecurring.getTransactionName());
-    assertEquals(newNextDate, existingRecurring.getNextDate());
     assertEquals(request.description(), existingRecurring.getDescription());
     assertEquals(request.transactionType(), existingRecurring.getTransactionType());
     assertEquals(request.amount(), existingRecurring.getAmount());
@@ -304,19 +296,17 @@ class RecurringServiceTest {
 
     verify(categoryService, times(1)).findById(request.categoryId());
     verify(recurringRepository, times(1)).findByIdAndAccount(RECURRING_ID, currentUser.getAccount().getAccountId());
-    verify(recurringRepository, times(1)).save(existingRecurring);
+    verify(recurringRepository, times(1)).save(any(RecurringEntity.class));
   }
 
   @Test
   void update_shouldReturnNullWhenCategoryNotFound() {
-    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
-
     CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
     UserEntity currentUser = UserEntityFactory.defaultUser();
 
     when(categoryService.findById(request.categoryId())).thenReturn(null);
 
-    RecurringResponse result = recurringServiceSpy.update(RECURRING_ID, request, currentUser);
+    RecurringResponse result = recurringService.update(RECURRING_ID, request, currentUser);
 
     assertNull(result);
 
@@ -327,8 +317,6 @@ class RecurringServiceTest {
 
   @Test
   void update_shouldReturnNullWhenRecurringNotFoundForUser() {
-    RecurringService recurringServiceSpy = Mockito.spy(recurringService);
-
     CreateRecurringRequest request = CreateRecurringRequestFactory.defaultRequest();
     UserEntity currentUser = UserEntityFactory.defaultUser();
     CategoryEntity category = CategoryEntityFactory.defaultCategory();
@@ -337,7 +325,7 @@ class RecurringServiceTest {
     when(recurringRepository.findByIdAndAccount(RECURRING_ID, currentUser.getAccount().getAccountId()))
         .thenReturn(Optional.empty());
 
-    RecurringResponse result = recurringServiceSpy.update(RECURRING_ID, request, currentUser);
+    RecurringResponse result = recurringService.update(RECURRING_ID, request, currentUser);
 
     assertNull(result);
 

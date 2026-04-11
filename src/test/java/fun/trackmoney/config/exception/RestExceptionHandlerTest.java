@@ -2,7 +2,7 @@ package fun.trackmoney.config.exception;
 
 import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.exception.BudgetsNotFoundException;
-import fun.trackmoney.category.exception.CategoryNotFoundException;
+import fun.trackmoney.exception.CategoryNotFoundException;
 import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
