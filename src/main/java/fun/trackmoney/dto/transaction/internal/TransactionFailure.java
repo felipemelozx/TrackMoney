@@ -1,6 +1,6 @@
 package fun.trackmoney.dto.transaction.internal;
 
-import fun.trackmoney.transaction.enums.TransactionsError;
+import fun.trackmoney.enums.TransactionsError;
 
 public record TransactionFailure(TransactionsError error) implements TransactionResult {
 }

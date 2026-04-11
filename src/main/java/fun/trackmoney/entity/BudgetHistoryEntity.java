@@ -1,7 +1,7 @@
 package fun.trackmoney.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import fun.trackmoney.budget.enums.BudgetStatus;
+import fun.trackmoney.enums.BudgetStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

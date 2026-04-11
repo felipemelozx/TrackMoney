@@ -1,8 +1,8 @@
 package fun.trackmoney.repository;
 
 import fun.trackmoney.entity.AccountEntity;
-import fun.trackmoney.metrics.projection.CategoryAggregateProjection;
-import fun.trackmoney.metrics.projection.MonthAggregateProjection;
+import fun.trackmoney.repository.projection.CategoryAggregateProjection;
+import fun.trackmoney.repository.projection.MonthAggregateProjection;
 import fun.trackmoney.entity.TransactionEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

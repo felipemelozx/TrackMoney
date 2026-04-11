@@ -4,7 +4,7 @@ import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
 import fun.trackmoney.dto.budget.GenerationResultDTO;
 import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.entity.BudgetsEntity;
-import fun.trackmoney.budget.enums.BudgetStatus;
+import fun.trackmoney.enums.BudgetStatus;
 import fun.trackmoney.mapper.BudgetHistoryMapper;
 import fun.trackmoney.repository.BudgetHistoryRepository;
 import fun.trackmoney.repository.BudgetsRepository;

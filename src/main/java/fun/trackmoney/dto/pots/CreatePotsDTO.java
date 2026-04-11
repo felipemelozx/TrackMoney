@@ -1,6 +1,6 @@
 package fun.trackmoney.dto.pots;
 
-import fun.trackmoney.pots.enums.ColorPick;
+import fun.trackmoney.enums.ColorPick;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 

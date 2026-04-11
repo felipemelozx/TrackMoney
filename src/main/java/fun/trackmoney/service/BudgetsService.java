@@ -7,7 +7,7 @@ import fun.trackmoney.dto.budget.internal.BudgetFailure;
 import fun.trackmoney.dto.budget.internal.BudgetResult;
 import fun.trackmoney.dto.budget.internal.BudgetSuccess;
 import fun.trackmoney.entity.BudgetsEntity;
-import fun.trackmoney.budget.enums.BudgetError;
+import fun.trackmoney.enums.BudgetError;
 import fun.trackmoney.mapper.BudgetMapper;
 import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.entity.CategoryEntity;

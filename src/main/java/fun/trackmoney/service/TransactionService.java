@@ -6,7 +6,7 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
-import fun.trackmoney.transaction.enums.TransactionsError;
+import fun.trackmoney.enums.TransactionsError;
 import fun.trackmoney.dto.transaction.internal.TransactionFailure;
 import fun.trackmoney.dto.transaction.internal.TransactionResult;
 import fun.trackmoney.dto.transaction.internal.TransactionSuccess;

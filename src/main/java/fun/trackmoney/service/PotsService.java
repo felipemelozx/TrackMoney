@@ -8,7 +8,7 @@ import fun.trackmoney.dto.pots.internal.PotsFailure;
 import fun.trackmoney.dto.pots.internal.PotsResult;
 import fun.trackmoney.dto.pots.internal.PotsSuccess;
 import fun.trackmoney.entity.PotsEntity;
-import fun.trackmoney.pots.enums.PotsErrorType;
+import fun.trackmoney.enums.PotsErrorType;
 import fun.trackmoney.mapper.PotsMapper;
 import fun.trackmoney.repository.PotsRepository;
 import fun.trackmoney.entity.UserEntity;

@@ -1,6 +1,6 @@
 package fun.trackmoney.dto.budget;
 
-import fun.trackmoney.budget.enums.BudgetStatus;
+import fun.trackmoney.enums.BudgetStatus;
 import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.dto.transaction.TransactionSimpleDTO;
 import java.math.BigDecimal;

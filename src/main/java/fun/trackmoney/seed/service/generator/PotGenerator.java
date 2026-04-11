@@ -2,7 +2,7 @@ package fun.trackmoney.seed.service.generator;
 
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.entity.PotsEntity;
-import fun.trackmoney.pots.enums.ColorPick;
+import fun.trackmoney.enums.ColorPick;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
