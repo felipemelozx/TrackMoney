@@ -212,7 +212,7 @@ public class MetricsService {
   ) {
     // Generate provisional history if the date range corresponds to the current month
     if (isCurrentMonthRange(startDate, endDate)) {
-      generateProvisionalHistoryForCurrentMonth(accountId, startDate, endDate, categoryId);
+      this.generateProvisionalHistoryForCurrentMonth(accountId, startDate, endDate, categoryId);
     }
 
     List<BudgetHistoryEntity> histories = budgetHistoryRepository.findByAccountAndYearMonthRange(
@@ -648,7 +648,7 @@ public class MetricsService {
    * @param categoryId the category ID to filter by (null for all categories)
    */
   @Transactional
-  private void generateProvisionalHistoryForCurrentMonth(
+  public void generateProvisionalHistoryForCurrentMonth(
       Integer accountId,
       LocalDate startDate,
       LocalDate endDate,
@@ -712,7 +712,7 @@ public class MetricsService {
     // Delete existing history if present
     budgetHistoryRepository
         .findByBudgetAndReferenceMonthAndReferenceYear(budget, currentMonth, currentYear)
-        .ifPresent(history -> budgetHistoryRepository.delete(history));
+        .ifPresent(budgetHistoryRepository::delete);
 
     // Calculate values
     CategoryEntity category = budget.getCategory();
@@ -793,7 +793,7 @@ public class MetricsService {
     return transactions.stream()
         .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
         .map(fun.trackmoney.entity.TransactionEntity::getAmount)
-        .filter(amount -> amount != null)
+        .filter(java.util.Objects::nonNull)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 

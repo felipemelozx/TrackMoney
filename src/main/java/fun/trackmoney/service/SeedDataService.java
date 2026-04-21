@@ -21,6 +21,7 @@ import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +35,8 @@ public class SeedDataService {
 
   private static final Logger LOG = LoggerFactory.getLogger(SeedDataService.class);
   private static final String SEED_USER_EMAIL = "test@example.com";
-  private static final String SEED_USER_PASSWORD = "Test@123";
+
+  private final String seedUserPassword;
 
   private final PasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
@@ -49,7 +51,8 @@ public class SeedDataService {
   private final PotGenerator potGenerator;
   private final RecurringGenerator recurringGenerator;
 
-  public SeedDataService(PasswordEncoder passwordEncoder,
+  public SeedDataService(@Value("${trackmoney.seed.password:Test@123}") String seedUserPassword,
+                         PasswordEncoder passwordEncoder,
                          UserRepository userRepository,
                          CategoryRepository categoryRepository,
                          BudgetsRepository budgetRepository,
@@ -60,6 +63,7 @@ public class SeedDataService {
                          BudgetGenerator budgetGenerator,
                          PotGenerator potGenerator,
                          RecurringGenerator recurringGenerator) {
+    this.seedUserPassword = seedUserPassword;
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.categoryRepository = categoryRepository;
@@ -170,7 +174,7 @@ public class SeedDataService {
   private record UserAndAccount(UserEntity user, AccountEntity account) {}
 
   private UserEntity createSeedUser() {
-    String encodedPassword = passwordEncoder.encode(SEED_USER_PASSWORD);
+    String encodedPassword = passwordEncoder.encode(seedUserPassword);
 
     UserEntity user = new UserEntity();
     user.setName("Usuário de Desenvolvimento");

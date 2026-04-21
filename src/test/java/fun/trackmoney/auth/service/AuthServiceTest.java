@@ -1,7 +1,6 @@
 package fun.trackmoney.auth.service;
 import fun.trackmoney.service.AuthService;
 
-import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.dto.auth.LoginRequestDTO;
 import fun.trackmoney.dto.auth.LoginResponseDTO;
 import fun.trackmoney.dto.auth.internal.AuthError;
@@ -51,7 +50,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;

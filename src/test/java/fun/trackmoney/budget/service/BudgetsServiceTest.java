@@ -1,7 +1,7 @@
 package fun.trackmoney.budget.service;
 import fun.trackmoney.service.BudgetsService;
-
 import fun.trackmoney.service.CategoryService;
+
 import fun.trackmoney.dto.account.AccountResponseDTO;
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.mapper.AccountMapper;
@@ -12,7 +12,6 @@ import fun.trackmoney.dto.budget.internal.BudgetResult;
 import fun.trackmoney.dto.budget.internal.BudgetSuccess;
 import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.enums.BudgetError;
-import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.mapper.BudgetMapper;
 import fun.trackmoney.repository.BudgetCheckProjection;
 import fun.trackmoney.repository.BudgetsRepository;
@@ -31,7 +30,6 @@ import fun.trackmoney.service.TransactionService;
 import fun.trackmoney.service.RecurringService;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
-import fun.trackmoney.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

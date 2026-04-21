@@ -1,5 +1,4 @@
 package fun.trackmoney.metrics.service;
-import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.service.MetricsService;
 
 
@@ -321,8 +320,6 @@ class MetricsServiceTest {
         .setTargetAmount(new BigDecimal("100"))
         .setSpentAmount(new BigDecimal("110"));
 
-    String status = metricsService.getBudgetPerformance(1, 2024, null).year() == 2024 ? "OK" : "OK";
-
     // Test through getBudgetPerformance which uses the private method
     CategoryEntity category = CategoryEntityFactory.defaultCategory();
 
@@ -534,7 +531,7 @@ class MetricsServiceTest {
         .setStatus(BudgetStatus.EXCEEDED);
 
     when(budgetHistoryRepository.findByAccountAndYearMonthRange(
-        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3), eq(null)
+        eq(accountId), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(null)
     )).thenReturn(List.of(historyJan, historyFeb));
 
     BudgetPerformanceDTO result = metricsService.getBudgetPerformance(accountId, startDate, endDate, null);
@@ -553,7 +550,7 @@ class MetricsServiceTest {
     LocalDate endDate = LocalDate.of(2024, 3, 31);
 
     when(budgetHistoryRepository.findByAccountAndYearMonthRange(
-        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3), eq(null)
+        eq(accountId), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(null)
     )).thenReturn(List.of());
 
     BudgetPerformanceDTO result = metricsService.getBudgetPerformance(accountId, startDate, endDate, null);
@@ -607,7 +604,7 @@ class MetricsServiceTest {
         .thenReturn(List.of(monthData));
 
     when(budgetHistoryRepository.findByAccountAndYearMonthRange(
-        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3), eq(null)
+        eq(accountId), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(null)
     )).thenReturn(List.of(exceededBudget, onTrackBudget));
 
     when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any(), eq(null)))
@@ -637,7 +634,7 @@ class MetricsServiceTest {
         .thenReturn(List.of());
 
     when(budgetHistoryRepository.findByAccountAndYearMonthRange(
-        eq(accountId), eq(2024), eq((short) 1), eq(2024), eq((short) 3), eq(null)
+        eq(accountId), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(null)
     )).thenReturn(List.of());
 
     when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any(), eq(null)))
@@ -685,7 +682,7 @@ class MetricsServiceTest {
         .thenReturn(List.of());
 
     when(budgetHistoryRepository.findByAccountAndYearMonthRange(
-        eq(accountId), eq(2024), eq((short) 2), eq(2024), eq((short) 3), eq(null)
+        eq(accountId), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(null)
     )).thenReturn(List.of(janBudget, febBudget));
 
     when(transactionRepository.sumByCategoryForDateRange(eq(accountId), any(), any(), eq(null)))

@@ -1,5 +1,4 @@
 package fun.trackmoney.user.service;
-import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.service.UserService;
 
 
