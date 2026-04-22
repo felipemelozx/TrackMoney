@@ -62,12 +62,6 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Download Test Reports
-        uses: actions/download-artifact@v4
-        with:
-          name: test-reports
-          path: target/site
-
       - name: Start Docker Compose
         run: docker compose up -d
 
@@ -75,7 +69,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn clean verify sonar:sonar \
+          mvn verify sonar:sonar \
             -Dsonar.projectKey=felipemelozx_TrackMoney \
             -Dsonar.organization=felipemelozx-trackmoney \
             -Dsonar.host.url=https://sonarcloud.io \

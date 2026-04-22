@@ -1,0 +1,189 @@
+package fun.trackmoney.service;
+
+import fun.trackmoney.dto.auth.LoginRequestDTO;
+import fun.trackmoney.dto.auth.LoginResponseDTO;
+import fun.trackmoney.dto.auth.internal.AuthError;
+import fun.trackmoney.dto.auth.internal.ForgotPasswordFailure;
+import fun.trackmoney.dto.auth.internal.ForgotPasswordResult;
+import fun.trackmoney.dto.auth.internal.ForgotPasswordSuccess;
+import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailFailure;
+import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailResult;
+import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailSuccess;
+import fun.trackmoney.dto.auth.internal.login.LoginFailure;
+import fun.trackmoney.dto.auth.internal.login.LoginResult;
+import fun.trackmoney.dto.auth.internal.login.LoginSuccess;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
+import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
+import fun.trackmoney.infra.jwt.JwtService;
+import fun.trackmoney.infra.email.EmailService;
+import fun.trackmoney.infra.redis.CacheManagerService;
+import fun.trackmoney.dto.user.UserRequestDTO;
+import fun.trackmoney.entity.UserEntity;
+import jakarta.mail.MessagingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.security.SecureRandom;
+import java.util.Optional;
+
+@Service
+public class AuthService {
+
+  @Value("${front.url}")
+  private String frontUrl;
+  private final UserService userService;
+  private final PasswordEncoder passwordEncoder;
+  private final JwtService jwtService;
+  private final EmailService emailService;
+  private final CacheManagerService cacheManagerService;
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
+
+  private static final String EMAIL_VERIFICATION_CACHE = "EmailVerificationCodes";
+  private static final String VERIFICATION_EMAIL_ERROR_MSG = "Error sending verification email to {}.";
+  private static final String RESET_PASSWORD_EMAIL_ERROR_MSG = "Error sending reset password email to {}.";
+
+  public AuthService(UserService userService,
+                     PasswordEncoder passwordEncoder,
+                     JwtService jwtservice,
+                     EmailService emailService,
+                     CacheManagerService cacheManagerService) {
+    this.userService = userService;
+    this.passwordEncoder = passwordEncoder;
+    this.jwtService = jwtservice;
+    this.emailService = emailService;
+    this.cacheManagerService = cacheManagerService;
+  }
+
+  public UserRegisterResult register(UserRequestDTO userDto)  {
+    UserRegisterResult result = userService.register(userDto);
+    if(result instanceof UserRegisterSuccess) {
+      Integer code;
+      boolean codeIsSaved;
+      do {
+        code = generateVerificationCode();
+        codeIsSaved = saveCode(code, userDto.email());
+      } while (!codeIsSaved);
+
+      try{
+        emailService.sendEmailToVerifyEmail(userDto.email(), userDto.name(), code);
+      } catch (MessagingException ex) {
+        LOGGER.error(VERIFICATION_EMAIL_ERROR_MSG, userDto.email(), ex);
+      }
+    }
+    return result;
+  }
+
+  public LoginResult login(LoginRequestDTO loginDto) {
+    Optional<UserEntity> optionalUser = userService.findUserByEmail(loginDto.email());
+    if(optionalUser.isEmpty()) {
+      return new LoginFailure(AuthError.USER_NOT_REGISTER);
+    }
+    UserEntity user = optionalUser.get();
+
+    if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
+      return new LoginFailure(AuthError.INVALID_CREDENTIALS);
+    }
+
+    if(!user.isActive()){
+      String verificationToken = jwtService.generateVerificationToken(user.getEmail());
+      String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+
+      LoginResponseDTO tokens = new LoginResponseDTO(verificationToken, refreshToken);
+      return new LoginSuccess(tokens);
+    }
+
+    String accessToken = jwtService.generateAccessToken(user.getEmail());
+    String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+
+    LoginResponseDTO tokens = new LoginResponseDTO(accessToken, refreshToken);
+
+    return new LoginSuccess(tokens);
+  }
+
+  public Boolean activateUser(Integer code, String email) {
+    String recoverEmail = getEmailByCode(code);
+    if(recoverEmail == null) {
+      return false;
+    }
+    if(!recoverEmail.equals(email)) {
+      return false;
+    }
+    removeCode(code);
+    return userService.activateUser(email);
+  }
+
+  public VerificationEmailResult resendVerificationEmail(UserEntity user) {
+    if(user.isActive()) {
+      return new VerificationEmailFailure(AuthError.USER_IS_VERIFIED);
+    }
+    int code;
+    boolean codeIsSaved;
+    do {
+      code = generateVerificationCode();
+      codeIsSaved = saveCode(code, user.getEmail());
+    } while (!codeIsSaved);
+    try{
+      emailService.sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
+    } catch (MessagingException ex) {
+      LOGGER.error(VERIFICATION_EMAIL_ERROR_MSG, user.getEmail(), ex);
+      return new VerificationEmailFailure(AuthError.ERROR_SENDING_EMAIL);
+    }
+    return new VerificationEmailSuccess();
+  }
+
+  public ForgotPasswordResult forgotPassword(String email) {
+    UserEntity optionalUser = userService.findUserByEmail(email).orElse(null);
+    if(optionalUser == null) {
+      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    }
+    String jwtCode = jwtService.generateResetPasswordToken(email);
+    String link = frontUrl + "/reset-password?token=" +  jwtCode;
+    try {
+      emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
+    } catch (RuntimeException | MessagingException ex) {
+      LOGGER.error(RESET_PASSWORD_EMAIL_ERROR_MSG, email, ex);
+      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    }
+    return new ForgotPasswordSuccess();
+  }
+
+  public ForgotPasswordResult resetPassword(String email, String newPassword) {
+    UserEntity user = userService.findUserByEmail(email).orElse(null);
+    if(user == null) {
+      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    }
+    String password = passwordEncoder.encode(newPassword);
+    user.setPassword(password);
+    userService.update(user);
+    return new ForgotPasswordSuccess();
+  }
+
+  public String refreshAccessToken(String email) {
+    UserEntity user = userService.findUserByEmail(email).orElse(null);
+
+    if(user == null) {
+      return null;
+    }
+    return jwtService.generateAccessToken(email);
+  }
+
+  protected Boolean saveCode(Integer code, String email) {
+    return cacheManagerService.put(EMAIL_VERIFICATION_CACHE, code, email);
+  }
+
+  protected String getEmailByCode(Integer code) {
+    return cacheManagerService.get(EMAIL_VERIFICATION_CACHE, code, String.class);
+  }
+
+  protected void removeCode(Integer code) {
+    cacheManagerService.evict(EMAIL_VERIFICATION_CACHE, code);
+  }
+
+  protected Integer generateVerificationCode() {
+    return SECURE_RANDOM.nextInt(9000) + 1000;
+  }
+}

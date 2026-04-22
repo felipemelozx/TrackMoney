@@ -46,45 +46,78 @@ curl http://localhost:8080/api/v1/actuator/health
 
 ## Architecture Overview
 
-TrackMoney is a **personal finance management system** built with **Spring Boot 3.4.5** following **layered architecture** principles.
+TrackMoney is a **personal finance management system** built with **Spring Boot 3.4.5** following a **flat layered architecture** where each layer groups all domains together.
 
 ### Layer Architecture (Strict Separation)
 
-The codebase enforces strict separation between layers:
+The codebase organizes code by technical layer (not by domain module):
 
-1. **Controller Layer** (`src/main/java/fun/trackmoney/*/controller/`)
+1. **Controller Layer** (`fun.trackmoney.controller/`)
    - REST endpoints with `@RestController`
    - Input validation using Bean Validation
    - DTOs for request/response (never expose entities directly)
    - HTTP status codes and error handling
 
-2. **Service Layer** (`src/main/java/fun/trackmoney/*/service/`)
+2. **Service Layer** (`fun.trackmoney.service/`)
    - Business logic and orchestration
    - DTO ↔ Entity conversion using **MapStruct mappers**
    - Transaction management with `@Transactional`
    - Custom exceptions for domain errors
 
-3. **Repository Layer** (`src/main/java/fun/trackmoney/*/repository/`)
+3. **Repository Layer** (`fun.trackmoney.repository/`)
    - Spring Data JPA repositories
    - Custom queries using `@Query` or query methods
+   - Projection interfaces in `repository/projection/`
    - Database abstraction
 
-4. **Entity Layer** (`src/main/java/fun/trackmoney/*/entity/`)
+4. **Entity Layer** (`fun.trackmoney.entity/`)
    - JPA entities mapped to PostgreSQL tables
-   - **All primary keys use UUID** (`@Id` with `@GeneratedValue(UUID)`)
+   - **All primary keys use UUID** (`@Id` with `@GeneratedValue(UUID)`) — except `CategoryEntity` which uses `IDENTITY`
    - Relationships between domain objects
 
-### Domain Package Structure
+### Package Structure
 
-Each domain module (account, transaction, budget, etc.) follows this structure:
 ```
-fun.trackmoney.{domain}/
-├── entity/          # JPA entities (database model)
-├── repository/      # Spring Data JPA repositories
-├── service/         # Business logic + DTO conversion
-├── controller/      # REST endpoints
-├── mappers/         # MapStruct interfaces (DTO ↔ Entity)
-└── dto/            # Request/Response DTOs
+fun.trackmoney/
+├── controller/          # All REST controllers (one file per domain)
+├── service/             # All business services (one file per domain)
+├── entity/              # All JPA entities
+├── repository/          # All Spring Data JPA repositories
+│   └── projection/      # Repository projection interfaces
+├── mapper/              # All MapStruct mapper interfaces
+├── dto/                 # DTOs organized by domain sub-package
+│   ├── account/
+│   ├── auth/
+│   │   └── internal/   # Auth result types (login, register, forgot-password)
+│   ├── budget/
+│   │   └── internal/
+│   ├── category/
+│   ├── metrics/
+│   │   └── response/
+│   ├── pots/
+│   │   └── internal/
+│   ├── recurring/
+│   ├── transaction/
+│   │   └── internal/
+│   └── user/
+├── config/              # Application configuration
+│   ├── exception/       # Global exception handler
+│   └── swagger/         # Swagger/OpenAPI config
+├── infra/               # Infrastructure concerns
+│   ├── auth/config/     # Security config & JWT filter
+│   ├── email/           # Email service
+│   ├── jwt/             # JWT token service
+│   └── redis/           # Redis cache config & manager
+├── exception/           # Domain-specific exceptions
+├── enums/               # Shared and domain-specific enums
+├── seed/                # Seed data generation (dev only)
+│   ├── config/          # Startup runners
+│   ├── service/
+│   │   ├── generator/   # Entity generators
+│   │   └── model/       # Seed data models
+│   └── util/            # Random utilities
+└── utils/               # Shared utilities
+    └── response/        # ApiResponse wrapper
 ```
 
 **Important**: Always use DTOs for API operations. Never expose entities directly to controllers.
@@ -102,7 +135,7 @@ fun.trackmoney.{domain}/
 ### JWT Authentication (Dual-Token Strategy)
 - **Access Token**: Short-lived (15 minutes), used in all authenticated requests
 - **Refresh Token**: Long-lived (7 days), used only to obtain new access tokens
-- Tokens are generated/validated in `auth/infra/jwt/JwtService.java`
+- Tokens are generated/validated in `infra/jwt/JwtService.java`
 
 ### Authorities (Granular Permissions)
 Not just roles, but fine-grained authorities:
@@ -140,7 +173,7 @@ Not just roles, but fine-grained authorities:
 - Used for frequently accessed data (categories, user settings)
 - Spring Cache abstraction with Redis backend
 - Application-level caching enabled via `@EnableCaching`
-- Cache configuration in `redis/` package
+- Cache configuration in `infra/redis/` package
 
 ## Testing Strategy
 
@@ -154,8 +187,8 @@ Not just roles, but fine-grained authorities:
 ### Test Data Builders
 Use the Factory/Builder classes in `testutils/` for creating test data:
 ```java
-AccountEntity account = AccountFactory.createAccount();
-TransactionEntity transaction = TransactionBuilder.aTransaction().withAmount(100.0).build();
+AccountEntity account = AccountEntityFactory.defaultAccount();
+TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
 ```
 
 ## Important Constraints
@@ -178,7 +211,8 @@ TransactionEntity transaction = TransactionBuilder.aTransaction().withAmount(100
 
 ### Application Configuration
 - Main config: `src/main/resources/application.yaml`
-- Environment-specific: `application-dev.yaml`, `application-prod.yaml`
+- Dev profile: `src/main/resources/application-dev.yaml`
+- Prod profile: `src/main/resources/application-prod.yaml`
 - Environment variables required: `API_SECRET_KEY`, `POSTGRES_*`, `SPRING_MAIL_*`
 
 ### Context Path
