@@ -1,5 +1,6 @@
 package fun.trackmoney.repository;
 
+import fun.trackmoney.repository.projection.BudgetCheckProjection;
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.entity.CategoryEntity;

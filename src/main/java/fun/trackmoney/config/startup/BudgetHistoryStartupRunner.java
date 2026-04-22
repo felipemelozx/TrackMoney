@@ -1,4 +1,4 @@
-package fun.trackmoney.config;
+package fun.trackmoney.config.startup;
 
 import fun.trackmoney.service.BudgetHistoryService;
 import org.slf4j.Logger;
