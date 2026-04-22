@@ -112,3 +112,24 @@ Thumbs.db
 .github/agents/
 .claude/settings.local.json
 .aios/install-log.txt
+
+# AI Coding Agents & Dev Tools
+.agents/
+.opencode/
+.windsurf/
+.aider/
+.cline/
+.copilot/
+.augment/
+.sourcegraph/
+.tabby/
+.supermaven/
+.mentat/
+.sweep/
+.bito/
+.codeium/
+.cursorrules
+.windsurfrules
+.aider.conf.yml
+CLAUDE.md
+AGENTS.md
