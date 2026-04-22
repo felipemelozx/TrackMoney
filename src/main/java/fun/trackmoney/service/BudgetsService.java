@@ -47,7 +47,7 @@ public class BudgetsService {
   @Transactional
   public BudgetResult create(BudgetCreateDTO dto, UserEntity currentUser) {
     var account = currentUser.getAccount();
-    var category = categoryService.findById(dto.categoryId());
+    var category = categoryService.findEntityById(dto.categoryId());
 
     if (category == null) {
       String message = "Category not found with this id: " + dto.categoryId();
@@ -123,7 +123,7 @@ public class BudgetsService {
   @Transactional
   public BudgetResult update(BudgetCreateDTO dto, Integer id, UserEntity currentUser) {
 
-    var category = categoryService.findById(dto.categoryId());
+    var category = categoryService.findEntityById(dto.categoryId());
     if (category == null) {
       return new BudgetFailure(
           BudgetError.CATEGORY_NOT_FOUND,

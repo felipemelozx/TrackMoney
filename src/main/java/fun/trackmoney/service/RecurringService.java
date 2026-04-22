@@ -51,7 +51,7 @@ public class RecurringService {
     AccountEntity account = currentUser.getAccount();
     RecurringEntity recurring = recurringMapper.toEntity(request);
 
-    CategoryEntity category = categoryService.findById(request.categoryId());
+    CategoryEntity category = categoryService.findEntityById(request.categoryId());
 
     if (category == null) {
       return null;
@@ -67,7 +67,7 @@ public class RecurringService {
 
 
   public RecurringResponse update(Long id, CreateRecurringRequest request, UserEntity currentUser) {
-    CategoryEntity category = categoryService.findById(request.categoryId());
+    CategoryEntity category = categoryService.findEntityById(request.categoryId());
     
     if(category == null) {
       return null;

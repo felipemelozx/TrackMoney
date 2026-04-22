@@ -1,6 +1,6 @@
 package fun.trackmoney.controller;
 
-import fun.trackmoney.entity.CategoryEntity;
+import fun.trackmoney.dto.category.CategoryResponseDTO;
 import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +22,9 @@ public class CategoryController {
   }
 
   @GetMapping("/findAll")
-  public ResponseEntity<ApiResponse<List<CategoryEntity>>> findAll() {
+  public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> findAll() {
     return ResponseEntity.ok().body(
-      ApiResponse.<List<CategoryEntity>>success()
+      ApiResponse.<List<CategoryResponseDTO>>success()
           .message("Categories")
           .data(categoryService.findAll())
           .build()
@@ -32,10 +32,10 @@ public class CategoryController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<CategoryEntity>> findById(@PathVariable Integer id) {
+  public ResponseEntity<ApiResponse<CategoryResponseDTO>> findById(@PathVariable Integer id) {
     return ResponseEntity.ok().body(
-      ApiResponse.<CategoryEntity>success()
-          .message("Categories")
+      ApiResponse.<CategoryResponseDTO>success()
+          .message("Category found")
           .data(categoryService.findById(id))
           .build()
     );

@@ -55,7 +55,7 @@ public class TransactionService {
       return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
     }
 
-    CategoryEntity category = categoryService.findById(transactionDTO.categoryId());
+    CategoryEntity category = categoryService.findEntityById(transactionDTO.categoryId());
 
     if (category == null) {
       return new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
@@ -103,7 +103,7 @@ public class TransactionService {
     oldTransaction.setTransactionName(dto.transactionName());
     oldTransaction.setAmount(dto.amount());
     oldTransaction.setDescription(dto.description());
-    oldTransaction.setCategory(categoryService.findById(dto.categoryId()));
+    oldTransaction.setCategory(categoryService.findEntityById(dto.categoryId()));
     oldTransaction.setTransactionType(dto.transactionType());
     oldTransaction.setTransactionDate(dto.transactionDate());
 
