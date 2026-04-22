@@ -6,7 +6,7 @@ import fun.trackmoney.dto.category.CategoryResponseDTO;
 import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.exception.CategoryNotFoundException;
 import fun.trackmoney.mapper.CategoryMapper;
-import fun.trackmoney.mapper.CategoryMapperImpl;
+
 import fun.trackmoney.repository.CategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ class CategoryServiceTest {
   private CategoryRepository categoryRepository;
 
   @Spy
-  private CategoryMapper categoryMapper = new CategoryMapperImpl();
+  private CategoryMapper categoryMapper = new CategoryMapper();
 
   @InjectMocks
   private CategoryService categoryService;

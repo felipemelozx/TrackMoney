@@ -3,16 +3,49 @@ package fun.trackmoney.mapper;
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
 import fun.trackmoney.entity.BudgetsEntity;
-import org.mapstruct.Mapper;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
-public interface BudgetMapper {
+@Component
+public class BudgetMapper {
 
-  BudgetsEntity createDtoTOEntity(BudgetCreateDTO dto);
+  private final AccountMapper accountMapper;
 
-  BudgetResponseDTO entityToResponseDTO(BudgetsEntity entity);
+  public BudgetMapper(AccountMapper accountMapper) {
+    this.accountMapper = accountMapper;
+  }
 
-  List<BudgetResponseDTO> entityListToResponseList(List<BudgetsEntity> entityList);
+  public BudgetsEntity createDtoTOEntity(BudgetCreateDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    BudgetsEntity entity = new BudgetsEntity();
+    entity.setPercent(dto.percent());
+    return entity;
+  }
+
+  public BudgetResponseDTO entityToResponseDTO(BudgetsEntity entity) {
+    if (entity == null) {
+      return null;
+    }
+    return new BudgetResponseDTO(
+        entity.getBudgetId(),
+        entity.getCategory(),
+        accountMapper.accountEntityToAccountResponse(entity.getAccount()),
+        entity.getPercent(),
+        null,
+        null,
+        null
+    );
+  }
+
+  public List<BudgetResponseDTO> entityListToResponseList(List<BudgetsEntity> entityList) {
+    if (entityList == null) {
+      return null;
+    }
+    return entityList.stream()
+        .map(this::entityToResponseDTO)
+        .toList();
+  }
 }

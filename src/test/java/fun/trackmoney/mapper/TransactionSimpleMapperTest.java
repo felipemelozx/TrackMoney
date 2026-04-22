@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 class TransactionSimpleMapperTest {
 
-  private final TransactionSimpleMapper mapper = new TransactionSimpleMapperImpl();
+  private final TransactionSimpleMapper mapper = new TransactionSimpleMapper();
 
   @Test
   void entityToSimpleDTO_shouldMapAllFields() {
