@@ -4,21 +4,75 @@ import fun.trackmoney.dto.account.AccountRequestDTO;
 import fun.trackmoney.dto.account.AccountResponseDTO;
 import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
 import fun.trackmoney.entity.AccountEntity;
-import org.mapstruct.Mapper;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
-public interface AccountMapper {
-  AccountEntity accountRequestToAccountEntity(AccountRequestDTO accountRequestDTO);
+@Component
+public class AccountMapper {
 
-  AccountEntity accountUpdateRequestToAccountEntity(AccountUpdateRequestDTO accountRequestDTO);
+  private final UserMapper userMapper;
 
-  AccountResponseDTO accountEntityToAccountResponse(AccountEntity accountEntity);
+  public AccountMapper(UserMapper userMapper) {
+    this.userMapper = userMapper;
+  }
 
-  List<AccountResponseDTO> accountEntityListToAccountResponseList(List<AccountEntity> entities);
+  public AccountEntity accountRequestToAccountEntity(AccountRequestDTO accountRequestDTO) {
+    if (accountRequestDTO == null) {
+      return null;
+    }
+    AccountEntity entity = new AccountEntity();
+    entity.setName(accountRequestDTO.name());
+    entity.setBalance(accountRequestDTO.balance());
+    return entity;
+  }
 
-  AccountEntity accountResponseToEntity(AccountResponseDTO accountById);
+  public AccountEntity accountUpdateRequestToAccountEntity(AccountUpdateRequestDTO accountRequestDTO) {
+    if (accountRequestDTO == null) {
+      return null;
+    }
+    AccountEntity entity = new AccountEntity();
+    entity.setName(accountRequestDTO.name());
+    return entity;
+  }
 
-  AccountUpdateRequestDTO toAccountRequest(AccountEntity account);
+  public AccountResponseDTO accountEntityToAccountResponse(AccountEntity accountEntity) {
+    if (accountEntity == null) {
+      return null;
+    }
+    return new AccountResponseDTO(
+        accountEntity.getAccountId(),
+        userMapper.userEntityToUserResponseDto(accountEntity.getUser()),
+        accountEntity.getName(),
+        accountEntity.getBalance()
+    );
+  }
+
+  public List<AccountResponseDTO> accountEntityListToAccountResponseList(List<AccountEntity> entities) {
+    if (entities == null) {
+      return null;
+    }
+    return entities.stream()
+        .map(this::accountEntityToAccountResponse)
+        .toList();
+  }
+
+  public AccountEntity accountResponseToEntity(AccountResponseDTO accountById) {
+    if (accountById == null) {
+      return null;
+    }
+    AccountEntity entity = new AccountEntity();
+    entity.setAccountId(accountById.accountId());
+    entity.setUser(userMapper.userResponseDtoToEntity(accountById.user()));
+    entity.setName(accountById.name());
+    entity.setBalance(accountById.balance());
+    return entity;
+  }
+
+  public AccountUpdateRequestDTO toAccountRequest(AccountEntity account) {
+    if (account == null) {
+      return null;
+    }
+    return new AccountUpdateRequestDTO(account.getName());
+  }
 }

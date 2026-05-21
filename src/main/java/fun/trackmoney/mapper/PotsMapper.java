@@ -3,18 +3,43 @@ package fun.trackmoney.mapper;
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.PotsResponseDTO;
 import fun.trackmoney.entity.PotsEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
-public interface PotsMapper {
+@Component
+public class PotsMapper {
 
-  List<PotsResponseDTO> listToResponse(List<PotsEntity> entityList);
+  public List<PotsResponseDTO> listToResponse(List<PotsEntity> entityList) {
+    if (entityList == null) {
+      return null;
+    }
+    return entityList.stream()
+        .map(this::toResponse)
+        .toList();
+  }
 
-  @Mapping(target = "color", source = "color.hex")
-  PotsResponseDTO toResponse(PotsEntity entity);
+  public PotsResponseDTO toResponse(PotsEntity entity) {
+    if (entity == null) {
+      return null;
+    }
+    return new PotsResponseDTO(
+        entity.getPotId(),
+        entity.getName(),
+        entity.getTargetAmount(),
+        entity.getCurrentAmount(),
+        entity.getColor() != null ? entity.getColor().getHex() : null
+    );
+  }
 
-  PotsEntity toEntity(CreatePotsDTO dto);
+  public PotsEntity toEntity(CreatePotsDTO dto) {
+    if (dto == null) {
+      return null;
+    }
+    PotsEntity entity = new PotsEntity();
+    entity.setName(dto.name());
+    entity.setTargetAmount(dto.targetAmount());
+    entity.setColor(dto.color());
+    return entity;
+  }
 }
