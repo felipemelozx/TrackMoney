@@ -167,7 +167,7 @@ jobs:
           cat <<EOF > $APP_DIR/.env
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           IMAGE_TAG=latest
-          APP_PORT=8080
+          PROJECT_URL=${{ secrets.PROJECT_URL }}
           SERVER_CONTEXT_PATH=/api/v1
           SPRING_PROFILES_ACTIVE=prod
           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
@@ -184,7 +184,7 @@ jobs:
           EOF
 
           cd $APP_DIR
-          
+
           docker compose -f docker-compose.prod.yaml down
 
           docker compose -f docker-compose.prod.yaml up -d --force-recreate --pull always
