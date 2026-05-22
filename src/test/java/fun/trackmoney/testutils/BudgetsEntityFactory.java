@@ -1,8 +1,8 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.budget.entity.BudgetsEntity;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.BudgetsEntity;
+import fun.trackmoney.entity.CategoryEntity;
 
 public class BudgetsEntityFactory {
 

@@ -79,3 +79,57 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 target
+
+# Environment & Secrets (AIOS)
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Dependencies (AIOS)
+node_modules/
+node_modules
+
+# Build & Logs (AIOS)
+dist/
+build/
+*.log
+
+# IDE & OS (AIOS)
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# AIOS Local (AIOS)
+.aios-core/
+.antigravity/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.github/agents/
+.claude/settings.local.json
+.aios/install-log.txt
+
+# AI Coding Agents & Dev Tools
+.agents/
+.opencode/
+.windsurf/
+.aider/
+.cline/
+.copilot/
+.augment/
+.sourcegraph/
+.tabby/
+.supermaven/
+.mentat/
+.sweep/
+.bito/
+.codeium/
+.cursorrules
+.windsurfrules
+.aider.conf.yml
+CLAUDE.md
+AGENTS.md

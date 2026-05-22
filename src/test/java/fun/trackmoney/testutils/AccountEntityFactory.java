@@ -1,7 +1,7 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.user.entity.UserEntity;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.UserEntity;
 
 import java.math.BigDecimal;
 import java.util.UUID;

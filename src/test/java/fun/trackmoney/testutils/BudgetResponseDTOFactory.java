@@ -1,9 +1,9 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.account.dtos.AccountResponseDTO;
-import fun.trackmoney.budget.dtos.BudgetResponseDTO;
-import fun.trackmoney.category.entity.CategoryEntity;
-import fun.trackmoney.transaction.dto.TransactionResponseDTO;
+import fun.trackmoney.dto.account.AccountResponseDTO;
+import fun.trackmoney.dto.budget.BudgetResponseDTO;
+import fun.trackmoney.entity.CategoryEntity;
+import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 
 import java.math.BigDecimal;
 import java.util.Collections;

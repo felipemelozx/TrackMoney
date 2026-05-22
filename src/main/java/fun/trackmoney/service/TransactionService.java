@@ -1,0 +1,204 @@
+package fun.trackmoney.service;
+
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.CategoryEntity;
+import fun.trackmoney.enums.TransactionType;
+import fun.trackmoney.dto.transaction.CreateTransactionDTO;
+import fun.trackmoney.dto.transaction.TransactionResponseDTO;
+import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
+import fun.trackmoney.enums.TransactionsError;
+import fun.trackmoney.dto.transaction.internal.TransactionFailure;
+import fun.trackmoney.dto.transaction.internal.TransactionResult;
+import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
+import fun.trackmoney.entity.TransactionEntity;
+import fun.trackmoney.exception.TransactionNotFoundException;
+import fun.trackmoney.mapper.TransactionMapper;
+import fun.trackmoney.repository.TransactionRepository;
+import fun.trackmoney.entity.UserEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+public class TransactionService {
+
+  private final TransactionRepository transactionRepository;
+  private final TransactionMapper transactionMapper;
+  private final AccountService accountService;
+  private final CategoryService categoryService;
+
+  public TransactionService(TransactionRepository transactionRepository,
+                            TransactionMapper transactionMapper,
+                            AccountService accountService,
+                            CategoryService categoryService) {
+    this.transactionRepository = transactionRepository;
+    this.transactionMapper = transactionMapper;
+    this.accountService = accountService;
+    this.categoryService = categoryService;
+  }
+
+  @Transactional
+  public TransactionResult createTransaction(CreateTransactionDTO transactionDTO, UserEntity currentUser) {
+    AccountEntity account = currentUser.getAccount();
+
+    if (account == null) {
+      return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
+    }
+
+    CategoryEntity category = categoryService.findEntityById(transactionDTO.categoryId());
+
+    if (category == null) {
+      return new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
+    }
+
+    TransactionEntity transactionEntity = transactionMapper.createTransactionToEntity(transactionDTO);
+
+    transactionEntity.setAccount(account);
+    transactionEntity.setCategory(category);
+
+    var response = transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
+
+    boolean isCredit = TransactionType.INCOME.equals(transactionDTO.transactionType());
+    accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
+
+    return new TransactionSuccess(response);
+  }
+
+  public List<TransactionResponseDTO> findAllTransaction(UserEntity currentUser) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+    return transactionMapper.toResponseDTOList(transactionRepository.findAllByAccountId(accountId));
+  }
+
+  public TransactionResponseDTO findById(Integer id, UserEntity currentUser) {
+    TransactionEntity transaction = transactionRepository.findByIdAndAccount(id, currentUser.getAccount())
+        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
+    return transactionMapper.toResponseDTO(transaction);
+  }
+
+  @Transactional
+  public TransactionResponseDTO update(Integer id, TransactionUpdateDTO dto, UserEntity currentUser) {
+    AccountEntity account = currentUser.getAccount();
+    TransactionEntity oldTransaction = transactionRepository.findByIdAndAccount(id, account)
+        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
+
+    if (oldTransaction.getTransactionType() == TransactionType.INCOME) {
+      accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), false);
+    } else {
+      accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), true);
+    }
+
+    boolean newIsCredit = (dto.transactionType() == TransactionType.INCOME);
+    accountService.updateAccountBalance(dto.amount(), account.getAccountId(), newIsCredit);
+
+    oldTransaction.setTransactionName(dto.transactionName());
+    oldTransaction.setAmount(dto.amount());
+    oldTransaction.setDescription(dto.description());
+    oldTransaction.setCategory(categoryService.findEntityById(dto.categoryId()));
+    oldTransaction.setTransactionType(dto.transactionType());
+    oldTransaction.setTransactionDate(dto.transactionDate());
+
+    return transactionMapper.toResponseDTO(transactionRepository.save(oldTransaction));
+  }
+
+  @Transactional
+  public void delete(Integer id, UserEntity currentUser) {
+    TransactionEntity transaction = transactionRepository.findById(id).orElse(null);
+
+    if(transaction != null){
+      boolean isCredit = !transaction.getTransactionType().equals(TransactionType.INCOME);
+      Integer accountId = currentUser.getAccount().getAccountId();
+      accountService.updateAccountBalance(transaction.getAmount(), accountId , isCredit);
+    }
+
+    transactionRepository.deleteByIdAndAccountId(id, currentUser.getAccount());
+  }
+
+  public BigDecimal getIncome(UUID userId) {
+    Integer accountId = accountService.findAccountDefaultByUserId(userId).getAccountId();
+    LocalDate today = LocalDate.now();
+    int currentMonth = today.getMonthValue();
+    int currentYear = today.getYear();
+
+    return transactionRepository.findAllByAccountId(accountId)
+        .stream()
+        .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
+        .filter(t -> {
+          LocalDate date = t.getTransactionDate().toLocalDate();
+          return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
+        })
+        .map(TransactionEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  public BigDecimal getExpense(UserEntity currentUser) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+    LocalDate today = LocalDate.now();
+    int currentMonth = today.getMonthValue();
+    int currentYear = today.getYear();
+
+    return transactionRepository.findAllByAccountId(accountId)
+        .stream()
+        .filter(t -> TransactionType.EXPENSE.equals(t.getTransactionType()))
+        .filter(t -> {
+          LocalDate date = t.getTransactionDate().toLocalDate();
+          return date.getMonthValue() == currentMonth && date.getYear() == currentYear;
+        })
+        .map(TransactionEntity::getAmount)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  public Page<TransactionResponseDTO> getPaginatedTransactions(Pageable pageable,
+                                                               UserEntity currentUser,
+                                                               String name,
+                                                               Integer categoryId,
+                                                               LocalDate startDate,
+                                                               LocalDate endDate
+                                                               ) {
+    Integer accountId = currentUser.getAccount().getAccountId();
+
+    LocalDateTime startDateTime = null;
+    LocalDateTime endDateTime = null;
+    if (startDate != null && endDate != null) {
+      startDateTime = startDate.atStartOfDay();
+      endDateTime = endDate.atTime(23, 59, 59);
+    }
+    if(name == null){
+      name = "";
+    }
+    return transactionRepository.findAllByFilters(accountId, name, categoryId, startDateTime, endDateTime, pageable)
+        .map(transactionMapper::toResponseDTO);
+  }
+
+  public Map<CategoryEntity, List<TransactionResponseDTO>> getLast5TransactionsPerCategory(Integer accountId) {
+    List<TransactionEntity> transactions =
+        transactionRepository.findLast5TransactionsPerCategory(accountId);
+
+    return transactions.stream()
+        .collect(Collectors.groupingBy(
+            TransactionEntity::getCategory,
+            Collectors.mapping(
+                transactionMapper::toResponseDTO,
+                Collectors.toList()
+            )
+        ));
+  }
+
+  public List<TransactionEntity> getCurrentMonthTransactions() {
+    LocalDateTime startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+    LocalDateTime endDate = LocalDateTime.now();
+
+    return transactionRepository.findAllBetweenDates(startDate, endDate);
+  }
+}

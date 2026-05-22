@@ -1,26 +1,27 @@
 package fun.trackmoney.seed.service;
 
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.budget.entity.BudgetsEntity;
-import fun.trackmoney.budget.repository.BudgetsRepository;
-import fun.trackmoney.category.entity.CategoryEntity;
-import fun.trackmoney.category.repository.CategoryRepository;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.BudgetsEntity;
+import fun.trackmoney.repository.BudgetsRepository;
+import fun.trackmoney.entity.CategoryEntity;
+import fun.trackmoney.repository.CategoryRepository;
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.pots.entity.PotsEntity;
-import fun.trackmoney.pots.repository.PotsRepository;
-import fun.trackmoney.recurring.entity.RecurringEntity;
-import fun.trackmoney.recurring.repository.RecurringRepository;
+import fun.trackmoney.entity.PotsEntity;
+import fun.trackmoney.repository.PotsRepository;
+import fun.trackmoney.entity.RecurringEntity;
+import fun.trackmoney.repository.RecurringRepository;
 import fun.trackmoney.seed.service.generator.BudgetGenerator;
 import fun.trackmoney.seed.service.generator.PotGenerator;
 import fun.trackmoney.seed.service.generator.RecurringGenerator;
 import fun.trackmoney.seed.service.generator.TransactionGenerator;
 import fun.trackmoney.seed.service.model.SeedDataSummary;
-import fun.trackmoney.transaction.entity.TransactionEntity;
-import fun.trackmoney.transaction.repository.TransactionRepository;
-import fun.trackmoney.user.entity.UserEntity;
-import fun.trackmoney.user.repository.UserRepository;
+import fun.trackmoney.entity.TransactionEntity;
+import fun.trackmoney.repository.TransactionRepository;
+import fun.trackmoney.entity.UserEntity;
+import fun.trackmoney.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +35,8 @@ public class SeedDataService {
 
   private static final Logger LOG = LoggerFactory.getLogger(SeedDataService.class);
   private static final String SEED_USER_EMAIL = "test@example.com";
-  private static final String SEED_USER_PASSWORD = "Test@123";
+
+  private final String seedUserPassword;
 
   private final PasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
@@ -49,7 +51,8 @@ public class SeedDataService {
   private final PotGenerator potGenerator;
   private final RecurringGenerator recurringGenerator;
 
-  public SeedDataService(PasswordEncoder passwordEncoder,
+  public SeedDataService(@Value("${trackmoney.seed.password:Test@123}") String seedUserPassword,
+                         PasswordEncoder passwordEncoder,
                          UserRepository userRepository,
                          CategoryRepository categoryRepository,
                          BudgetsRepository budgetRepository,
@@ -60,6 +63,7 @@ public class SeedDataService {
                          BudgetGenerator budgetGenerator,
                          PotGenerator potGenerator,
                          RecurringGenerator recurringGenerator) {
+    this.seedUserPassword = seedUserPassword;
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.categoryRepository = categoryRepository;
@@ -170,7 +174,7 @@ public class SeedDataService {
   private record UserAndAccount(UserEntity user, AccountEntity account) {}
 
   private UserEntity createSeedUser() {
-    String encodedPassword = passwordEncoder.encode(SEED_USER_PASSWORD);
+    String encodedPassword = passwordEncoder.encode(seedUserPassword);
 
     UserEntity user = new UserEntity();
     user.setName("Usuário de Desenvolvimento");

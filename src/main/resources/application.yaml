@@ -52,6 +52,10 @@ api:
   secret:
     key: ${API_SECRET_KEY:test}
 
+trackmoney:
+  seed:
+    password: ${TRACKMONEY_SEED_PASSWORD:Test@123}
+
 logging:
   level:
     ROOT: DEBUG

@@ -1,8 +1,8 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.transaction.entity.TransactionEntity;
-import fun.trackmoney.account.entity.AccountEntity;
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.TransactionEntity;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.enums.TransactionType;
 
 import java.math.BigDecimal;

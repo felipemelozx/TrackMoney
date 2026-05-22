@@ -1,9 +1,9 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.enums.Frequency;
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.recurring.dtos.RecurringResponse;
+import fun.trackmoney.dto.recurring.RecurringResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
