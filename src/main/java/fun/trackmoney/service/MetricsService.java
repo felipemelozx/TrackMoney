@@ -1,12 +1,8 @@
 package fun.trackmoney.service;
 
 import fun.trackmoney.entity.BudgetHistoryEntity;
-import fun.trackmoney.entity.BudgetsEntity;
 import fun.trackmoney.repository.BudgetHistoryRepository;
-import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.enums.BudgetStatus;
-import fun.trackmoney.entity.CategoryEntity;
-import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.metrics.response.BudgetPerformanceDTO;
 import fun.trackmoney.dto.metrics.response.CategoryBreakdownDTO;
 import fun.trackmoney.dto.metrics.response.DashboardOverviewDTO;
@@ -15,7 +11,6 @@ import fun.trackmoney.repository.projection.CategoryAggregateProjection;
 import fun.trackmoney.repository.projection.MonthAggregateProjection;
 import fun.trackmoney.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,14 +31,14 @@ public class MetricsService {
 
   private final TransactionRepository transactionRepository;
   private final BudgetHistoryRepository budgetHistoryRepository;
-  private final BudgetsRepository budgetsRepository;
+  private final BudgetHistoryService budgetHistoryService;
 
   public MetricsService(TransactionRepository transactionRepository,
                         BudgetHistoryRepository budgetHistoryRepository,
-                        BudgetsRepository budgetsRepository) {
+                        BudgetHistoryService budgetHistoryService) {
     this.transactionRepository = transactionRepository;
     this.budgetHistoryRepository = budgetHistoryRepository;
-    this.budgetsRepository = budgetsRepository;
+    this.budgetHistoryService = budgetHistoryService;
   }
 
   /**
@@ -212,7 +207,7 @@ public class MetricsService {
   ) {
     // Generate provisional history if the date range corresponds to the current month
     if (isCurrentMonthRange(startDate, endDate)) {
-      this.generateProvisionalHistoryForCurrentMonth(accountId, startDate, endDate, categoryId);
+      budgetHistoryService.generateProvisionalHistoryForCurrentMonth(accountId, categoryId);
     }
 
     List<BudgetHistoryEntity> histories = budgetHistoryRepository.findByAccountAndYearMonthRange(
@@ -635,166 +630,6 @@ public class MetricsService {
     YearMonth endMonth = YearMonth.from(endDate);
 
     return startMonth.equals(currentMonth) && endMonth.equals(currentMonth);
-  }
-
-  /**
-   * Generates provisional budget history for the current month.
-   * This method creates or overwrites budget history entries for the current month
-   * with PROVISIONAL status, based on transactions from the start of the month until now.
-   *
-   * @param accountId  the user's account ID
-   * @param startDate  the start date of the period
-   * @param endDate    the end date of the period
-   * @param categoryId the category ID to filter by (null for all categories)
-   */
-  @Transactional
-  public void generateProvisionalHistoryForCurrentMonth(
-      Integer accountId,
-      LocalDate startDate,
-      LocalDate endDate,
-      Integer categoryId
-  ) {
-    LocalDate now = LocalDate.now();
-    short currentMonth = (short) now.getMonthValue();
-    int currentYear = now.getYear();
-
-    List<BudgetsEntity> budgets = getBudgetsForAccount(accountId, categoryId);
-    if (budgets.isEmpty()) {
-      return;
-    }
-
-    LocalDateTime monthStart = LocalDate.of(currentYear, currentMonth, 1).atStartOfDay();
-    LocalDateTime monthEnd = now.atTime(23, 59, 59);
-    BigDecimal totalIncome = getTotalIncomeForMonth(accountId, monthStart, monthEnd);
-
-    for (BudgetsEntity budget : budgets) {
-      createProvisionalHistoryForBudget(budget, currentMonth, currentYear, totalIncome, monthStart, monthEnd);
-    }
-  }
-
-  /**
-   * Gets budgets for an account, optionally filtered by category.
-   *
-   * @param accountId  the account ID
-   * @param categoryId the category ID filter (null for all)
-   * @return list of budgets
-   */
-  private List<BudgetsEntity> getBudgetsForAccount(Integer accountId, Integer categoryId) {
-    List<BudgetsEntity> budgets = budgetsRepository.findAllByAccountAccountId(accountId);
-
-    if (categoryId != null) {
-      budgets = budgets.stream()
-          .filter(b -> b.getCategory().getCategoryId().equals(categoryId))
-          .toList();
-    }
-
-    return budgets;
-  }
-
-  /**
-   * Creates or overwrites a provisional budget history entry for a specific budget.
-   *
-   * @param budget       the budget entity
-   * @param currentMonth the current month
-   * @param currentYear  the current year
-   * @param totalIncome  the total income for the month
-   * @param monthStart   the start of the month
-   * @param monthEnd     the end of the period (today)
-   */
-  private void createProvisionalHistoryForBudget(
-      BudgetsEntity budget,
-      short currentMonth,
-      int currentYear,
-      BigDecimal totalIncome,
-      LocalDateTime monthStart,
-      LocalDateTime monthEnd
-  ) {
-    // Delete existing history if present
-    budgetHistoryRepository
-        .findByBudgetAndReferenceMonthAndReferenceYear(budget, currentMonth, currentYear)
-        .ifPresent(budgetHistoryRepository::delete);
-
-    // Calculate values
-    CategoryEntity category = budget.getCategory();
-    short percent = budget.getPercent();
-    BigDecimal targetAmount = calculateTargetAmount(totalIncome, percent);
-    BigDecimal spentAmount = getSpentAmount(budget.getAccount().getAccountId(), category, monthStart, monthEnd);
-    BigDecimal remainingAmount = targetAmount.subtract(spentAmount);
-
-    // Create and save new provisional history
-    BudgetHistoryEntity history = new BudgetHistoryEntity()
-        .setBudget(budget)
-        .setAccount(budget.getAccount())
-        .setCategory(category)
-        .setReferenceMonth(currentMonth)
-        .setReferenceYear(currentYear)
-        .setPercent(percent)
-        .setTargetAmount(targetAmount)
-        .setSpentAmount(spentAmount)
-        .setRemainingAmount(remainingAmount)
-        .setTotalIncome(totalIncome)
-        .setStatus(BudgetStatus.PROVISIONAL);
-
-    budgetHistoryRepository.save(history);
-  }
-
-  /**
-   * Calculates the target amount based on total income and budget percentage.
-   *
-   * @param totalIncome the total income
-   * @param percent     the budget percentage
-   * @return target amount
-   */
-  private BigDecimal calculateTargetAmount(BigDecimal totalIncome, short percent) {
-    return totalIncome
-        .multiply(BigDecimal.valueOf(percent))
-        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-  }
-
-  /**
-   * Gets the total spent amount for a category within a date range.
-   *
-   * @param accountId the account ID
-   * @param category  the category
-   * @param startDate the start date
-   * @param endDate   the end date
-   * @return spent amount
-   */
-  private BigDecimal getSpentAmount(
-      Integer accountId,
-      CategoryEntity category,
-      LocalDateTime startDate,
-      LocalDateTime endDate) {
-    BigDecimal spentAmount = transactionRepository.sumExpensesByCategoryAndDateRange(
-        accountId,
-        category.getCategoryId(),
-        startDate,
-        endDate
-    );
-    return spentAmount != null ? spentAmount : BigDecimal.ZERO;
-  }
-
-  /**
-   * Gets total income for an account within a date range.
-   *
-   * @param accountId the account ID
-   * @param startDate the start date
-   * @param endDate   the end date
-   * @return total income
-   */
-  private BigDecimal getTotalIncomeForMonth(
-      Integer accountId,
-      LocalDateTime startDate,
-      LocalDateTime endDate) {
-
-    List<fun.trackmoney.entity.TransactionEntity> transactions =
-        transactionRepository.findAllByAccountIdAndDateRange(accountId, startDate, endDate);
-
-    return transactions.stream()
-        .filter(t -> TransactionType.INCOME.equals(t.getTransactionType()))
-        .map(fun.trackmoney.entity.TransactionEntity::getAmount)
-        .filter(java.util.Objects::nonNull)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
   /**

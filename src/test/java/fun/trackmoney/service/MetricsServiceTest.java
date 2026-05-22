@@ -37,6 +37,9 @@ class MetricsServiceTest {
   @Mock
   private BudgetHistoryRepository budgetHistoryRepository;
 
+  @Mock
+  private BudgetHistoryService budgetHistoryService;
+
   @InjectMocks
   private MetricsService metricsService;
 
@@ -694,5 +697,50 @@ class MetricsServiceTest {
     // Only February budget should be counted (January is before start date)
     assertEquals(1, result.totalBudgetsCount());
     assertEquals(1, result.exceededBudgetsCount());
+  }
+
+  @Test
+  void getBudgetPerformance_withDateRange_shouldCallProvisionalGeneration_whenCurrentMonthRange() {
+    LocalDate now = LocalDate.now();
+    LocalDate startDate = LocalDate.of(now.getYear(), now.getMonthValue(), 1);
+    LocalDate endDate = now;
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(1), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(null)
+    )).thenReturn(List.of());
+
+    metricsService.getBudgetPerformance(1, startDate, endDate, null);
+
+    verify(budgetHistoryService).generateProvisionalHistoryForCurrentMonth(eq(1), eq(null));
+  }
+
+  @Test
+  void getBudgetPerformance_withDateRange_shouldNotCallProvisionalGeneration_whenNotCurrentMonthRange() {
+    LocalDate startDate = LocalDate.of(2024, 1, 1);
+    LocalDate endDate = LocalDate.of(2024, 3, 31);
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(1), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(null)
+    )).thenReturn(List.of());
+
+    metricsService.getBudgetPerformance(1, startDate, endDate, null);
+
+    verify(budgetHistoryService, never()).generateProvisionalHistoryForCurrentMonth(anyInt(), any());
+  }
+
+  @Test
+  void getBudgetPerformance_withDateRange_shouldCallProvisionalGeneration_withCategoryId() {
+    LocalDate now = LocalDate.now();
+    LocalDate startDate = LocalDate.of(now.getYear(), now.getMonthValue(), 1);
+    LocalDate endDate = now;
+    Integer categoryId = 5;
+
+    when(budgetHistoryRepository.findByAccountAndYearMonthRange(
+        eq(1), anyInt(), any(Short.class), anyInt(), any(Short.class), eq(categoryId)
+    )).thenReturn(List.of());
+
+    metricsService.getBudgetPerformance(1, startDate, endDate, categoryId);
+
+    verify(budgetHistoryService).generateProvisionalHistoryForCurrentMonth(eq(1), eq(categoryId));
   }
 }

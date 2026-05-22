@@ -782,4 +782,232 @@ class BudgetHistoryServiceTest {
     verify(transactionSimpleMapper).entityListToSimpleDTOList(argThat(list ->
         list != null && list.size() == 2));
   }
+
+  @Test
+  void generateProvisionalHistoryForCurrentMonth_shouldCreateProvisionalHistoryEntries() {
+    LocalDate now = LocalDate.now();
+    short currentMonth = (short) now.getMonthValue();
+    int currentYear = now.getYear();
+
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+    BudgetsEntity budget = new BudgetsEntity()
+        .setBudgetId(1)
+        .setAccount(user.getAccount())
+        .setCategory(category)
+        .setPercent((short) 20);
+
+    LocalDateTime monthStart = LocalDate.of(currentYear, currentMonth, 1).atStartOfDay();
+    LocalDateTime monthEnd = now.atTime(23, 59, 59);
+
+    TransactionEntity income = new TransactionEntity()
+        .setAmount(BigDecimal.valueOf(5000))
+        .setTransactionType(TransactionType.INCOME);
+
+    when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
+        .thenReturn(List.of(budget));
+
+    when(transactionRepository.findAllByAccountIdAndDateRange(
+        user.getAccount().getAccountId(), monthStart, monthEnd))
+        .thenReturn(List.of(income));
+
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        budget, currentMonth, currentYear))
+        .thenReturn(Optional.empty());
+
+    when(transactionRepository.sumExpensesByCategoryAndDateRange(
+        user.getAccount().getAccountId(), category.getCategoryId(), monthStart, monthEnd))
+        .thenReturn(BigDecimal.valueOf(800));
+
+    when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    budgetHistoryService.generateProvisionalHistoryForCurrentMonth(user.getAccount().getAccountId(), null);
+
+    verify(budgetHistoryRepository).save(argThat(history ->
+        history.getStatus() == BudgetStatus.PROVISIONAL &&
+        history.getReferenceMonth() == currentMonth &&
+        history.getReferenceYear() == currentYear &&
+        history.getTargetAmount().compareTo(new BigDecimal("1000")) == 0 &&
+        history.getSpentAmount().compareTo(BigDecimal.valueOf(800)) == 0 &&
+        history.getRemainingAmount().compareTo(new BigDecimal("200")) == 0
+    ));
+  }
+
+  @Test
+  void generateProvisionalHistoryForCurrentMonth_shouldOverwriteExistingHistory() {
+    LocalDate now = LocalDate.now();
+    short currentMonth = (short) now.getMonthValue();
+    int currentYear = now.getYear();
+
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+    BudgetsEntity budget = new BudgetsEntity()
+        .setBudgetId(1)
+        .setAccount(user.getAccount())
+        .setCategory(category)
+        .setPercent((short) 20);
+
+    LocalDateTime monthStart = LocalDate.of(currentYear, currentMonth, 1).atStartOfDay();
+    LocalDateTime monthEnd = now.atTime(23, 59, 59);
+
+    BudgetHistoryEntity existingHistory = new BudgetHistoryEntity()
+        .setHistoryId(1)
+        .setBudget(budget)
+        .setAccount(user.getAccount())
+        .setCategory(category)
+        .setReferenceMonth(currentMonth)
+        .setReferenceYear(currentYear)
+        .setStatus(BudgetStatus.WITHIN_LIMIT);
+
+    TransactionEntity income = new TransactionEntity()
+        .setAmount(BigDecimal.valueOf(5000))
+        .setTransactionType(TransactionType.INCOME);
+
+    when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
+        .thenReturn(List.of(budget));
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        budget, currentMonth, currentYear))
+        .thenReturn(Optional.of(existingHistory));
+
+    when(transactionRepository.findAllByAccountIdAndDateRange(
+        user.getAccount().getAccountId(), monthStart, monthEnd))
+        .thenReturn(List.of(income));
+
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
+
+    when(transactionRepository.sumExpensesByCategoryAndDateRange(
+        user.getAccount().getAccountId(), category.getCategoryId(), monthStart, monthEnd))
+        .thenReturn(BigDecimal.valueOf(800));
+
+    when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    budgetHistoryService.generateProvisionalHistoryForCurrentMonth(user.getAccount().getAccountId(), null);
+
+    verify(budgetHistoryRepository).delete(existingHistory);
+    verify(budgetHistoryRepository).save(argThat(history ->
+        history.getStatus() == BudgetStatus.PROVISIONAL
+    ));
+  }
+
+  @Test
+  void generateProvisionalHistoryForCurrentMonth_shouldFilterByCategoryId() {
+    LocalDate now = LocalDate.now();
+    short currentMonth = (short) now.getMonthValue();
+    int currentYear = now.getYear();
+
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category1 = CategoryEntityFactory.defaultCategory();
+    CategoryEntity category2 = new CategoryEntity(2, "Transport", "#33FF57");
+
+    BudgetsEntity budget1 = new BudgetsEntity()
+        .setBudgetId(1)
+        .setAccount(user.getAccount())
+        .setCategory(category1)
+        .setPercent((short) 20);
+
+    BudgetsEntity budget2 = new BudgetsEntity()
+        .setBudgetId(2)
+        .setAccount(user.getAccount())
+        .setCategory(category2)
+        .setPercent((short) 15);
+
+    LocalDateTime monthStart = LocalDate.of(currentYear, currentMonth, 1).atStartOfDay();
+    LocalDateTime monthEnd = now.atTime(23, 59, 59);
+
+    TransactionEntity income = new TransactionEntity()
+        .setAmount(BigDecimal.valueOf(5000))
+        .setTransactionType(TransactionType.INCOME);
+
+    when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
+        .thenReturn(List.of(budget1, budget2));
+
+    when(transactionRepository.findAllByAccountIdAndDateRange(
+        user.getAccount().getAccountId(), monthStart, monthEnd))
+        .thenReturn(List.of(income));
+
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        any(BudgetsEntity.class), eq(currentMonth), eq(currentYear)))
+        .thenReturn(Optional.empty());
+
+    when(transactionRepository.sumExpensesByCategoryAndDateRange(
+        eq(user.getAccount().getAccountId()), anyInt(), eq(monthStart), eq(monthEnd)))
+        .thenReturn(BigDecimal.valueOf(400));
+
+    when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    budgetHistoryService.generateProvisionalHistoryForCurrentMonth(user.getAccount().getAccountId(), category1.getCategoryId());
+
+    verify(budgetHistoryRepository, times(1)).save(any(BudgetHistoryEntity.class));
+  }
+
+  @Test
+  void generateProvisionalHistoryForCurrentMonth_shouldHandleEmptyBudgets() {
+    when(budgetsRepository.findAllByAccountAccountId(1))
+        .thenReturn(List.of());
+
+    budgetHistoryService.generateProvisionalHistoryForCurrentMonth(1, null);
+
+    verify(budgetHistoryRepository, never()).save(any(BudgetHistoryEntity.class));
+    verify(transactionRepository, never()).findAllByAccountIdAndDateRange(anyInt(), any(), any());
+  }
+
+  @Test
+  void generateProvisionalHistoryForCurrentMonth_shouldHandleNullSpentAmount() {
+    LocalDate now = LocalDate.now();
+    short currentMonth = (short) now.getMonthValue();
+    int currentYear = now.getYear();
+
+    UserEntity user = UserEntityFactory.defaultUser();
+    CategoryEntity category = CategoryEntityFactory.defaultCategory();
+    BudgetsEntity budget = new BudgetsEntity()
+        .setBudgetId(1)
+        .setAccount(user.getAccount())
+        .setCategory(category)
+        .setPercent((short) 20);
+
+    LocalDateTime monthStart = LocalDate.of(currentYear, currentMonth, 1).atStartOfDay();
+    LocalDateTime monthEnd = now.atTime(23, 59, 59);
+
+    TransactionEntity income = new TransactionEntity()
+        .setAmount(BigDecimal.valueOf(5000))
+        .setTransactionType(TransactionType.INCOME);
+
+    when(budgetsRepository.findAllByAccountAccountId(user.getAccount().getAccountId()))
+        .thenReturn(List.of(budget));
+
+    when(transactionRepository.findAllByAccountIdAndDateRange(
+        user.getAccount().getAccountId(), monthStart, monthEnd))
+        .thenReturn(List.of(income));
+
+    when(recurringService.getIncomeFromRecurring(user.getAccount().getAccountId()))
+        .thenReturn(BigDecimal.ZERO);
+
+    when(budgetHistoryRepository.findByBudgetAndReferenceMonthAndReferenceYear(
+        budget, currentMonth, currentYear))
+        .thenReturn(Optional.empty());
+
+    when(transactionRepository.sumExpensesByCategoryAndDateRange(
+        user.getAccount().getAccountId(), category.getCategoryId(), monthStart, monthEnd))
+        .thenReturn(null);
+
+    when(budgetHistoryRepository.save(any(BudgetHistoryEntity.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    budgetHistoryService.generateProvisionalHistoryForCurrentMonth(user.getAccount().getAccountId(), null);
+
+    verify(budgetHistoryRepository).save(argThat(history ->
+        history.getSpentAmount().compareTo(BigDecimal.ZERO) == 0
+    ));
+  }
 }

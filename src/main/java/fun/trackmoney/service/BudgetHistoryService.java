@@ -443,4 +443,79 @@ public class BudgetHistoryService {
     budgetHistoryRepository.delete(history);
     LOG.info("Deleted budget history entry");
   }
+
+  /**
+   * Generates provisional budget history for the current month.
+   * This method creates or overwrites budget history entries for the current month
+   * with PROVISIONAL status, based on transactions from the start of the month until now.
+   *
+   * @param accountId  the user's account ID
+   * @param categoryId the category ID to filter by (null for all categories)
+   */
+  @Transactional
+  public void generateProvisionalHistoryForCurrentMonth(Integer accountId, Integer categoryId) {
+    LocalDate now = LocalDate.now();
+    short currentMonth = (short) now.getMonthValue();
+    int currentYear = now.getYear();
+
+    List<BudgetsEntity> budgets = getBudgetsForAccount(accountId, categoryId);
+    if (budgets.isEmpty()) {
+      return;
+    }
+
+    LocalDateTime monthStart = LocalDate.of(currentYear, currentMonth, 1).atStartOfDay();
+    LocalDateTime monthEnd = now.atTime(23, 59, 59);
+    BigDecimal totalIncome = getTotalIncomeForMonth(accountId, monthStart, monthEnd);
+
+    for (BudgetsEntity budget : budgets) {
+      createProvisionalHistoryForBudget(budget, currentMonth, currentYear, totalIncome, monthStart, monthEnd);
+    }
+  }
+
+  private List<BudgetsEntity> getBudgetsForAccount(Integer accountId, Integer categoryId) {
+    List<BudgetsEntity> budgets = budgetsRepository.findAllByAccountAccountId(accountId);
+
+    if (categoryId != null) {
+      budgets = budgets.stream()
+          .filter(b -> b.getCategory().getCategoryId().equals(categoryId))
+          .toList();
+    }
+
+    return budgets;
+  }
+
+  private void createProvisionalHistoryForBudget(
+      BudgetsEntity budget,
+      short currentMonth,
+      int currentYear,
+      BigDecimal totalIncome,
+      LocalDateTime monthStart,
+      LocalDateTime monthEnd) {
+    // Delete existing history if present
+    budgetHistoryRepository
+        .findByBudgetAndReferenceMonthAndReferenceYear(budget, currentMonth, currentYear)
+        .ifPresent(budgetHistoryRepository::delete);
+
+    CategoryEntity category = budget.getCategory();
+    short percent = budget.getPercent();
+    BigDecimal targetAmount = calculateTargetAmount(totalIncome, percent);
+    BigDecimal spentAmount = getSpentAmount(
+        budget.getAccount().getAccountId(), category, monthStart, monthEnd);
+    BigDecimal remainingAmount = targetAmount.subtract(spentAmount);
+
+    BudgetHistoryEntity history = new BudgetHistoryEntity()
+        .setBudget(budget)
+        .setAccount(budget.getAccount())
+        .setCategory(category)
+        .setReferenceMonth(currentMonth)
+        .setReferenceYear(currentYear)
+        .setPercent(percent)
+        .setTargetAmount(targetAmount)
+        .setSpentAmount(spentAmount)
+        .setRemainingAmount(remainingAmount)
+        .setTotalIncome(totalIncome)
+        .setStatus(BudgetStatus.PROVISIONAL);
+
+    budgetHistoryRepository.save(history);
+  }
 }
