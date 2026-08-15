@@ -51,6 +51,10 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
   @Query("DELETE FROM TransactionEntity t WHERE t.account = :account AND t.transactionId = :id")
   void deleteByIdAndAccountId(@Param("id") Integer id, @Param("account") AccountEntity account);
 
+  @Modifying
+  @Query("DELETE FROM TransactionEntity t WHERE t.account = :account")
+  void deleteAllByAccount(@Param("account") AccountEntity account);
+
   @NativeQuery
   @Query(
       value = """

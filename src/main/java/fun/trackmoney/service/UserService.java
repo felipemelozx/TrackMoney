@@ -9,6 +9,11 @@ import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.mapper.UserMapper;
+import fun.trackmoney.repository.BudgetHistoryRepository;
+import fun.trackmoney.repository.BudgetsRepository;
+import fun.trackmoney.repository.PotsRepository;
+import fun.trackmoney.repository.RecurringRepository;
+import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,13 +29,28 @@ public class UserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder encoder;
+  private final TransactionRepository transactionRepository;
+  private final PotsRepository potsRepository;
+  private final BudgetsRepository budgetsRepository;
+  private final BudgetHistoryRepository budgetHistoryRepository;
+  private final RecurringRepository recurringRepository;
 
   public UserService(UserRepository userRepository,
                      UserMapper userMapper,
-                     PasswordEncoder encoder) {
+                     PasswordEncoder encoder,
+                     TransactionRepository transactionRepository,
+                     PotsRepository potsRepository,
+                     BudgetsRepository budgetsRepository,
+                     BudgetHistoryRepository budgetHistoryRepository,
+                     RecurringRepository recurringRepository) {
     this.userRepository = userRepository;
     this.userMapper = userMapper;
     this.encoder = encoder;
+    this.transactionRepository = transactionRepository;
+    this.potsRepository = potsRepository;
+    this.budgetsRepository = budgetsRepository;
+    this.budgetHistoryRepository = budgetHistoryRepository;
+    this.recurringRepository = recurringRepository;
   }
 
   @Transactional
@@ -79,15 +99,27 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public boolean deleteUser(UserEntity currentUser) {
-    Optional<UserEntity> userExist = userRepository.findByEmail(currentUser.getEmail());
+  @Transactional
+  public boolean deleteAccount(UserEntity currentUser, String password) {
+    Optional<UserEntity> userExist = userRepository.findById(currentUser.getUserId());
 
-    if(userExist.isEmpty()) {
+    if (userExist.isEmpty()) {
       return false;
     }
-    userExist.get().deletedUser();
 
-    userRepository.save(userExist.get());
+    UserEntity user = userExist.get();
+    if (!encoder.matches(password, user.getPassword())) {
+      return false;
+    }
+
+    AccountEntity account = user.getAccount();
+    budgetHistoryRepository.deleteAllByAccountAccountId(account.getAccountId());
+    budgetsRepository.deleteAllByAccountAccountId(account.getAccountId());
+    potsRepository.deleteAllByAccount(account);
+    recurringRepository.deleteAllByAccountId(account.getAccountId());
+    transactionRepository.deleteAllByAccount(account);
+
+    userRepository.delete(user);
     return true;
   }
 }

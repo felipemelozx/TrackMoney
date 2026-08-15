@@ -1,8 +1,11 @@
 package fun.trackmoney.controller;
 import fun.trackmoney.controller.UserController;
 
+import fun.trackmoney.dto.user.DeleteAccountRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
+import fun.trackmoney.service.UserService;
+import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
@@ -16,7 +19,9 @@ import org.springframework.http.ResponseEntity;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -28,6 +33,9 @@ class UserControllerTest {
 
   @Mock
   AuthUtils authUtils;
+
+  @Mock
+  UserService userService;
 
   @Test
   void shouldReturnUserInfoWhenAuthUtilsReturnsValidUser(){
@@ -45,5 +53,35 @@ class UserControllerTest {
     assertEquals(userMock.getName(), body.getData().name());
     assertEquals(userMock.getEmail(), body.getData().email());
     assertEquals(userMock.getUserId(), body.getData().userId());
+  }
+
+  @Test
+  void deleteUser_shouldReturn204NoContent_whenPasswordIsValid() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    DeleteAccountRequestDTO request = new DeleteAccountRequestDTO("password123");
+
+    when(userService.deleteAccount(user, request.password())).thenReturn(true);
+
+    ResponseEntity<ApiResponse<Void>> response = userController.deleteUser(request, user);
+
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertNull(response.getBody());
+    verify(userService, times(1)).deleteAccount(user, request.password());
+  }
+
+  @Test
+  void deleteUser_shouldReturn400BadRequest_whenPasswordIsInvalid() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    DeleteAccountRequestDTO request = new DeleteAccountRequestDTO("wrong-password");
+
+    when(userService.deleteAccount(user, request.password())).thenReturn(false);
+
+    ResponseEntity<ApiResponse<Void>> response = userController.deleteUser(request, user);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("Password", response.getBody().getErrors().get(0).getField());
+    verify(userService, times(1)).deleteAccount(user, request.password());
   }
 }

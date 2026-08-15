@@ -8,8 +8,22 @@ import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
 import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.BudgetHistoryEntity;
+import fun.trackmoney.entity.BudgetsEntity;
+import fun.trackmoney.entity.PotsEntity;
+import fun.trackmoney.entity.RecurringEntity;
+import fun.trackmoney.entity.TransactionEntity;
 import fun.trackmoney.entity.UserEntity;
+import fun.trackmoney.enums.ColorPick;
+import fun.trackmoney.enums.Frequency;
+import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.mapper.UserMapper;
+import fun.trackmoney.repository.BudgetHistoryRepository;
+import fun.trackmoney.repository.BudgetsRepository;
+import fun.trackmoney.repository.PotsRepository;
+import fun.trackmoney.repository.RecurringRepository;
+import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.repository.UserRepository;
 
 import org.junit.jupiter.api.Test;
@@ -19,8 +33,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+
+import fun.trackmoney.testutils.AccountEntityFactory;
+import fun.trackmoney.testutils.BudgetHistoryEntityFactory;
+import fun.trackmoney.testutils.BudgetsEntityFactory;
+import fun.trackmoney.testutils.CategoryEntityFactory;
+import fun.trackmoney.testutils.PotsEntityFactory;
+import fun.trackmoney.testutils.RecurringEntityFactory;
+import fun.trackmoney.testutils.TransactionEntityFactory;
+import fun.trackmoney.testutils.UserEntityFactory;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -36,6 +61,21 @@ class UserServiceTest {
 
   @Mock
   private PasswordEncoder passwordEncoder;
+
+  @Mock
+  private TransactionRepository transactionRepository;
+
+  @Mock
+  private PotsRepository potsRepository;
+
+  @Mock
+  private BudgetsRepository budgetsRepository;
+
+  @Mock
+  private BudgetHistoryRepository budgetHistoryRepository;
+
+  @Mock
+  private RecurringRepository recurringRepository;
 
   @InjectMocks
   private UserService userService;
@@ -157,6 +197,95 @@ class UserServiceTest {
 
     assertFalse(response);
     verify(userRepository, times(0)).save(any());
+  }
+
+  @Test
+  void deleteAccount_shouldDeleteUserDataAndReturnTrue_whenPasswordIsValid() {
+    AccountEntity account = AccountEntityFactory.defaultAccount();
+    UserEntity user = UserEntityFactory.customUser(
+        UUID.randomUUID(), "John Doe", "johndoe@example.com", "password123", true, account);
+
+    when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches("password123", user.getPassword())).thenReturn(true);
+
+    boolean result = userService.deleteAccount(user, "password123");
+
+    assertTrue(result);
+    verify(budgetHistoryRepository).deleteAllByAccountAccountId(account.getAccountId());
+    verify(budgetsRepository).deleteAllByAccountAccountId(account.getAccountId());
+    verify(potsRepository).deleteAllByAccount(account);
+    verify(recurringRepository).deleteAllByAccountId(account.getAccountId());
+    verify(transactionRepository).deleteAllByAccount(account);
+    verify(userRepository).delete(user);
+  }
+
+  @Test
+  void deleteAccount_shouldDeleteAllLinkedData_whenUserHasTransactionsPotsBudgetsRecurringAndBudgetHistory() {
+    AccountEntity account = AccountEntityFactory.defaultAccount();
+    UserEntity user = UserEntityFactory.customUser(
+        UUID.randomUUID(), "John Doe", "johndoe@example.com", "password123", true, account);
+
+    // Dados variados ligados à conta do usuário
+    TransactionEntity transaction = TransactionEntityFactory.customTransaction(
+        1, account, CategoryEntityFactory.defaultCategory(), TransactionType.EXPENSE,
+        BigDecimal.valueOf(100), "Mercado", LocalDateTime.now());
+    PotsEntity pot = PotsEntityFactory.customPot(
+        1L, "Férias", BigDecimal.valueOf(5000), BigDecimal.valueOf(500), account, ColorPick.DARK_BLUE);
+    BudgetsEntity budget = BudgetsEntityFactory.customBudget(
+        1, CategoryEntityFactory.defaultCategory(), account, (short) 50);
+    RecurringEntity recurring = RecurringEntityFactory.customEntity(
+        1L, Frequency.MONTHLY, LocalDateTime.now().plusDays(1), null, account,
+        CategoryEntityFactory.defaultCategory(), TransactionType.INCOME,
+        BigDecimal.valueOf(150), "Desc", "Netflix");
+    BudgetHistoryEntity budgetHistory = BudgetHistoryEntityFactory.defaultBudgetHistory();
+
+    when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches("password123", user.getPassword())).thenReturn(true);
+
+    boolean result = userService.deleteAccount(user, "password123");
+
+    assertTrue(result);
+    verify(transactionRepository).deleteAllByAccount(account);
+    verify(potsRepository).deleteAllByAccount(account);
+    verify(budgetsRepository).deleteAllByAccountAccountId(account.getAccountId());
+    verify(budgetHistoryRepository).deleteAllByAccountAccountId(account.getAccountId());
+    verify(recurringRepository).deleteAllByAccountId(account.getAccountId());
+    verify(userRepository).delete(user);
+    verifyNoMoreInteractions(userRepository, transactionRepository, potsRepository,
+        budgetsRepository, budgetHistoryRepository, recurringRepository);
+  }
+
+  @Test
+  void deleteAccount_shouldReturnFalse_whenPasswordIsInvalid() {
+    AccountEntity account = AccountEntityFactory.defaultAccount();
+    UserEntity user = UserEntityFactory.customUser(
+        UUID.randomUUID(), "John Doe", "johndoe@example.com", "password123", true, account);
+
+    when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches("wrong-password", user.getPassword())).thenReturn(false);
+
+    boolean result = userService.deleteAccount(user, "wrong-password");
+
+    assertFalse(result);
+    verify(budgetHistoryRepository, never()).deleteAllByAccountAccountId(anyInt());
+    verify(budgetsRepository, never()).deleteAllByAccountAccountId(anyInt());
+    verify(potsRepository, never()).deleteAllByAccount(any());
+    verify(recurringRepository, never()).deleteAllByAccountId(anyInt());
+    verify(transactionRepository, never()).deleteAllByAccount(any());
+    verify(userRepository, never()).delete(any());
+  }
+
+  @Test
+  void deleteAccount_shouldReturnFalse_whenUserDoesNotExist() {
+    UUID userId = UUID.randomUUID();
+    UserEntity user = new UserEntity(userId, "John Doe", "johndoe@example.com", "password123", true);
+
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+    boolean result = userService.deleteAccount(user, "password123");
+
+    assertFalse(result);
+    verify(userRepository, never()).delete(any());
   }
 
 }
