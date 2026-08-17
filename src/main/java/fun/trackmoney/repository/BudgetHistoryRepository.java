@@ -97,7 +97,8 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
   void deleteByBudgetBudgetId(Integer budgetId);
 
   @Modifying
-  void deleteAllByAccountAccountId(Integer accountId);
+  @Query("DELETE FROM BudgetHistoryEntity bh WHERE bh.account.accountId = :accountId")
+  void deleteAllByAccountAccountId(@Param("accountId") Integer accountId);
 
   // ===== Metrics Queries =====
 

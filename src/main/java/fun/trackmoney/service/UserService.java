@@ -9,6 +9,7 @@ import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.mapper.UserMapper;
+import fun.trackmoney.repository.AccountRepository;
 import fun.trackmoney.repository.BudgetHistoryRepository;
 import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.repository.PotsRepository;
@@ -29,6 +30,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder encoder;
+  private final AccountRepository accountRepository;
   private final TransactionRepository transactionRepository;
   private final PotsRepository potsRepository;
   private final BudgetsRepository budgetsRepository;
@@ -38,6 +40,7 @@ public class UserService {
   public UserService(UserRepository userRepository,
                      UserMapper userMapper,
                      PasswordEncoder encoder,
+                     AccountRepository accountRepository,
                      TransactionRepository transactionRepository,
                      PotsRepository potsRepository,
                      BudgetsRepository budgetsRepository,
@@ -46,6 +49,7 @@ public class UserService {
     this.userRepository = userRepository;
     this.userMapper = userMapper;
     this.encoder = encoder;
+    this.accountRepository = accountRepository;
     this.transactionRepository = transactionRepository;
     this.potsRepository = potsRepository;
     this.budgetsRepository = budgetsRepository;
@@ -113,13 +117,16 @@ public class UserService {
     }
 
     AccountEntity account = user.getAccount();
-    budgetHistoryRepository.deleteAllByAccountAccountId(account.getAccountId());
-    budgetsRepository.deleteAllByAccountAccountId(account.getAccountId());
+    Integer accountId = account.getAccountId();
+    budgetHistoryRepository.deleteAllByAccountAccountId(accountId);
+    budgetsRepository.deleteAllByAccountAccountId(accountId);
     potsRepository.deleteAllByAccount(account);
-    recurringRepository.deleteAllByAccountId(account.getAccountId());
+    recurringRepository.deleteAllByAccountId(accountId);
     transactionRepository.deleteAllByAccount(account);
 
-    userRepository.delete(user);
+    userRepository.clearAccountReference(user.getUserId());
+    accountRepository.deleteByAccountIdDirect(accountId);
+    userRepository.deleteByUserIdDirect(user.getUserId());
     return true;
   }
 }

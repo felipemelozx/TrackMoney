@@ -40,5 +40,6 @@ public interface BudgetsRepository extends JpaRepository<BudgetsEntity, Integer>
   void deleteByBudgetIdAndAccount(Integer id, AccountEntity account);
 
   @Modifying
-  void deleteAllByAccountAccountId(Integer accountId);
+  @Query("DELETE FROM BudgetsEntity b WHERE b.account.accountId = :accountId")
+  void deleteAllByAccountAccountId(@Param("accountId") Integer accountId);
 }

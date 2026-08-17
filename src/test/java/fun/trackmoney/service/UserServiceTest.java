@@ -19,6 +19,7 @@ import fun.trackmoney.enums.ColorPick;
 import fun.trackmoney.enums.Frequency;
 import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.mapper.UserMapper;
+import fun.trackmoney.repository.AccountRepository;
 import fun.trackmoney.repository.BudgetHistoryRepository;
 import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.repository.PotsRepository;
@@ -55,6 +56,9 @@ class UserServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private AccountRepository accountRepository;
 
   @Mock
   private UserMapper userMapper;
@@ -216,7 +220,9 @@ class UserServiceTest {
     verify(potsRepository).deleteAllByAccount(account);
     verify(recurringRepository).deleteAllByAccountId(account.getAccountId());
     verify(transactionRepository).deleteAllByAccount(account);
-    verify(userRepository).delete(user);
+    verify(userRepository).clearAccountReference(user.getUserId());
+    verify(accountRepository).deleteByAccountIdDirect(account.getAccountId());
+    verify(userRepository).deleteByUserIdDirect(user.getUserId());
   }
 
   @Test
@@ -250,9 +256,11 @@ class UserServiceTest {
     verify(budgetsRepository).deleteAllByAccountAccountId(account.getAccountId());
     verify(budgetHistoryRepository).deleteAllByAccountAccountId(account.getAccountId());
     verify(recurringRepository).deleteAllByAccountId(account.getAccountId());
-    verify(userRepository).delete(user);
-    verifyNoMoreInteractions(userRepository, transactionRepository, potsRepository,
-        budgetsRepository, budgetHistoryRepository, recurringRepository);
+    verify(userRepository).clearAccountReference(user.getUserId());
+    verify(accountRepository).deleteByAccountIdDirect(account.getAccountId());
+    verify(userRepository).deleteByUserIdDirect(user.getUserId());
+    verifyNoMoreInteractions(userRepository, accountRepository, transactionRepository,
+        potsRepository, budgetsRepository, budgetHistoryRepository, recurringRepository);
   }
 
   @Test
@@ -272,7 +280,9 @@ class UserServiceTest {
     verify(potsRepository, never()).deleteAllByAccount(any());
     verify(recurringRepository, never()).deleteAllByAccountId(anyInt());
     verify(transactionRepository, never()).deleteAllByAccount(any());
-    verify(userRepository, never()).delete(any());
+    verify(userRepository, never()).clearAccountReference(any());
+    verify(accountRepository, never()).deleteByAccountIdDirect(any());
+    verify(userRepository, never()).deleteByUserIdDirect(any());
   }
 
   @Test
@@ -285,7 +295,9 @@ class UserServiceTest {
     boolean result = userService.deleteAccount(user, "password123");
 
     assertFalse(result);
-    verify(userRepository, never()).delete(any());
+    verify(userRepository, never()).clearAccountReference(any());
+    verify(accountRepository, never()).deleteByAccountIdDirect(any());
+    verify(userRepository, never()).deleteByUserIdDirect(any());
   }
 
 }
