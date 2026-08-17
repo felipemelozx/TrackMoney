@@ -300,4 +300,49 @@ class UserServiceTest {
     verify(userRepository, never()).deleteByUserIdDirect(any());
   }
 
+  @Test
+  void changePassword_shouldUpdatePassword_whenCurrentPasswordIsCorrect() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    String newPassword = "NewStrongPassword123#";
+
+    when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches("password123", user.getPassword())).thenReturn(true);
+    when(passwordEncoder.encode(newPassword)).thenReturn("encodedNewPassword");
+
+    boolean result = userService.changePassword(user, "password123", newPassword);
+
+    assertTrue(result);
+    assertEquals("encodedNewPassword", user.getPassword());
+    verify(passwordEncoder).encode(newPassword);
+    verify(userRepository).save(user);
+  }
+
+  @Test
+  void changePassword_shouldReturnFalse_whenCurrentPasswordIsIncorrect() {
+    UserEntity user = UserEntityFactory.defaultUser();
+
+    when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches("wrong-password", user.getPassword())).thenReturn(false);
+
+    boolean result = userService.changePassword(user, "wrong-password", "NewStrongPassword123#");
+
+    assertFalse(result);
+    assertEquals("password123", user.getPassword());
+    verify(passwordEncoder, never()).encode(anyString());
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  void changePassword_shouldReturnFalse_whenUserDoesNotExist() {
+    UserEntity user = UserEntityFactory.defaultUser();
+
+    when(userRepository.findById(user.getUserId())).thenReturn(Optional.empty());
+
+    boolean result = userService.changePassword(user, "password123", "NewStrongPassword123#");
+
+    assertFalse(result);
+    verify(passwordEncoder, never()).encode(anyString());
+    verify(userRepository, never()).save(any());
+  }
+
 }

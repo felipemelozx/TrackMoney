@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.dto.user.ChangePasswordRequestDTO;
 import fun.trackmoney.dto.user.DeleteAccountRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +42,23 @@ public class UserController {
                   actualUser.getEmail()
                 )
             )
+            .build());
+  }
+
+  @PutMapping("/password")
+  public ResponseEntity<ApiResponse<Void>> changePassword(@RequestBody @Valid ChangePasswordRequestDTO request) {
+    UserEntity actualUser = authUtils.getCurrentUser();
+    boolean isChanged = userService.changePassword(actualUser, request.currentPassword(), request.newPassword());
+    if (!isChanged) {
+      return ResponseEntity.badRequest().body(
+          ApiResponse.<Void>failure()
+              .message("Password change failed.")
+              .errors(new CustomFieldError("Password", "Current password is incorrect."))
+              .build());
+    }
+    return ResponseEntity.ok().body(
+        ApiResponse.<Void>success()
+            .message("Password changed successfully.")
             .build());
   }
 

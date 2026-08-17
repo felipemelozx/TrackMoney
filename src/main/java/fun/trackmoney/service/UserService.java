@@ -104,6 +104,24 @@ public class UserService {
   }
 
   @Transactional
+  public boolean changePassword(UserEntity currentUser, String currentPassword, String newPassword) {
+    Optional<UserEntity> userExist = userRepository.findById(currentUser.getUserId());
+
+    if (userExist.isEmpty()) {
+      return false;
+    }
+
+    UserEntity user = userExist.get();
+    if (!encoder.matches(currentPassword, user.getPassword())) {
+      return false;
+    }
+
+    user.setPassword(encoder.encode(newPassword));
+    userRepository.save(user);
+    return true;
+  }
+
+  @Transactional
   public boolean deleteAccount(UserEntity currentUser, String password) {
     Optional<UserEntity> userExist = userRepository.findById(currentUser.getUserId());
 

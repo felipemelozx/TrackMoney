@@ -1,6 +1,7 @@
 package fun.trackmoney.controller;
 import fun.trackmoney.controller.UserController;
 
+import fun.trackmoney.dto.user.ChangePasswordRequestDTO;
 import fun.trackmoney.dto.user.DeleteAccountRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
@@ -83,5 +84,39 @@ class UserControllerTest {
     assertFalse(response.getBody().isSuccess());
     assertEquals("Password", response.getBody().getErrors().get(0).getField());
     verify(userService, times(1)).deleteAccount(user, request.password());
+  }
+
+  @Test
+  void changePassword_shouldReturn200_whenPasswordChanged() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    ChangePasswordRequestDTO request = new ChangePasswordRequestDTO("password123", "NewStrongPassword123#");
+
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(userService.changePassword(user, request.currentPassword(), request.newPassword())).thenReturn(true);
+
+    ResponseEntity<ApiResponse<Void>> response = userController.changePassword(request);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertTrue(response.getBody().isSuccess());
+    assertTrue(response.getBody().getErrors().isEmpty());
+    verify(userService, times(1)).changePassword(user, request.currentPassword(), request.newPassword());
+  }
+
+  @Test
+  void changePassword_shouldReturn400_whenCurrentPasswordIsInvalid() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    ChangePasswordRequestDTO request = new ChangePasswordRequestDTO("wrong-password", "NewStrongPassword123#");
+
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    when(userService.changePassword(user, request.currentPassword(), request.newPassword())).thenReturn(false);
+
+    ResponseEntity<ApiResponse<Void>> response = userController.changePassword(request);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("Password", response.getBody().getErrors().get(0).getField());
+    verify(userService, times(1)).changePassword(user, request.currentPassword(), request.newPassword());
   }
 }
