@@ -9,6 +9,12 @@ import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.mapper.UserMapper;
+import fun.trackmoney.repository.AccountRepository;
+import fun.trackmoney.repository.BudgetHistoryRepository;
+import fun.trackmoney.repository.BudgetsRepository;
+import fun.trackmoney.repository.PotsRepository;
+import fun.trackmoney.repository.RecurringRepository;
+import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,13 +30,31 @@ public class UserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder encoder;
+  private final AccountRepository accountRepository;
+  private final TransactionRepository transactionRepository;
+  private final PotsRepository potsRepository;
+  private final BudgetsRepository budgetsRepository;
+  private final BudgetHistoryRepository budgetHistoryRepository;
+  private final RecurringRepository recurringRepository;
 
   public UserService(UserRepository userRepository,
                      UserMapper userMapper,
-                     PasswordEncoder encoder) {
+                     PasswordEncoder encoder,
+                     AccountRepository accountRepository,
+                     TransactionRepository transactionRepository,
+                     PotsRepository potsRepository,
+                     BudgetsRepository budgetsRepository,
+                     BudgetHistoryRepository budgetHistoryRepository,
+                     RecurringRepository recurringRepository) {
     this.userRepository = userRepository;
     this.userMapper = userMapper;
     this.encoder = encoder;
+    this.accountRepository = accountRepository;
+    this.transactionRepository = transactionRepository;
+    this.potsRepository = potsRepository;
+    this.budgetsRepository = budgetsRepository;
+    this.budgetHistoryRepository = budgetHistoryRepository;
+    this.recurringRepository = recurringRepository;
   }
 
   @Transactional
@@ -79,15 +103,53 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public boolean deleteUser(UserEntity currentUser) {
-    Optional<UserEntity> userExist = userRepository.findByEmail(currentUser.getEmail());
+  @Transactional
+  public boolean changePassword(UserEntity currentUser, String currentPassword, String newPassword) {
+    Optional<UserEntity> userExist = userRepository.findById(currentUser.getUserId());
 
-    if(userExist.isEmpty()) {
+    if (userExist.isEmpty()) {
       return false;
     }
-    userExist.get().deletedUser();
 
-    userRepository.save(userExist.get());
+    UserEntity user = userExist.get();
+    if (!encoder.matches(currentPassword, user.getPassword())) {
+      return false;
+    }
+
+    user.setPassword(encoder.encode(newPassword));
+    userRepository.save(user);
+    return true;
+  }
+
+  @Transactional
+  public boolean deleteAccount(UserEntity currentUser, String password) {
+    Optional<UserEntity> userExist = userRepository.findById(currentUser.getUserId());
+
+    if (userExist.isEmpty()) {
+      return false;
+    }
+
+    UserEntity user = userExist.get();
+    if (!encoder.matches(password, user.getPassword())) {
+      return false;
+    }
+
+    AccountEntity account = user.getAccount();
+    if (account == null) {
+      return false;
+    }
+    Integer accountId = account.getAccountId();
+    accountRepository.deleteLegacyTransfersByAccountId(accountId);
+    accountRepository.deleteLegacyReportsByAccountId(accountId);
+    budgetHistoryRepository.deleteAllByAccountAccountId(accountId);
+    budgetsRepository.deleteAllByAccountAccountId(accountId);
+    potsRepository.deleteAllByAccount(account);
+    recurringRepository.deleteAllByAccountId(accountId);
+    transactionRepository.deleteAllByAccount(account);
+
+    userRepository.clearAccountReference(user.getUserId());
+    accountRepository.deleteByAccountIdDirect(accountId);
+    userRepository.deleteByUserIdDirect(user.getUserId());
     return true;
   }
 }

@@ -1,8 +1,10 @@
 package fun.trackmoney.config.exception;
 
 import fun.trackmoney.exception.AccountNotFoundException;
+import fun.trackmoney.exception.AccountHasRelatedDataException;
 import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.exception.CategoryNotFoundException;
+import fun.trackmoney.exception.InvalidAccountRequestException;
 import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
@@ -97,6 +99,30 @@ public class RestExceptionHandler {
             ApiResponse.<List<CustomFieldError>>failure()
                 .message(ex.getMessage())
                 .errors(ex.getErrors())
+                .build()
+        );
+  }
+
+  @ExceptionHandler(AccountHasRelatedDataException.class)
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> accountHasRelatedData(AccountHasRelatedDataException ex) {
+    return ResponseEntity
+        .status(HttpStatus.CONFLICT)
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(List.of(new CustomFieldError("Account", ex.getMessage())))
+                .build()
+        );
+  }
+
+  @ExceptionHandler(InvalidAccountRequestException.class)
+  public ResponseEntity<ApiResponse<List<CustomFieldError>>> invalidAccountRequest(InvalidAccountRequestException ex) {
+    return ResponseEntity
+        .badRequest()
+        .body(
+            ApiResponse.<List<CustomFieldError>>failure()
+                .message(ex.getMessage())
+                .errors(List.of(new CustomFieldError("Account", ex.getMessage())))
                 .build()
         );
   }

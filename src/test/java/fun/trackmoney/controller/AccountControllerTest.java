@@ -47,10 +47,12 @@ class AccountControllerTest {
 
   @Test
   void testCreateAccount() {
+    UserEntity user = new UserEntity(userId, "User Test", "user@example.com", "password");
+    when(authUtils.getCurrentUser()).thenReturn(user);
     AccountRequestDTO requestDTO = new AccountRequestDTO(userId, "Conta Corrente", BigDecimal.valueOf(1000));
     AccountResponseDTO responseDTO = new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000));
 
-    when(accountService.createAccount(requestDTO)).thenReturn(responseDTO);
+    when(accountService.createAccount(requestDTO, userId)).thenReturn(responseDTO);
 
     ResponseEntity<ApiResponse<AccountResponseDTO>> response = accountController.createAccount(requestDTO);
 
@@ -83,9 +85,11 @@ class AccountControllerTest {
 
   @Test
   void testFindAccountById() {
+    UserEntity user = new UserEntity(userId, "User Test", "user@example.com", "password");
+    when(authUtils.getCurrentUser()).thenReturn(user);
     AccountResponseDTO responseDTO = new AccountResponseDTO(1, userResponseDTO, "Conta Corrente", BigDecimal.valueOf(1000));
 
-    when(accountService.findAccountById(1)).thenReturn(responseDTO);
+    when(accountService.findAccountById(1, userId)).thenReturn(responseDTO);
 
     ResponseEntity<ApiResponse<AccountResponseDTO>> response = accountController.findAccountById(1);
 
@@ -98,10 +102,12 @@ class AccountControllerTest {
 
   @Test
   void testUpdateAccountById() {
+    UserEntity user = new UserEntity(userId, "User Test", "user@example.com", "password");
+    when(authUtils.getCurrentUser()).thenReturn(user);
     AccountUpdateRequestDTO updateDTO = new AccountUpdateRequestDTO("Nova Conta");
     AccountResponseDTO updatedResponse = new AccountResponseDTO(1, userResponseDTO, "Nova Conta", BigDecimal.valueOf(1000));
 
-    when(accountService.updateAccountById(1, updateDTO)).thenReturn(updatedResponse);
+    when(accountService.updateAccountById(1, updateDTO, userId)).thenReturn(updatedResponse);
 
     ResponseEntity<ApiResponse<AccountResponseDTO>> response = accountController.updateAccountById(1, updateDTO);
 
@@ -114,11 +120,13 @@ class AccountControllerTest {
 
   @Test
   void testDeleteAccountById() {
-    doNothing().when(accountService).deleteById(1);
+    UserEntity user = new UserEntity(userId, "User Test", "user@example.com", "password");
+    when(authUtils.getCurrentUser()).thenReturn(user);
+    doNothing().when(accountService).deleteById(1, userId);
 
     ResponseEntity<ApiResponse<Void>> response = accountController.deleteAccountById(1);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    verify(accountService, times(1)).deleteById(1);
+    verify(accountService, times(1)).deleteById(1, userId);
   }
 }
