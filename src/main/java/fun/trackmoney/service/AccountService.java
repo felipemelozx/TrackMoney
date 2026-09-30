@@ -6,6 +6,7 @@ import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.exception.AccountHasRelatedDataException;
 import fun.trackmoney.exception.AccountNotFoundException;
+import fun.trackmoney.exception.InvalidAccountRequestException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.repository.AccountRepository;
@@ -19,6 +20,8 @@ import java.util.UUID;
 
 @Service
 public class AccountService {
+
+  private static final String ACCOUNT_NOT_FOUND_MESSAGE = "Account not found!";
 
   private final AccountRepository accountRepository;
   private final AccountMapper accountMapper;
@@ -34,6 +37,9 @@ public class AccountService {
 
   public AccountResponseDTO createAccount(AccountRequestDTO dto, UUID authenticatedUserId) {
     AccountEntity account = accountMapper.accountRequestToAccountEntity(dto);
+    if (account == null) {
+      throw new InvalidAccountRequestException("Account request is required.");
+    }
 
     account.setUser(userRepository.findById(authenticatedUserId)
         .orElseThrow(() -> new UserNotFoundException("User not found!")));
@@ -48,7 +54,7 @@ public class AccountService {
 
   public AccountResponseDTO findAccountById(Integer id, UUID authenticatedUserId) {
     AccountEntity account = accountRepository.findByAccountIdAndUserId(id, authenticatedUserId)
-        .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
+        .orElseThrow(() -> new AccountNotFoundException(ACCOUNT_NOT_FOUND_MESSAGE));
     return accountMapper.accountEntityToAccountResponse(account);
   }
 
@@ -62,7 +68,7 @@ public class AccountService {
 
   public AccountResponseDTO updateAccountById(Integer id, AccountUpdateRequestDTO dto, UUID authenticatedUserId) {
     AccountEntity account = accountRepository.findByAccountIdAndUserId(id, authenticatedUserId)
-        .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
+        .orElseThrow(() -> new AccountNotFoundException(ACCOUNT_NOT_FOUND_MESSAGE));
 
     account.setName(dto.name());
 
@@ -72,7 +78,7 @@ public class AccountService {
   @Transactional
   public void deleteById(Integer id, UUID authenticatedUserId) {
     AccountEntity account = accountRepository.findByAccountIdAndUserId(id, authenticatedUserId)
-        .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
+        .orElseThrow(() -> new AccountNotFoundException(ACCOUNT_NOT_FOUND_MESSAGE));
 
     if (accountRepository.hasRelatedData(id)) {
       throw new AccountHasRelatedDataException(id);

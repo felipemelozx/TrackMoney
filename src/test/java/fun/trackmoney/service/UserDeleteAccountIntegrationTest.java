@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @Transactional
@@ -108,13 +109,13 @@ class UserDeleteAccountIntegrationTest {
     assertTrue(deleted);
     entityManager.clear();
     assertTrue(userRepository.findById(user.getUserId()).isEmpty());
-    assertTrue(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM tb_report WHERE account_id = ?", Integer.class,
-        account.getAccountId()) == 0);
-    assertTrue(jdbcTemplate.queryForObject(
+    assertEquals(0, jdbcTemplate.queryForObject("SELECT COUNT(*) FROM tb_report WHERE account_id = ?", Integer.class,
+        account.getAccountId()));
+    assertEquals(0, jdbcTemplate.queryForObject(
         "SELECT COUNT(*) FROM tb_transfer WHERE from_account_id = ? OR to_account_id = ?", Integer.class,
-        account.getAccountId(), account.getAccountId()) == 0);
-    assertTrue(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM tb_account WHERE account_id = ?", Integer.class,
-        otherAccount.getAccountId()) == 1);
+        account.getAccountId(), account.getAccountId()));
+    assertEquals(1, jdbcTemplate.queryForObject("SELECT COUNT(*) FROM tb_account WHERE account_id = ?", Integer.class,
+        otherAccount.getAccountId()));
   }
 
   private UserEntity createUserWithAccount() {

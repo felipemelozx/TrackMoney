@@ -233,20 +233,6 @@ class UserServiceTest {
     UserEntity user = UserEntityFactory.customUser(
         UUID.randomUUID(), "John Doe", "johndoe@example.com", "password123", true, account);
 
-    // Dados variados ligados à conta do usuário
-    TransactionEntity transaction = TransactionEntityFactory.customTransaction(
-        1, account, CategoryEntityFactory.defaultCategory(), TransactionType.EXPENSE,
-        BigDecimal.valueOf(100), "Mercado", LocalDateTime.now());
-    PotsEntity pot = PotsEntityFactory.customPot(
-        1L, "Férias", BigDecimal.valueOf(5000), BigDecimal.valueOf(500), account, ColorPick.DARK_BLUE);
-    BudgetsEntity budget = BudgetsEntityFactory.customBudget(
-        1, CategoryEntityFactory.defaultCategory(), account, (short) 50);
-    RecurringEntity recurring = RecurringEntityFactory.customEntity(
-        1L, Frequency.MONTHLY, LocalDateTime.now().plusDays(1), null, account,
-        CategoryEntityFactory.defaultCategory(), TransactionType.INCOME,
-        BigDecimal.valueOf(150), "Desc", "Netflix");
-    BudgetHistoryEntity budgetHistory = BudgetHistoryEntityFactory.defaultBudgetHistory();
-
     when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
     when(passwordEncoder.matches("password123", user.getPassword())).thenReturn(true);
 

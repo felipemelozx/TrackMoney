@@ -6,6 +6,7 @@ import fun.trackmoney.dto.account.AccountResponseDTO;
 import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
 import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.exception.AccountNotFoundException;
+import fun.trackmoney.exception.InvalidAccountRequestException;
 import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.repository.AccountRepository;
 import fun.trackmoney.entity.UserEntity;
@@ -57,6 +58,14 @@ class AccountServiceTest {
     verify(accountRepository).save(accountEntity);
     verify(userRepository).findById(userId);
     assertEquals(user, accountEntity.getUser());
+  }
+
+  @Test
+  void testCreateAccount_RejectsNullRequest() {
+    assertThrows(InvalidAccountRequestException.class,
+        () -> accountService.createAccount(null, UUID.randomUUID()));
+
+    verifyNoInteractions(userRepository, accountRepository);
   }
 
   @Test
