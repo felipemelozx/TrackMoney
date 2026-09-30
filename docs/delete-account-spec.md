@@ -1,6 +1,6 @@
 # Especificação — Deletar Conta (Hard Delete)
 
-Endpoint para exclusão **permanente** da conta do usuário autenticado. Apaga o usuário e **todos os dados relacionados**: conta, transações, budgets, budget history, pots e lançamentos recorrentes.
+Endpoint para exclusão **permanente** da conta do usuário autenticado. Apaga o usuário e **todos os dados relacionados**: conta, transações, budgets, budget history, pots, lançamentos recorrentes e registros legados de relatórios/transferências.
 
 ---
 
@@ -111,7 +111,7 @@ if (response.status === 204) {
 
 1. Busca o usuário pelo `userId` do token autenticado — inexistente => `400`.
 2. Compara a senha com BCrypt (`PasswordEncoder.matches`) — incorreta => `400`.
-3. Deleta em cascata, em ordem: `budget_history` → `budgets` → `pots` → `recurring` → `transactions` → conta → usuário.
+3. Deleta em cascata, em ordem: transferências e relatórios legados → `budget_history` → `budgets` → `pots` → `recurring` → `transactions` → conta → usuário.
 4. Tudo roda em uma transação (`@Transactional`): se algo falhar, nada é apagado.
 5. Após a exclusão, o usuário não existe mais no banco — **o JWT atual fica inválido automaticamente** (o filtro não encontra o usuário).
 

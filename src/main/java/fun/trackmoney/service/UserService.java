@@ -135,7 +135,12 @@ public class UserService {
     }
 
     AccountEntity account = user.getAccount();
+    if (account == null) {
+      return false;
+    }
     Integer accountId = account.getAccountId();
+    accountRepository.deleteLegacyTransfersByAccountId(accountId);
+    accountRepository.deleteLegacyReportsByAccountId(accountId);
     budgetHistoryRepository.deleteAllByAccountAccountId(accountId);
     budgetsRepository.deleteAllByAccountAccountId(accountId);
     potsRepository.deleteAllByAccount(account);

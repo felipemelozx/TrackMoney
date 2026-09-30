@@ -215,6 +215,8 @@ class UserServiceTest {
     boolean result = userService.deleteAccount(user, "password123");
 
     assertTrue(result);
+    verify(accountRepository).deleteLegacyTransfersByAccountId(account.getAccountId());
+    verify(accountRepository).deleteLegacyReportsByAccountId(account.getAccountId());
     verify(budgetHistoryRepository).deleteAllByAccountAccountId(account.getAccountId());
     verify(budgetsRepository).deleteAllByAccountAccountId(account.getAccountId());
     verify(potsRepository).deleteAllByAccount(account);
@@ -251,6 +253,8 @@ class UserServiceTest {
     boolean result = userService.deleteAccount(user, "password123");
 
     assertTrue(result);
+    verify(accountRepository).deleteLegacyTransfersByAccountId(account.getAccountId());
+    verify(accountRepository).deleteLegacyReportsByAccountId(account.getAccountId());
     verify(transactionRepository).deleteAllByAccount(account);
     verify(potsRepository).deleteAllByAccount(account);
     verify(budgetsRepository).deleteAllByAccountAccountId(account.getAccountId());
@@ -275,6 +279,8 @@ class UserServiceTest {
     boolean result = userService.deleteAccount(user, "wrong-password");
 
     assertFalse(result);
+    verify(accountRepository, never()).deleteLegacyTransfersByAccountId(anyInt());
+    verify(accountRepository, never()).deleteLegacyReportsByAccountId(anyInt());
     verify(budgetHistoryRepository, never()).deleteAllByAccountAccountId(anyInt());
     verify(budgetsRepository, never()).deleteAllByAccountAccountId(anyInt());
     verify(potsRepository, never()).deleteAllByAccount(any());
