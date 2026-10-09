@@ -23,12 +23,6 @@ target/
 logs/
 *.log
 
-# Docker
-docker-compose.yaml
-docker-compose.prod.yaml
-Dockerfile
-.dockerignore
-
 # Documentation
 README.md
 HELP.md

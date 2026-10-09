@@ -440,12 +440,12 @@ FRONT_URL=http://localhost:4200
 #### 3. Suba PostgreSQL e Redis
 
 ```bash
-docker compose up -d
+docker compose -f docker/docker-compose.yaml up -d
 ```
 
 Aguarde os containers iniciarem:
 ```bash
-docker compose ps
+docker compose -f docker/docker-compose.yaml ps
 ```
 
 Deve mostrar `postgres` e `redis` como `running`.
