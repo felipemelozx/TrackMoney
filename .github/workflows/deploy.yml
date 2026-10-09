@@ -31,7 +31,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven
 
       - name: Start Docker Compose
-        run: docker compose up -d
+        run: docker compose -f docker/docker-compose.yaml up -d
 
       - name: Build & Run Tests
         run: mvn -B clean verify -Dspring.profiles.active=dev
@@ -73,7 +73,7 @@ jobs:
           path: target/site
 
       - name: Start Docker Compose
-        run: docker compose up -d
+        run: docker compose -f docker/docker-compose.yaml up -d
 
       - name: SonarCloud Analysis
         env:
@@ -161,7 +161,7 @@ jobs:
         run: |
           APP_DIR="/opt/${{ env.APP_NAME }}"
           mkdir -p $APP_DIR
-          cp docker-compose.prod.yaml $APP_DIR/docker-compose.prod.yaml
+          cp docker/docker-compose.prod.yaml $APP_DIR/docker-compose.prod.yaml
 
           # Create .env file with all environment variables
           cat <<EOF > $APP_DIR/.env
