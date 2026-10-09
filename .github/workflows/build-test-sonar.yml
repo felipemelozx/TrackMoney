@@ -27,7 +27,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven
 
       - name: Start Docker Compose
-        run: docker compose up -d
+        run: docker compose -f docker/docker-compose.yaml up -d
 
       - name: Build & Run Tests
         run: mvn -B clean verify -Dspring.profiles.active=dev
@@ -63,7 +63,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Start Docker Compose
-        run: docker compose up -d
+        run: docker compose -f docker/docker-compose.yaml up -d
 
       - name: SonarCloud Analysis
         env:
