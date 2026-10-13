@@ -8,10 +8,8 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
-import fun.trackmoney.enums.TransactionsError;
-import fun.trackmoney.dto.transaction.internal.TransactionFailure;
-import fun.trackmoney.dto.transaction.internal.TransactionResult;
-import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.TransactionService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -48,7 +46,7 @@ class TransactionControllerTest {
     UserEntity user = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
     TransactionResponseDTO responseDTO = TransactionResponseDTOFactory.incomeTransactionResponse();
-    TransactionResult transactionResult = new TransactionSuccess(responseDTO);
+    Result<TransactionResponseDTO> transactionResult = Result.ok(responseDTO);
 
     when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
@@ -67,7 +65,7 @@ class TransactionControllerTest {
   void shouldReturnBadRequest_whenAccountNotFound() {
     UserEntity user = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
-    TransactionResult transactionResult = new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
+    Result<TransactionResponseDTO> transactionResult = Result.err(ErrorCode.TRANSACTION_ACCOUNT_NOT_FOUND);
 
     when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
@@ -76,7 +74,7 @@ class TransactionControllerTest {
     assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Transaction create error.", response.getBody().getMessage());
+    assertEquals(ErrorCode.TRANSACTION_ACCOUNT_NOT_FOUND.defaultMessage(), response.getBody().getMessage());
     assertEquals("Account", response.getBody().getErrors().get(0).getField());
     assertEquals("Account not found to update balance", response.getBody().getErrors().get(0).getMessage());
 
@@ -87,7 +85,7 @@ class TransactionControllerTest {
   void shouldReturnBadRequest_whenCategoryNotFound() {
     UserEntity user = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
-    TransactionResult transactionResult = new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
+    Result<TransactionResponseDTO> transactionResult = Result.err(ErrorCode.TRANSACTION_CATEGORY_NOT_FOUND);
 
     when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
@@ -96,7 +94,7 @@ class TransactionControllerTest {
     assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Transaction create error.", response.getBody().getMessage());
+    assertEquals(ErrorCode.TRANSACTION_CATEGORY_NOT_FOUND.defaultMessage(), response.getBody().getMessage());
     assertEquals("Category", response.getBody().getErrors().get(0).getField());
     assertEquals("Category not found.", response.getBody().getErrors().get(0).getMessage());
 

@@ -6,10 +6,8 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
-import fun.trackmoney.enums.TransactionsError;
-import fun.trackmoney.dto.transaction.internal.TransactionFailure;
-import fun.trackmoney.dto.transaction.internal.TransactionResult;
-import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.TransactionEntity;
 import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.mapper.TransactionMapper;
@@ -48,17 +46,17 @@ public class TransactionService {
   }
 
   @Transactional
-  public TransactionResult createTransaction(CreateTransactionDTO transactionDTO, UserEntity currentUser) {
+  public Result<TransactionResponseDTO> createTransaction(CreateTransactionDTO transactionDTO, UserEntity currentUser) {
     AccountEntity account = currentUser.getAccount();
 
     if (account == null) {
-      return new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
+      return Result.err(ErrorCode.TRANSACTION_ACCOUNT_NOT_FOUND);
     }
 
     CategoryEntity category = categoryService.findEntityById(transactionDTO.categoryId());
 
     if (category == null) {
-      return new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
+      return Result.err(ErrorCode.TRANSACTION_CATEGORY_NOT_FOUND);
     }
 
     TransactionEntity transactionEntity = transactionMapper.createTransactionToEntity(transactionDTO);
@@ -71,7 +69,7 @@ public class TransactionService {
     boolean isCredit = TransactionType.INCOME.equals(transactionDTO.transactionType());
     accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
 
-    return new TransactionSuccess(response);
+    return Result.ok(response);
   }
 
   public List<TransactionResponseDTO> findAllTransaction(UserEntity currentUser) {

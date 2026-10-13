@@ -8,11 +8,10 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.MoneyRequest;
 import fun.trackmoney.dto.pots.PotsResponseDTO;
-import fun.trackmoney.dto.pots.internal.PotsFailure;
-import fun.trackmoney.dto.pots.internal.PotsSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.PotsEntity;
 import fun.trackmoney.enums.ColorPick;
-import fun.trackmoney.enums.PotsErrorType;
 import fun.trackmoney.mapper.PotsMapper;
 import fun.trackmoney.repository.PotsRepository;
 import fun.trackmoney.testutils.CreatePotsDTOFactory;
@@ -31,8 +30,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -151,10 +152,22 @@ class PotsServiceTest {
 
     var result = potsService.addMoney(potId, moneyRequest, currentUser);
 
-    assertTrue(result instanceof PotsFailure);
-    PotsFailure failure = (PotsFailure) result;
-    assertEquals(PotsErrorType.NOT_FOUND, failure.type());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.POT_NOT_FOUND, ((Result.Err<PotsResponseDTO>) result).error().code());
     verify(potsRepository, times(0)).save(any());
+  }
+
+  @Test
+  void addMoney_shouldPropagateInfrastructureFailureInsteadOfReturningBusinessError() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    MoneyRequest moneyRequest = new MoneyRequest(TransactionType.INCOME, BigDecimal.ONE);
+    when(potsRepository.findByIdAndAccount(1L, currentUser.getAccount()))
+        .thenThrow(new IllegalStateException("database unavailable"));
+
+    IllegalStateException exception = assertThrows(IllegalStateException.class,
+        () -> potsService.addMoney(1L, moneyRequest, currentUser));
+
+    assertEquals("database unavailable", exception.getMessage());
   }
 
   @Test
@@ -171,10 +184,9 @@ class PotsServiceTest {
 
     var result = potsService.addMoney(pot.getPotId(), moneyRequest, currentUser);
 
-    assertTrue(result instanceof PotsFailure);
-    PotsFailure failure = (PotsFailure) result;
-    assertEquals(PotsErrorType.BAD_REQUEST, failure.type());
-    assertEquals("Money is greater than target amount!", failure.message());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.POT_INCOME_EXCEEDS_TARGET, ((Result.Err<PotsResponseDTO>) result).error().code());
+    assertEquals("Money is greater than target amount!", ((Result.Err<PotsResponseDTO>) result).error().message());
     verify(potsRepository, times(0)).save(any());
   }
 
@@ -191,10 +203,9 @@ class PotsServiceTest {
 
     var result = potsService.addMoney(pot.getPotId(), moneyRequest, currentUser);
 
-    assertTrue(result instanceof PotsFailure);
-    PotsFailure failure = (PotsFailure) result;
-    assertEquals(PotsErrorType.BAD_REQUEST, failure.type());
-    assertEquals("Money is greater than current amount!", failure.message());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.POT_EXPENSE_EXCEEDS_BALANCE, ((Result.Err<PotsResponseDTO>) result).error().code());
+    assertEquals("Money is greater than current amount!", ((Result.Err<PotsResponseDTO>) result).error().message());
     verify(potsRepository, times(0)).save(any());
   }
 
@@ -215,7 +226,7 @@ class PotsServiceTest {
 
     var result = potsService.addMoney(pot.getPotId(), moneyRequest, currentUser);
 
-    assertTrue(result instanceof PotsSuccess);
+    assertInstanceOf(Result.Ok.class, result);
 
     assertEquals(new BigDecimal("70"), pot.getCurrentAmount());
 
@@ -241,7 +252,7 @@ class PotsServiceTest {
 
     var result = potsService.addMoney(pot.getPotId(), moneyRequest, currentUser);
 
-    assertTrue(result instanceof PotsSuccess);
+    assertInstanceOf(Result.Ok.class, result);
 
     assertEquals(new BigDecimal("30"), pot.getCurrentAmount());
 
@@ -269,7 +280,7 @@ class PotsServiceTest {
 
     var result = potsService.addMoney(pot.getPotId(), moneyRequest, currentUser);
 
-    assertTrue(result instanceof PotsSuccess);
+    assertInstanceOf(Result.Ok.class, result);
     assertEquals(new BigDecimal("60"), pot.getCurrentAmount()); // 10 + 50
   }
 
@@ -291,7 +302,7 @@ class PotsServiceTest {
 
     var result = potsService.addMoney(pot.getPotId(), moneyRequest, currentUser);
 
-    assertTrue(result instanceof PotsSuccess);
+    assertInstanceOf(Result.Ok.class, result);
     assertEquals(new BigDecimal("40"), pot.getCurrentAmount());
   }
 
@@ -319,7 +330,7 @@ class PotsServiceTest {
 
     var result = potsService.update(potId, updateDTO, currentUser);
 
-    assertTrue(result instanceof PotsSuccess);
+    assertInstanceOf(Result.Ok.class, result);
 
     assertEquals("New Name", existingPot.getName());
     assertEquals(ColorPick.DARK_BLUE, existingPot.getColor());
@@ -339,10 +350,9 @@ class PotsServiceTest {
 
     var result = potsService.update(potId, updateDTO, currentUser);
 
-    assertTrue(result instanceof PotsFailure);
-    PotsFailure failure = (PotsFailure) result;
-    assertEquals(PotsErrorType.NOT_FOUND, failure.type());
-    assertEquals("Pots not found!", failure.message());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.POT_NOT_FOUND, ((Result.Err<PotsResponseDTO>) result).error().code());
+    assertEquals("Pots not found!", ((Result.Err<PotsResponseDTO>) result).error().message());
 
     verify(potsRepository, times(0)).save(any());
   }
@@ -366,11 +376,9 @@ class PotsServiceTest {
 
     var result = potsService.update(potId, updateDTO, currentUser);
 
-    assertTrue(result instanceof PotsFailure);
-    PotsFailure failure = (PotsFailure) result;
-
-    assertEquals(PotsErrorType.BAD_REQUEST, failure.type());
-    assertEquals("Target amount cannot be less than current amount!", failure.message());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.POT_TARGET_BELOW_CURRENT, ((Result.Err<PotsResponseDTO>) result).error().code());
+    assertEquals("Target amount cannot be less than current amount!", ((Result.Err<PotsResponseDTO>) result).error().message());
 
     verify(potsRepository, times(0)).save(any());
   }

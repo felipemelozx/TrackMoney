@@ -3,15 +3,12 @@ package fun.trackmoney.controller;
 import fun.trackmoney.dto.pots.MoneyRequest;
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.PotsResponseDTO;
-import fun.trackmoney.dto.pots.internal.PotsFailure;
-import fun.trackmoney.dto.pots.internal.PotsResult;
-import fun.trackmoney.dto.pots.internal.PotsSuccess;
+import fun.trackmoney.common.result.HttpErrorMapper;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.PotsService;
 import fun.trackmoney.entity.UserEntity;
-import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -63,30 +60,13 @@ public class PotsController {
       @Valid @RequestBody MoneyRequest moneyRequest,
       @AuthenticationPrincipal UserEntity currentUser) {
 
-    PotsResult result = potsService.addMoney(id, moneyRequest, currentUser);
-
-    if (result instanceof PotsSuccess success) {
-      return ResponseEntity.ok(
+    Result<PotsResponseDTO> result = potsService.addMoney(id, moneyRequest, currentUser);
+    return result.fold(data -> ResponseEntity.ok(
           ApiResponse.<PotsResponseDTO>success()
               .message("Money added successfully!")
-              .data(success.responseDTO())
+              .data(data)
               .build()
-      );
-    }
-
-    PotsFailure failure = (PotsFailure) result;
-
-    HttpStatus status = switch (failure.type()) {
-      case NOT_FOUND -> HttpStatus.NOT_FOUND;
-      case BAD_REQUEST -> HttpStatus.BAD_REQUEST;
-    };
-
-    var body = ApiResponse.<PotsResponseDTO>failure()
-        .message(failure.message())
-        .errors(new CustomFieldError(failure.field(), failure.message()))
-        .build();
-
-    return ResponseEntity.status(status).body(body);
+      ), HttpErrorMapper::toResponse);
   }
 
   @DeleteMapping("/{id}")
@@ -107,29 +87,12 @@ public class PotsController {
       @Valid @RequestBody CreatePotsDTO request,
       @AuthenticationPrincipal UserEntity currentUser) {
 
-    PotsResult result = potsService.update(id, request, currentUser);
-
-    if (result instanceof PotsSuccess success) {
-      return ResponseEntity.ok(
+    Result<PotsResponseDTO> result = potsService.update(id, request, currentUser);
+    return result.fold(data -> ResponseEntity.ok(
           ApiResponse.<PotsResponseDTO>success()
               .message("Pot updated successfully")
-              .data(success.responseDTO())
+              .data(data)
               .build()
-      );
-    }
-
-    PotsFailure failure = (PotsFailure) result;
-
-    HttpStatus status = switch (failure.type()) {
-      case NOT_FOUND -> HttpStatus.NOT_FOUND;
-      case BAD_REQUEST -> HttpStatus.BAD_REQUEST;
-    };
-
-    var body = ApiResponse.<PotsResponseDTO>failure()
-        .message(failure.message())
-        .errors(new CustomFieldError(failure.field(), failure.message()))
-        .build();
-
-    return ResponseEntity.status(status).body(body);
+      ), HttpErrorMapper::toResponse);
   }
 }

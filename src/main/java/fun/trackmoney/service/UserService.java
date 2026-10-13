@@ -1,10 +1,8 @@
 package fun.trackmoney.service;
 
 import fun.trackmoney.entity.AccountEntity;
-import fun.trackmoney.dto.auth.internal.AuthError;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterFailure;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.UserEntity;
@@ -34,10 +32,10 @@ public class UserService {
   }
 
   @Transactional
-  public UserRegisterResult register(UserRequestDTO userRequestDTO) {
+  public Result<UserResponseDTO> register(UserRequestDTO userRequestDTO) {
     Optional<UserEntity> userExist= findUserByEmail(userRequestDTO.email());
     if(userExist.isPresent()) {
-      return new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
+      return Result.err(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
     }
 
     UserEntity user = userMapper.userRequestDTOToEntity(userRequestDTO);
@@ -52,7 +50,7 @@ public class UserService {
     UserEntity savedUser = userRepository.save(user);
 
     UserResponseDTO userResponseDTO = userMapper.userEntityToUserResponseDto(savedUser);
-    return new UserRegisterSuccess(userResponseDTO);
+    return Result.ok(userResponseDTO);
   }
 
   public Boolean activateUser(String email) {

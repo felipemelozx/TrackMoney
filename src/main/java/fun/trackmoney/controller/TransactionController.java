@@ -3,13 +3,10 @@ package fun.trackmoney.controller;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
-import fun.trackmoney.enums.TransactionsError;
-import fun.trackmoney.dto.transaction.internal.TransactionFailure;
-import fun.trackmoney.dto.transaction.internal.TransactionResult;
-import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
+import fun.trackmoney.common.result.HttpErrorMapper;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.TransactionService;
 import fun.trackmoney.entity.UserEntity;
-import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -47,31 +44,14 @@ public class TransactionController {
                                                                                CreateTransactionDTO dto,
                                                                                @AuthenticationPrincipal
                                                                                UserEntity currentUser) {
-    TransactionResult result = transactionService.createTransaction(dto, currentUser);
-
-    if (result instanceof TransactionSuccess transactionSuccess) {
-      TransactionResponseDTO responseDTO = transactionSuccess.response();
+    Result<TransactionResponseDTO> result = transactionService.createTransaction(dto, currentUser);
+    return result.fold(responseDTO -> {
       var body = ApiResponse.<TransactionResponseDTO>success()
           .message("Transfer created")
           .data(responseDTO)
           .build();
       return ResponseEntity.status(HttpStatus.CREATED).body(body);
-    }
-    TransactionFailure failure = (TransactionFailure) result;
-
-    if (failure.error() == TransactionsError.ACCOUNT_NOT_FOUND) {
-      ApiResponse<TransactionResponseDTO> bodyData = ApiResponse.<TransactionResponseDTO>failure()
-          .message("Transaction create error.")
-          .errors(new CustomFieldError("Account", "Account not found to update balance"))
-          .build();
-      return ResponseEntity.badRequest().body(bodyData);
-    }
-
-    ApiResponse<TransactionResponseDTO> bodyData = ApiResponse.<TransactionResponseDTO>failure()
-        .message("Transaction create error.")
-        .errors(new CustomFieldError("Category", "Category not found."))
-        .build();
-    return ResponseEntity.badRequest().body(bodyData);
+    }, error -> HttpErrorMapper.toResponse(error));
   }
 
   @GetMapping

@@ -4,11 +4,9 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.MoneyRequest;
 import fun.trackmoney.dto.pots.PotsResponseDTO;
-import fun.trackmoney.dto.pots.internal.PotsFailure;
-import fun.trackmoney.dto.pots.internal.PotsResult;
-import fun.trackmoney.dto.pots.internal.PotsSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.PotsEntity;
-import fun.trackmoney.enums.PotsErrorType;
 import fun.trackmoney.mapper.PotsMapper;
 import fun.trackmoney.repository.PotsRepository;
 import fun.trackmoney.entity.UserEntity;
@@ -46,11 +44,11 @@ public class PotsService {
   }
 
   @Transactional
-  public PotsResult addMoney(Long id, MoneyRequest money, UserEntity currentUser) {
+  public Result<PotsResponseDTO> addMoney(Long id, MoneyRequest money, UserEntity currentUser) {
     Optional<PotsEntity> pot = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
 
     if(pot.isEmpty()) {
-      return new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!");
+      return Result.err(ErrorCode.POT_NOT_FOUND, "id", "Pots not found!");
     }
 
     BigDecimal spread = pot.get().getTargetAmount().subtract(pot.get().getCurrentAmount());
@@ -59,11 +57,11 @@ public class PotsService {
     boolean isIncome = money.type().equals(TransactionType.INCOME);
 
     if (isIncome && exceedsTargetAmount) {
-      return new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Money is greater than target amount!");
+      return Result.err(ErrorCode.POT_INCOME_EXCEEDS_TARGET, "Money", null);
     }
 
     if (!isIncome && exceedsCurrentBalance) {
-      return new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Money is greater than current amount!");
+      return Result.err(ErrorCode.POT_EXPENSE_EXCEEDS_BALANCE, "Money", null);
     }
 
     BigDecimal newValue;
@@ -77,7 +75,7 @@ public class PotsService {
 
     var potUpdated = potsRepository.save(pot.get());
     accountService.updateAccountBalance(money.amount(), currentUser.getAccount().getAccountId(), !isIncome);
-    return new PotsSuccess(potsMapper.toResponse(potUpdated));
+    return Result.ok(potsMapper.toResponse(potUpdated));
   }
 
   @Transactional
@@ -98,18 +96,18 @@ public class PotsService {
   }
 
   @Transactional
-  public PotsResult update(Long id, CreatePotsDTO dto, UserEntity currentUser) {
+  public Result<PotsResponseDTO> update(Long id, CreatePotsDTO dto, UserEntity currentUser) {
     Optional<PotsEntity> optionalPots = potsRepository.findByIdAndAccount(id, currentUser.getAccount());
 
     if(optionalPots.isEmpty()) {
-      return new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!");
+      return Result.err(ErrorCode.POT_NOT_FOUND, "id", "Pots not found!");
     }
 
     PotsEntity pot = optionalPots.get();
 
     if(pot.getCurrentAmount().compareTo(dto.targetAmount()) > 0){
       String message = "Target amount cannot be less than current amount!";
-      return new PotsFailure(PotsErrorType.BAD_REQUEST, "targetAmount", message);
+      return Result.err(ErrorCode.POT_TARGET_BELOW_CURRENT, "targetAmount", message);
     }
 
     pot.setTargetAmount(dto.targetAmount())
@@ -117,6 +115,6 @@ public class PotsService {
         .setColor(dto.color());
 
     PotsResponseDTO responseDTO = potsMapper.toResponse(potsRepository.save(pot));
-    return new PotsSuccess(responseDTO);
+    return Result.ok(responseDTO);
   }
 }

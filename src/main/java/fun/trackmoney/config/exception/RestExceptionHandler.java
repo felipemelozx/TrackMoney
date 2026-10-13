@@ -7,6 +7,9 @@ import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
+import fun.trackmoney.utils.response.ErrorResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,113 +18,78 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @ControllerAdvice
 public class RestExceptionHandler {
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> handleValidationExceptions(
-                                                                  MethodArgumentNotValidException ex) {
-    List<CustomFieldError> errors = ex.getBindingResult()
-        .getAllErrors()
-        .stream()
-        .map(error -> {
-          if (error instanceof FieldError fieldError) {
-            return new CustomFieldError(fieldError.getField(), fieldError.getDefaultMessage());
-          } else {
-             return new CustomFieldError("object", error.getDefaultMessage());
-          }
-        }).toList();
+  private static final Logger LOGGER = LoggerFactory.getLogger(RestExceptionHandler.class);
 
-    return new ResponseEntity<>(
-        ApiResponse.<List<CustomFieldError>>failure()
-            .message("Validation failed")
-            .errors(errors)
-            .build(),
-        HttpStatus.BAD_REQUEST
-    );
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    Map<String, String> details = new LinkedHashMap<>();
+    ex.getBindingResult().getAllErrors().forEach(error -> {
+      String field = error instanceof FieldError fieldError ? fieldError.getField() : "object";
+      details.put(field, error.getDefaultMessage());
+    });
+    return errorResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Validation failed", details);
   }
 
   @ExceptionHandler(HandlerMethodValidationException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> handlePathVariableValidationExceptions(
+  public ResponseEntity<ApiResponse<Void>> handlePathVariableValidationExceptions(
       HandlerMethodValidationException ex) {
-
-    List<CustomFieldError> errors = ex.getAllErrors()
-        .stream()
-        .map(error -> {
-          if (error instanceof FieldError fieldError) {
-            return new CustomFieldError(fieldError.getField(), fieldError.getDefaultMessage());
-          } else {
-            return new CustomFieldError("param", error.getDefaultMessage());
-          }
-        })
-        .toList();
-
-    return new ResponseEntity<>(
-        ApiResponse.<List<CustomFieldError>>failure()
-            .message("Validation failed")
-            .errors(errors)
-            .build(),
-        HttpStatus.BAD_REQUEST
-    );
+    Map<String, String> details = new LinkedHashMap<>();
+    ex.getAllErrors().forEach(error -> {
+      String field = error instanceof FieldError fieldError ? fieldError.getField() : "param";
+      details.put(field, error.getDefaultMessage());
+    });
+    return errorResponse(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Validation failed", details);
   }
 
   @ExceptionHandler(UserNotFoundException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> emailNotFound(UserNotFoundException ex) {
-    return ResponseEntity.badRequest().body(
-        ApiResponse.<List<CustomFieldError>>failure()
-            .message(ex.getMessage())
-            .errors(ex.getErrors())
-            .build()
-    );
+  public ResponseEntity<ApiResponse<Void>> emailNotFound(UserNotFoundException ex) {
+    return errorResponse(HttpStatus.BAD_REQUEST, "USER_NOT_FOUND", ex.getMessage(), toDetails(ex.getErrors()));
   }
 
   @ExceptionHandler(CategoryNotFoundException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> categoryNotFound(CategoryNotFoundException ex) {
-    return ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(
-            ApiResponse.<List<CustomFieldError>>failure()
-                .message(ex.getMessage())
-                .errors(List.of(new CustomFieldError("Category", ex.getMessage())))
-                .build()
-        );
+  public ResponseEntity<ApiResponse<Void>> categoryNotFound(CategoryNotFoundException ex) {
+    return errorResponse(HttpStatus.NOT_FOUND, "CATEGORY_NOT_FOUND", ex.getMessage(),
+        Map.of("Category", ex.getMessage()));
   }
 
   @ExceptionHandler(AccountNotFoundException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> accountNotFound(AccountNotFoundException ex) {
-    return ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(
-            ApiResponse.<List<CustomFieldError>>failure()
-                .message(ex.getMessage())
-                .errors(ex.getErrors())
-                .build()
-        );
+  public ResponseEntity<ApiResponse<Void>> accountNotFound(AccountNotFoundException ex) {
+    return errorResponse(HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND", ex.getMessage(), toDetails(ex.getErrors()));
   }
 
   @ExceptionHandler(TransactionNotFoundException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> transactionNotFound(TransactionNotFoundException ex) {
-    return ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(
-            ApiResponse.<List<CustomFieldError>>failure()
-                .message(ex.getMessage())
-                .errors(ex.getErrors())
-                .build()
-        );
+  public ResponseEntity<ApiResponse<Void>> transactionNotFound(TransactionNotFoundException ex) {
+    return errorResponse(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND", ex.getMessage(), toDetails(ex.getErrors()));
   }
 
   @ExceptionHandler(BudgetsNotFoundException.class)
-  public ResponseEntity<ApiResponse<List<CustomFieldError>>> budgetsNotFound(BudgetsNotFoundException ex) {
-    return ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(
-            ApiResponse.<List<CustomFieldError>>failure()
-                .message(ex.getMessage())
-                .errors(ex.getErrors())
-                .build()
-        );
+  public ResponseEntity<ApiResponse<Void>> budgetsNotFound(BudgetsNotFoundException ex) {
+    return errorResponse(HttpStatus.NOT_FOUND, "BUDGET_NOT_FOUND", ex.getMessage(), toDetails(ex.getErrors()));
+  }
+
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ApiResponse<Void>> unexpectedException(Exception ex) {
+    LOGGER.error("Unexpected error while processing request", ex);
+    return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
+        "An unexpected error occurred.", null);
+  }
+
+  private ResponseEntity<ApiResponse<Void>> errorResponse(HttpStatus status, String code, String message,
+                                                           Map<String, String> details) {
+    return ResponseEntity.status(status)
+        .body(ApiResponse.error(new ErrorResponse(code, message, details)));
+  }
+
+  private Map<String, String> toDetails(List<CustomFieldError> errors) {
+    Map<String, String> details = new LinkedHashMap<>();
+    errors.forEach(error -> details.put(error.getField(), error.getMessage()));
+    return details.isEmpty() ? null : details;
   }
 }
