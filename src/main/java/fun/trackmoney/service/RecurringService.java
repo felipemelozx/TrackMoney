@@ -11,8 +11,7 @@ import fun.trackmoney.mapper.RecurringMapper;
 import fun.trackmoney.repository.RecurringRepository;
 import fun.trackmoney.dto.transaction.BillResponseDTO;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
-import fun.trackmoney.dto.transaction.internal.TransactionFailure;
-import fun.trackmoney.dto.transaction.internal.TransactionResult;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.UserEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -124,11 +123,11 @@ public class RecurringService {
         recurring.getNextDate()
     );
 
-    TransactionResult result =
+    Result<fun.trackmoney.dto.transaction.TransactionResponseDTO> result =
         transactionService.createTransaction(dto, recurring.getAccount().getUser());
 
-    if (result instanceof TransactionFailure failure) {
-      throw new IllegalStateException("Failed to create transaction: " + failure.error());
+    if (result instanceof Result.Err<fun.trackmoney.dto.transaction.TransactionResponseDTO> failure) {
+      throw new IllegalStateException("Failed to create transaction: " + failure.error().code());
     }
 
     LocalDateTime next = calculateNextRun(

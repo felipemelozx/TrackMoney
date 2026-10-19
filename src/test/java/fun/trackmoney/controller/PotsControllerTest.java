@@ -5,9 +5,8 @@ import fun.trackmoney.enums.TransactionType;
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.MoneyRequest;
 import fun.trackmoney.dto.pots.PotsResponseDTO;
-import fun.trackmoney.dto.pots.internal.PotsFailure;
-import fun.trackmoney.dto.pots.internal.PotsSuccess;
-import fun.trackmoney.enums.PotsErrorType;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.PotsService;
 import fun.trackmoney.testutils.CreatePotsDTOFactory;
 import fun.trackmoney.testutils.PotsResponseDTOFactory;
@@ -97,7 +96,7 @@ class PotsControllerTest {
     PotsResponseDTO responseDTO = PotsResponseDTOFactory.defaultPotResponse();
 
     when(potsService.addMoney(potId, request, user))
-        .thenReturn(new PotsSuccess(responseDTO));
+        .thenReturn(Result.ok(responseDTO));
 
     ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
 
@@ -113,7 +112,7 @@ class PotsControllerTest {
     MoneyRequest request = new MoneyRequest(TransactionType.INCOME, new BigDecimal("100"));
 
     when(potsService.addMoney(potId, request, user))
-        .thenReturn(new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pot not found"));
+        .thenReturn(Result.err(ErrorCode.POT_NOT_FOUND, "id", "Pot not found"));
 
     ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
 
@@ -129,7 +128,7 @@ class PotsControllerTest {
     MoneyRequest request = new MoneyRequest(TransactionType.INCOME, new BigDecimal("5000"));
 
     when(potsService.addMoney(potId, request, user))
-        .thenReturn(new PotsFailure(PotsErrorType.BAD_REQUEST, "Money", "Limit exceeded"));
+        .thenReturn(Result.err(ErrorCode.POT_INCOME_EXCEEDS_TARGET, "Money", "Limit exceeded"));
 
     ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.addMoney(potId, request, user);
 
@@ -146,7 +145,7 @@ class PotsControllerTest {
     PotsResponseDTO responseDTO = PotsResponseDTOFactory.defaultPotResponse();
 
     when(potsService.update(id, request, user))
-        .thenReturn(new PotsSuccess(responseDTO));
+        .thenReturn(Result.ok(responseDTO));
 
     ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.update(id, request, user);
 
@@ -164,7 +163,7 @@ class PotsControllerTest {
     CreatePotsDTO request = CreatePotsDTOFactory.defaultCreatePot();
 
     when(potsService.update(id, request, user))
-        .thenReturn(new PotsFailure(PotsErrorType.NOT_FOUND, "id", "Pots not found!"));
+        .thenReturn(Result.err(ErrorCode.POT_NOT_FOUND, "id", "Pots not found!"));
 
     ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.update(id, request, user);
 
@@ -181,7 +180,8 @@ class PotsControllerTest {
     CreatePotsDTO request = CreatePotsDTOFactory.defaultCreatePot();
 
     when(potsService.update(id, request, user))
-        .thenReturn(new PotsFailure(PotsErrorType.BAD_REQUEST, "targetAmount", "Target amount cannot be less than current amount!"));
+        .thenReturn(Result.err(ErrorCode.POT_TARGET_BELOW_CURRENT, "targetAmount",
+            "Target amount cannot be less than current amount!"));
 
     ResponseEntity<ApiResponse<PotsResponseDTO>> response = potsController.update(id, request, user);
 

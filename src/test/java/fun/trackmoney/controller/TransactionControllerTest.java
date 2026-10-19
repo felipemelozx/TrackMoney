@@ -8,11 +8,11 @@ import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
-import fun.trackmoney.enums.TransactionsError;
-import fun.trackmoney.dto.transaction.internal.TransactionFailure;
-import fun.trackmoney.dto.transaction.internal.TransactionResult;
-import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.TransactionService;
+import fun.trackmoney.mapper.TransactionMapper;
+import fun.trackmoney.testutils.TransactionEntityFactory;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
 import org.junit.jupiter.api.Test;
@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatusCode;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -40,6 +41,8 @@ class TransactionControllerTest {
 
   @Mock
   private TransactionService transactionService;
+  @Mock
+  private TransactionMapper transactionMapper;
   @InjectMocks
   private TransactionController transactionController;
 
@@ -48,7 +51,7 @@ class TransactionControllerTest {
     UserEntity user = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
     TransactionResponseDTO responseDTO = TransactionResponseDTOFactory.incomeTransactionResponse();
-    TransactionResult transactionResult = new TransactionSuccess(responseDTO);
+    Result<TransactionResponseDTO> transactionResult = Result.ok(responseDTO);
 
     when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
@@ -67,7 +70,7 @@ class TransactionControllerTest {
   void shouldReturnBadRequest_whenAccountNotFound() {
     UserEntity user = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
-    TransactionResult transactionResult = new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
+    Result<TransactionResponseDTO> transactionResult = Result.err(ErrorCode.TRANSACTION_ACCOUNT_NOT_FOUND);
 
     when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
@@ -76,7 +79,7 @@ class TransactionControllerTest {
     assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Transaction create error.", response.getBody().getMessage());
+    assertEquals(ErrorCode.TRANSACTION_ACCOUNT_NOT_FOUND.defaultMessage(), response.getBody().getMessage());
     assertEquals("Account", response.getBody().getErrors().get(0).getField());
     assertEquals("Account not found to update balance", response.getBody().getErrors().get(0).getMessage());
 
@@ -87,7 +90,7 @@ class TransactionControllerTest {
   void shouldReturnBadRequest_whenCategoryNotFound() {
     UserEntity user = UserEntityFactory.defaultUser();
     CreateTransactionDTO dto = CreateTransactionDTOBuilder.incomeTransaction();
-    TransactionResult transactionResult = new TransactionFailure(TransactionsError.CATEGORY_NOT_FOUND);
+    Result<TransactionResponseDTO> transactionResult = Result.err(ErrorCode.TRANSACTION_CATEGORY_NOT_FOUND);
 
     when(transactionService.createTransaction(dto, user)).thenReturn(transactionResult);
 
@@ -96,7 +99,7 @@ class TransactionControllerTest {
     assertEquals(HttpStatusCode.valueOf(400), response.getStatusCode());
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
-    assertEquals("Transaction create error.", response.getBody().getMessage());
+    assertEquals(ErrorCode.TRANSACTION_CATEGORY_NOT_FOUND.defaultMessage(), response.getBody().getMessage());
     assertEquals("Category", response.getBody().getErrors().get(0).getField());
     assertEquals("Category not found.", response.getBody().getErrors().get(0).getMessage());
 
@@ -124,7 +127,9 @@ class TransactionControllerTest {
   void findTransactionById_shouldReturnTransaction() {
     TransactionResponseDTO transaction = TransactionResponseDTOFactory.defaultTransactionResponse();
     UserEntity currentUser = UserEntityFactory.defaultUser();
-    when(transactionService.findById(1, currentUser)).thenReturn(transaction);
+    var entity = TransactionEntityFactory.defaultExpenseNow();
+    when(transactionService.findById(1, currentUser)).thenReturn(Optional.of(entity));
+    when(transactionMapper.toResponseDTO(entity)).thenReturn(transaction);
 
     var response = transactionController.findTransactionById(1, currentUser);
 
@@ -133,6 +138,7 @@ class TransactionControllerTest {
     assertEquals("buy bread", response.getBody().getData().description());
 
     verify(transactionService, times(1)).findById(1, currentUser);
+    verify(transactionMapper).toResponseDTO(entity);
   }
 
   @Test
@@ -141,7 +147,7 @@ class TransactionControllerTest {
     TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransaction();
     TransactionResponseDTO updated = TransactionResponseDTOFactory.defaultTransactionResponse();
 
-    when(transactionService.update(1, dto, currentUser)).thenReturn(updated);
+    when(transactionService.update(1, dto, currentUser)).thenReturn(Result.ok(updated));
 
     var response = transactionController.updateTransaction(1, dto, currentUser);
 
@@ -149,6 +155,36 @@ class TransactionControllerTest {
     assertEquals("buy bread", response.getBody().getData().description());
 
     verify(transactionService).update(1, dto, currentUser);
+  }
+
+  @Test
+  void findTransactionById_shouldReturnNotFoundWhenEmpty() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    when(transactionService.findById(1, user)).thenReturn(Optional.empty());
+
+    var response = transactionController.findTransactionById(1, user);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("TRANSACTION_NOT_FOUND", response.getBody().getError().code());
+    assertNull(response.getBody().getData());
+    verifyNoInteractions(transactionMapper);
+  }
+
+  @Test
+  void updateTransaction_shouldReturnNotFound() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransaction();
+    when(transactionService.update(1, dto, user)).thenReturn(Result.err(ErrorCode.TRANSACTION_NOT_FOUND));
+
+    var response = transactionController.updateTransaction(1, dto, user);
+
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("TRANSACTION_NOT_FOUND", response.getBody().getError().code());
+    assertNull(response.getBody().getData());
   }
 
   @Test

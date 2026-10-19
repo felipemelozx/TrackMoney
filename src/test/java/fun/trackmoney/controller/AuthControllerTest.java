@@ -6,17 +6,8 @@ import fun.trackmoney.dto.auth.LoginResponseDTO;
 import fun.trackmoney.dto.auth.PasswordRequest;
 import fun.trackmoney.dto.auth.PasswordResponse;
 import fun.trackmoney.dto.auth.RefreshTokenResponse;
-import fun.trackmoney.dto.auth.internal.AuthError;
-import fun.trackmoney.dto.auth.internal.ForgotPasswordFailure;
-import fun.trackmoney.dto.auth.internal.ForgotPasswordResult;
-import fun.trackmoney.dto.auth.internal.ForgotPasswordSuccess;
-import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailFailure;
-import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailSuccess;
-import fun.trackmoney.dto.auth.internal.login.LoginFailure;
-import fun.trackmoney.dto.auth.internal.login.LoginResult;
-import fun.trackmoney.dto.auth.internal.login.LoginSuccess;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterFailure;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.AuthService;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
@@ -57,7 +48,7 @@ class AuthControllerTest {
   void shouldRegisterUserSuccessfullyWhenUserRequestIsValid() {
     UserRequestDTO userRequest = new UserRequestDTO("John", "john@example.com", "123");
     UserResponseDTO userResponse = new UserResponseDTO(UUID.randomUUID(), "John", "john@example.com");
-    UserRegisterSuccess userRegisterSuccess = new UserRegisterSuccess(userResponse);
+    Result<UserResponseDTO> userRegisterSuccess = Result.ok(userResponse);
 
     when(authService.register(userRequest)).thenReturn(userRegisterSuccess);
 
@@ -73,8 +64,8 @@ class AuthControllerTest {
   @Test
   void shouldReturnBadRequestWhenUserEmailAlreadyExists() {
     UserRequestDTO userRequest = new UserRequestDTO("John","john@example.com", "123");
-    UserRegisterFailure userRegisterFailure = new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
-    CustomFieldError customFieldError = new CustomFieldError("Email", AuthError.EMAIL_ALREADY_EXISTS.getMessage());
+    Result<UserResponseDTO> userRegisterFailure = Result.err(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
+    CustomFieldError customFieldError = new CustomFieldError("Email", ErrorCode.USER_EMAIL_ALREADY_EXISTS.defaultMessage());
 
     when(authService.register(userRequest)).thenReturn(userRegisterFailure);
 
@@ -89,12 +80,26 @@ class AuthControllerTest {
     assertEquals(customFieldError.getMessage(), response.getBody().getErrors().get(0).getMessage());
   }
 
+  @Test
+  void shouldReturnInternalServerErrorWhenRegistrationEmailFails() {
+    UserRequestDTO request = new UserRequestDTO("John", "john@example.com", "123");
+    when(authService.register(request)).thenReturn(Result.err(ErrorCode.AUTH_ERROR_SENDING_EMAIL));
+
+    ResponseEntity<ApiResponse<UserResponseDTO>> response = authController.register(request);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("Error sending email.", response.getBody().getMessage());
+    assertEquals("User", response.getBody().getErrors().get(0).getField());
+  }
+
 
   @Test
   void shouldReturnJwtTokenWhenCredentialsAreValid() {
     LoginRequestDTO loginRequest = new LoginRequestDTO("john@example.com", "123");
     LoginResponseDTO loginResponse = new LoginResponseDTO("accessToken-jwt", "refreshToken-jwt");
-    LoginResult loginResult = new LoginSuccess(loginResponse);
+    Result<LoginResponseDTO> loginResult = Result.ok(loginResponse);
     when(authService.login(loginRequest)).thenReturn(loginResult);
 
     ResponseEntity<ApiResponse<LoginResponseDTO>> response = authController.login(loginRequest);
@@ -120,7 +125,7 @@ class AuthControllerTest {
   @Test
   void shouldReturnErrorWhenCredentialsAreInvalid() {
     LoginRequestDTO loginRequestDTO = new LoginRequestDTO("test@gmail.com", "password");
-    LoginResult loginResult = new LoginFailure(AuthError.INVALID_CREDENTIALS);
+    Result<LoginResponseDTO> loginResult = Result.err(ErrorCode.AUTH_INVALID_CREDENTIALS);
 
     when(authService.login(loginRequestDTO)).thenReturn(loginResult);
     ResponseEntity<ApiResponse<LoginResponseDTO>> response = authController.login(loginRequestDTO);
@@ -129,14 +134,14 @@ class AuthControllerTest {
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
     assertEquals("Login failed", response.getBody().getMessage());
-    assertEquals(AuthError.INVALID_CREDENTIALS.getMessage(), response.getBody().getErrors().get(0).getMessage());
+    assertEquals(ErrorCode.AUTH_INVALID_CREDENTIALS.defaultMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
 
   @Test
   void shouldReturnErrorWhenUserIsNotRegistered() {
     LoginRequestDTO loginRequestDTO = new LoginRequestDTO("test@gmail.com", "password");
-    LoginResult loginResult = new LoginFailure(AuthError.USER_NOT_REGISTER);
+    Result<LoginResponseDTO> loginResult = Result.err(ErrorCode.USER_NOT_REGISTERED);
 
     when(authService.login(loginRequestDTO)).thenReturn(loginResult);
     ResponseEntity<ApiResponse<LoginResponseDTO>> response = authController.login(loginRequestDTO);
@@ -145,14 +150,14 @@ class AuthControllerTest {
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
     assertEquals("Login failed", response.getBody().getMessage());
-    assertEquals(AuthError.USER_NOT_REGISTER.getMessage(), response.getBody().getErrors().get(0).getMessage());
+    assertEquals(ErrorCode.USER_NOT_REGISTERED.defaultMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
 
   @Test
   void shouldReturnErrorWhenEmailIsNotVerified() {
     LoginRequestDTO loginRequestDTO = new LoginRequestDTO("test@gmail.com", "password");
-    LoginResult loginResult = new LoginFailure(AuthError.EMAIL_NOT_VERIFIED);
+    Result<LoginResponseDTO> loginResult = Result.err(ErrorCode.AUTH_EMAIL_NOT_VERIFIED);
 
     when(authService.login(loginRequestDTO)).thenReturn(loginResult);
     ResponseEntity<ApiResponse<LoginResponseDTO>> response = authController.login(loginRequestDTO);
@@ -161,7 +166,7 @@ class AuthControllerTest {
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
     assertEquals("Login failed", response.getBody().getMessage());
-    assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), response.getBody().getErrors().get(0).getMessage());
+    assertEquals(ErrorCode.AUTH_EMAIL_NOT_VERIFIED.defaultMessage(), response.getBody().getErrors().get(0).getMessage());
     assertNull(response.getBody().getData());
   }
 
@@ -208,7 +213,7 @@ class AuthControllerTest {
     UserEntity user = new UserEntity(null, "test", "mock@email.com", "mockPass", false);
 
     when(authUtils.getCurrentUser()).thenReturn(user);
-    when(authService.resendVerificationEmail(user)).thenReturn(new VerificationEmailSuccess());
+    when(authService.resendVerificationEmail(user)).thenReturn(Result.ok(null));
 
     ResponseEntity<ApiResponse<Void>> response = authController.resendVerificationEmail();
 
@@ -226,7 +231,7 @@ class AuthControllerTest {
 
     when(authUtils.getCurrentUser()).thenReturn(user);
     when(authService.resendVerificationEmail(user))
-        .thenReturn(new VerificationEmailFailure(AuthError.USER_IS_VERIFIED));
+        .thenReturn(Result.err(ErrorCode.AUTH_USER_ALREADY_VERIFIED));
 
     ResponseEntity<ApiResponse<Void>> response = authController.resendVerificationEmail();
 
@@ -235,7 +240,7 @@ class AuthControllerTest {
     assertNotNull(body);
     assertFalse(body.isSuccess());
     assertEquals("Email not send", body.getMessage());
-    assertEquals(AuthError.USER_IS_VERIFIED.getMessage(), body.getErrors().get(0).getMessage());
+    assertEquals(ErrorCode.AUTH_USER_ALREADY_VERIFIED.defaultMessage(), body.getErrors().get(0).getMessage());
   }
 
   @Test
@@ -244,7 +249,7 @@ class AuthControllerTest {
 
     when(authUtils.getCurrentUser()).thenReturn(user);
     when(authService.resendVerificationEmail(user))
-        .thenReturn(new VerificationEmailFailure(AuthError.EMAIL_NOT_VERIFIED));
+        .thenReturn(Result.err(ErrorCode.AUTH_EMAIL_NOT_VERIFIED));
 
     ResponseEntity<ApiResponse<Void>> response = authController.resendVerificationEmail();
 
@@ -253,13 +258,13 @@ class AuthControllerTest {
     assertNotNull(body);
     assertFalse(body.isSuccess());
     assertEquals("Error sending email", body.getMessage());
-    assertEquals(AuthError.EMAIL_NOT_VERIFIED.getMessage(), body.getErrors().get(0).getMessage());
+    assertEquals(ErrorCode.AUTH_EMAIL_NOT_VERIFIED.defaultMessage(), body.getErrors().get(0).getMessage());
   }
 
   @Test
   void shouldReturnOk_whenForgotPasswordSucceeds()   {
     String email = "test@email.com";
-    ForgotPasswordResult result = new ForgotPasswordSuccess();
+    Result<Void> result = Result.ok(null);
     when(authService.forgotPassword(email)).thenReturn(result);
 
     ResponseEntity<ApiResponse<Void>> response = authController.forgotPassword(email);
@@ -274,7 +279,7 @@ class AuthControllerTest {
   @Test
   void shouldReturnBadRequest_whenUserIsNotRegistered()  {
     String email = "teste@email.com";
-    ForgotPasswordResult failure = new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    Result<Void> failure = Result.err(ErrorCode.USER_NOT_REGISTERED);
     when(authService.forgotPassword(email)).thenReturn(failure);
 
     ResponseEntity<ApiResponse<Void>> response = authController.forgotPassword(email);
@@ -290,7 +295,7 @@ class AuthControllerTest {
   @Test
   void shouldReturnInternalServerError_whenEmailSendingFails()  {
     String email = "teste@email.com";
-    ForgotPasswordResult failure = new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    Result<Void> failure = Result.err(ErrorCode.AUTH_ERROR_SENDING_EMAIL);
     when(authService.forgotPassword(email)).thenReturn(failure);
 
     ResponseEntity<ApiResponse<Void>> response = authController.forgotPassword(email);
@@ -309,7 +314,7 @@ class AuthControllerTest {
     String newPassword = "newPassword";
     PasswordRequest request = new PasswordRequest(newPassword);
     UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
-    ForgotPasswordResult result = new ForgotPasswordSuccess();
+    Result<Void> result = Result.ok(null);
     when(authUtils.getCurrentUser()).thenReturn(mockUser);
     when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
 
@@ -331,7 +336,7 @@ class AuthControllerTest {
     PasswordRequest request = new PasswordRequest(newPassword);
     UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
 
-    ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+    Result<Void> result = Result.err(ErrorCode.USER_NOT_REGISTERED);
     when(authUtils.getCurrentUser()).thenReturn(mockUser);
     when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
 
@@ -355,7 +360,7 @@ class AuthControllerTest {
     PasswordRequest request = new PasswordRequest(newPassword);
     UserEntity mockUser = new UserEntity(uuid, "someName", "someEmail@email.com", "somePassword", true);
 
-    ForgotPasswordFailure result = new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+    Result<Void> result = Result.err(ErrorCode.AUTH_ERROR_SENDING_EMAIL);
     when(authUtils.getCurrentUser()).thenReturn(mockUser);
     when(authService.resetPassword(mockUser.getEmail(), newPassword)).thenReturn(result);
 

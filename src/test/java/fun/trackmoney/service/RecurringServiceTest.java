@@ -18,10 +18,8 @@ import fun.trackmoney.testutils.TransactionResponseDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
-import fun.trackmoney.dto.transaction.internal.TransactionFailure;
-import fun.trackmoney.dto.transaction.internal.TransactionResult;
-import fun.trackmoney.dto.transaction.internal.TransactionSuccess;
-import fun.trackmoney.enums.TransactionsError;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.TransactionService;
 import fun.trackmoney.entity.UserEntity;
 import org.junit.jupiter.api.Test;
@@ -192,7 +190,7 @@ class RecurringServiceTest {
     RecurringEntity recurring = RecurringEntityFactory.defaultEntity();
     LocalDateTime expectedNextDate = LocalDateTime.now().plusMonths(1);
     TransactionResponseDTO responseDTO = TransactionResponseDTOFactory.defaultTransactionResponse();
-    TransactionResult successResult = new TransactionSuccess(responseDTO);
+    Result<TransactionResponseDTO> successResult = Result.ok(responseDTO);
 
     when(transactionService.createTransaction(
         any(CreateTransactionDTO.class),
@@ -229,7 +227,7 @@ class RecurringServiceTest {
   void processRecurring_shouldThrowWhenTransactionFails() {
     RecurringService spyService = Mockito.spy(recurringService);
     RecurringEntity recurring = RecurringEntityFactory.defaultEntity();
-    TransactionFailure failure = new TransactionFailure(TransactionsError.ACCOUNT_NOT_FOUND);
+    Result<TransactionResponseDTO> failure = Result.err(ErrorCode.TRANSACTION_ACCOUNT_NOT_FOUND);
 
     when(transactionService.createTransaction(
         Mockito.<CreateTransactionDTO>any(),

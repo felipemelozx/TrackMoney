@@ -7,11 +7,9 @@ import fun.trackmoney.entity.AccountEntity;
 import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
-import fun.trackmoney.dto.budget.internal.BudgetFailure;
-import fun.trackmoney.dto.budget.internal.BudgetResult;
-import fun.trackmoney.dto.budget.internal.BudgetSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.BudgetsEntity;
-import fun.trackmoney.enums.BudgetError;
 import fun.trackmoney.mapper.BudgetMapper;
 import fun.trackmoney.repository.projection.BudgetCheckProjection;
 import fun.trackmoney.repository.BudgetsRepository;
@@ -97,13 +95,11 @@ class BudgetsServiceTest {
     when(budgetsRepository.save(any(BudgetsEntity.class))).thenReturn(savedEntity);
     when(budgetMapper.entityToResponseDTO(savedEntity)).thenReturn(budgetResponseDTO);
 
-    BudgetResult result = budgetsService.create(createDTO, userEntity);
+    Result<BudgetResponseDTO> result = budgetsService.create(createDTO, userEntity);
 
     assertNotNull(result);
-    assertInstanceOf(BudgetSuccess.class, result);
-
-    BudgetSuccess budgetSuccess = (BudgetSuccess) result;
-    assertEquals(1, budgetSuccess.response().budgetId());
+    assertInstanceOf(Result.Ok.class, result);
+    assertEquals(1, ((Result.Ok<BudgetResponseDTO>) result).value().budgetId());
   }
 
 
@@ -114,12 +110,11 @@ class BudgetsServiceTest {
 
     when(categoryService.findEntityById(dto.categoryId())).thenReturn(null);
 
-    BudgetResult result = budgetsService.create(dto, user);
+    Result<BudgetResponseDTO> result = budgetsService.create(dto, user);
 
-    assertInstanceOf(BudgetFailure.class, result);
-    BudgetFailure failure = (BudgetFailure) result;
-
-    assertEquals(BudgetError.CATEGORY_NOT_FOUND, failure.reason());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.BUDGET_CREATE_CATEGORY_NOT_FOUND,
+        ((Result.Err<BudgetResponseDTO>) result).error().code());
   }
 
 
@@ -139,12 +134,10 @@ class BudgetsServiceTest {
 
     when(budgetsRepository.checkBudget(user.getAccount(), category)).thenReturn(mockCheck);
 
-    BudgetResult result = budgetsService.create(dto, user);
+    Result<BudgetResponseDTO> result = budgetsService.create(dto, user);
 
-    assertInstanceOf(BudgetFailure.class, result);
-    BudgetFailure failure = (BudgetFailure) result;
-
-    assertEquals(BudgetError.EXIST_BUDGET, failure.reason());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.BUDGET_ALREADY_EXISTS, ((Result.Err<BudgetResponseDTO>) result).error().code());
   }
 
   @Test
@@ -163,12 +156,10 @@ class BudgetsServiceTest {
 
     when(budgetsRepository.checkBudget(user.getAccount(), category)).thenReturn(mockCheck);
 
-    BudgetResult result = budgetsService.create(dto, user);
+    Result<BudgetResponseDTO> result = budgetsService.create(dto, user);
 
-    assertInstanceOf(BudgetFailure.class, result);
-    BudgetFailure failure = (BudgetFailure) result;
-
-    assertEquals(BudgetError.PERCENT_LIMIT_EXCEEDED, failure.reason());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.BUDGET_PERCENT_LIMIT_EXCEEDED, ((Result.Err<BudgetResponseDTO>) result).error().code());
   }
 
   @Test
@@ -285,10 +276,10 @@ class BudgetsServiceTest {
     when(budgetsRepository.save(existing)).thenReturn(saved);
     when(budgetMapper.entityToResponseDTO(saved)).thenReturn(response);
 
-    BudgetResult result = budgetsService.update(dto, existing.getBudgetId(), user);
+    Result<BudgetResponseDTO> result = budgetsService.update(dto, existing.getBudgetId(), user);
 
-    assertInstanceOf(BudgetSuccess.class, result);
-    assertEquals(response, ((BudgetSuccess) result).response());
+    assertInstanceOf(Result.Ok.class, result);
+    assertEquals(response, ((Result.Ok<BudgetResponseDTO>) result).value());
   }
 
   @Test
@@ -298,10 +289,10 @@ class BudgetsServiceTest {
 
     when(categoryService.findEntityById(dto.categoryId())).thenReturn(null);
 
-    BudgetResult result = budgetsService.update(dto, 1, user);
+    Result<BudgetResponseDTO> result = budgetsService.update(dto, 1, user);
 
-    assertInstanceOf(BudgetFailure.class, result);
-    assertEquals(BudgetError.CATEGORY_NOT_FOUND, ((BudgetFailure) result).reason());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.BUDGET_CATEGORY_NOT_FOUND, ((Result.Err<BudgetResponseDTO>) result).error().code());
   }
 
   @Test
@@ -314,10 +305,10 @@ class BudgetsServiceTest {
     when(budgetsRepository.findByBudgetIdAndAccount(1, user.getAccount()))
         .thenReturn(Optional.empty());
 
-    BudgetResult result = budgetsService.update(dto, 1, user);
+    Result<BudgetResponseDTO> result = budgetsService.update(dto, 1, user);
 
-    assertInstanceOf(BudgetFailure.class, result);
-    assertEquals(BudgetError.BUDGET_NOT_FOUND, ((BudgetFailure) result).reason());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.BUDGET_NOT_FOUND, ((Result.Err<BudgetResponseDTO>) result).error().code());
   }
 
   @Test
@@ -334,10 +325,10 @@ class BudgetsServiceTest {
     when(budgetsRepository.getTotalPercentExcludingId(user.getAccount(), existing.getBudgetId()))
         .thenReturn(50); // 50 + 60 > 100
 
-    BudgetResult result = budgetsService.update(dto, existing.getBudgetId(), user);
+    Result<BudgetResponseDTO> result = budgetsService.update(dto, existing.getBudgetId(), user);
 
-    assertInstanceOf(BudgetFailure.class, result);
-    assertEquals(BudgetError.PERCENT_LIMIT_EXCEEDED, ((BudgetFailure) result).reason());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.BUDGET_PERCENT_LIMIT_EXCEEDED, ((Result.Err<BudgetResponseDTO>) result).error().code());
   }
 
   @Test
