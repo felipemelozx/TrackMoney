@@ -7,11 +7,11 @@ public enum ErrorCode {
   POT_EXPENSE_EXCEEDS_BALANCE("Money is greater than current amount!", "Money"),
   POT_TARGET_BELOW_CURRENT("Target amount cannot be less than current amount!", "targetAmount"),
   BUDGET_ALREADY_EXISTS("A budget already exists for this category.", "category"),
-  BUDGET_CREATE_CATEGORY_NOT_FOUND("Category not found.", "categoryId"),
-  BUDGET_CATEGORY_NOT_FOUND("Category not found.", "categoryId"),
+  BUDGET_CREATE_CATEGORY_NOT_FOUND(Messages.CATEGORY_NOT_FOUND, "categoryId"),
+  BUDGET_CATEGORY_NOT_FOUND(Messages.CATEGORY_NOT_FOUND, "categoryId"),
   BUDGET_PERCENT_LIMIT_EXCEEDED("Budget percentage limit exceeded.", "percent"),
   BUDGET_NOT_FOUND("Budget not found.", "id"),
-  TRANSACTION_CATEGORY_NOT_FOUND("Category not found.", "Category"),
+  TRANSACTION_CATEGORY_NOT_FOUND(Messages.CATEGORY_NOT_FOUND, "Category"),
   TRANSACTION_NOT_FOUND("Transaction not found.", "Transaction"),
   TRANSACTION_ACCOUNT_NOT_FOUND("Account not found to update balance", "Account"),
   USER_EMAIL_ALREADY_EXISTS("The provided email is already registered.", "Email"),
@@ -24,6 +24,12 @@ public enum ErrorCode {
 
   private final String defaultMessage;
   private final String defaultField;
+
+  private static final class Messages {
+    private static final String CATEGORY_NOT_FOUND = "Category not found.";
+
+    private Messages() { }
+  }
 
   ErrorCode(String defaultMessage, String defaultField) {
     this.defaultMessage = defaultMessage;

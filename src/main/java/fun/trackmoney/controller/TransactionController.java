@@ -56,7 +56,7 @@ public class TransactionController {
           .data(responseDTO)
           .build();
       return ResponseEntity.status(HttpStatus.CREATED).body(body);
-    }, error -> HttpErrorMapper.toResponse(error));
+    }, HttpErrorMapper::toResponse);
   }
 
   @GetMapping
@@ -138,7 +138,7 @@ public class TransactionController {
             .message("Update transaction")
             .data(responseDTO)
             .build()),
-        error -> HttpErrorMapper.toResponse(error));
+        HttpErrorMapper::toResponse);
   }
 
   @DeleteMapping("/{id}")
