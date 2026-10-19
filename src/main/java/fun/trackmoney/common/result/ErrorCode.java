@@ -12,6 +12,7 @@ public enum ErrorCode {
   BUDGET_PERCENT_LIMIT_EXCEEDED("Budget percentage limit exceeded.", "percent"),
   BUDGET_NOT_FOUND("Budget not found.", "id"),
   TRANSACTION_CATEGORY_NOT_FOUND("Category not found.", "Category"),
+  TRANSACTION_NOT_FOUND("Transaction not found.", "Transaction"),
   TRANSACTION_ACCOUNT_NOT_FOUND("Account not found to update balance", "Account"),
   USER_EMAIL_ALREADY_EXISTS("The provided email is already registered.", "Email"),
   USER_NOT_REGISTERED("User is not registered in the system.", "Email"),

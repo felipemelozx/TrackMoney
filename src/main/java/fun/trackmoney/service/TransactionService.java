@@ -9,7 +9,6 @@ import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
 import fun.trackmoney.common.result.ErrorCode;
 import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.TransactionEntity;
-import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.mapper.TransactionMapper;
 import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.entity.UserEntity;
@@ -24,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -77,17 +77,18 @@ public class TransactionService {
     return transactionMapper.toResponseDTOList(transactionRepository.findAllByAccountId(accountId));
   }
 
-  public TransactionResponseDTO findById(Integer id, UserEntity currentUser) {
-    TransactionEntity transaction = transactionRepository.findByIdAndAccount(id, currentUser.getAccount())
-        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
-    return transactionMapper.toResponseDTO(transaction);
+  public Optional<TransactionEntity> findById(Integer id, UserEntity currentUser) {
+    return transactionRepository.findByIdAndAccount(id, currentUser.getAccount());
   }
 
   @Transactional
-  public TransactionResponseDTO update(Integer id, TransactionUpdateDTO dto, UserEntity currentUser) {
+  public Result<TransactionResponseDTO> update(Integer id, TransactionUpdateDTO dto, UserEntity currentUser) {
     AccountEntity account = currentUser.getAccount();
     TransactionEntity oldTransaction = transactionRepository.findByIdAndAccount(id, account)
-        .orElseThrow(() -> new TransactionNotFoundException("Transaction not found."));
+        .orElse(null);
+    if (oldTransaction == null) {
+      return Result.err(ErrorCode.TRANSACTION_NOT_FOUND);
+    }
 
     if (oldTransaction.getTransactionType() == TransactionType.INCOME) {
       accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), false);
@@ -105,7 +106,7 @@ public class TransactionService {
     oldTransaction.setTransactionType(dto.transactionType());
     oldTransaction.setTransactionDate(dto.transactionDate());
 
-    return transactionMapper.toResponseDTO(transactionRepository.save(oldTransaction));
+    return Result.ok(transactionMapper.toResponseDTO(transactionRepository.save(oldTransaction)));
   }
 
   @Transactional

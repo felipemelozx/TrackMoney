@@ -3,7 +3,6 @@ package fun.trackmoney.config.exception;
 import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.exception.CategoryNotFoundException;
-import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -118,24 +117,6 @@ class RestExceptionHandlerTest {
     CustomFieldError error = apiResponse.getErrors().get(0);
     assertEquals("Account", error.getField());
     assertEquals("Account not found.", error.getMessage());
-  }
-
-  @Test
-  void TransactionNotFound_shouldReturnNotFoundWithError() {
-    TransactionNotFoundException exception = new TransactionNotFoundException("Transaction not found.");
-    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.transactionNotFound(exception);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    ApiResponse<Void> apiResponse = response.getBody();
-    assertNotNull(apiResponse);
-    assertFalse(apiResponse.isSuccess());
-    assertEquals("Transaction not found.", apiResponse.getMessage());
-    assertNull(apiResponse.getData());
-    assertNotNull(apiResponse.getErrors());
-    assertEquals(1, (apiResponse.getErrors()).size());
-    CustomFieldError error = apiResponse.getErrors().get(0);
-    assertEquals("Transaction", error.getField());
-    assertEquals("Transaction not found.", error.getMessage());
   }
 
   @Test

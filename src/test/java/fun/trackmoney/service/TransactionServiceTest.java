@@ -18,7 +18,6 @@ import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
 import fun.trackmoney.common.result.ErrorCode;
 import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.TransactionEntity;
-import fun.trackmoney.exception.TransactionNotFoundException;
 import fun.trackmoney.mapper.TransactionMapper;
 import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.entity.UserEntity;
@@ -133,24 +132,22 @@ class TransactionServiceTest {
   @Test
   void findById_shouldReturnTransactionResponseDTO() {
     TransactionEntity entity = TransactionEntityFactory.defaultExpenseNow();
-    TransactionResponseDTO dto = TransactionResponseDTOFactory.defaultTransactionResponse();
     UserEntity user = UserEntityFactory.defaultUser();
 
     when(transactionRepository.findByIdAndAccount(entity.getTransactionId(), user.getAccount())).thenReturn(Optional.of(entity));
-    when(transactionMapper.toResponseDTO(entity)).thenReturn(dto);
+    Optional<TransactionEntity> result = transactionService.findById(1, user);
 
-    TransactionResponseDTO result = transactionService.findById(1, user);
-
-    assertEquals("buy bread", result.description());
+    assertEquals(Optional.of(entity), result);
+    verifyNoInteractions(transactionMapper);
   }
 
   @Test
-  void findById_shouldThrowExceptionIfNotFound() {
+  void findById_shouldReturnEmptyIfNotFound() {
     UserEntity user = UserEntityFactory.defaultUser();
 
     when(transactionRepository.findByIdAndAccount(1, user.getAccount())).thenReturn(Optional.empty());
-    TransactionNotFoundException exception = assertThrows(TransactionNotFoundException.class, () -> transactionService.findById(1, user));
-    assertEquals("Transaction not found.", exception.getMessage());
+    assertEquals(Optional.empty(), transactionService.findById(1, user));
+    verifyNoInteractions(transactionMapper);
   }
 
   @Test
@@ -168,9 +165,9 @@ class TransactionServiceTest {
     when(transactionRepository.save(entity)).thenReturn(entity);
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);
 
-    TransactionResponseDTO result = transactionService.update(1, dto, currentUser);
+    Result<TransactionResponseDTO> result = transactionService.update(1, dto, currentUser);
 
-    assertEquals("buy bread", result.description());
+    assertEquals(Result.ok(dtoResponse), result);
   }
 
   @Test
@@ -188,9 +185,21 @@ class TransactionServiceTest {
     when(transactionRepository.save(entity)).thenReturn(entity);
     when(transactionMapper.toResponseDTO(entity)).thenReturn(dtoResponse);
 
-    TransactionResponseDTO result = transactionService.update(1, dto, currentUser);
+    Result<TransactionResponseDTO> result = transactionService.update(1, dto, currentUser);
 
-    assertEquals("buy bread", result.description());
+    assertEquals(Result.ok(dtoResponse), result);
+  }
+
+  @Test
+  void update_shouldReturnNotFoundWithoutChangingBalanceOrSaving() {
+    UserEntity user = UserEntityFactory.defaultUser();
+    when(transactionRepository.findByIdAndAccount(1, user.getAccount())).thenReturn(Optional.empty());
+
+    var result = transactionService.update(1, TransactionUpdateDTOFactory.defaultUpdateTransaction(), user);
+
+    assertEquals(Result.err(ErrorCode.TRANSACTION_NOT_FOUND), result);
+    verify(transactionRepository, never()).save(any());
+    verifyNoInteractions(accountService, categoryService, transactionMapper);
   }
 
 
