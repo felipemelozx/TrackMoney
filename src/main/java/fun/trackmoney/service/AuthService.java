@@ -7,7 +7,7 @@ import fun.trackmoney.common.result.Result;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.infra.jwt.JwtService;
 import fun.trackmoney.infra.email.EmailService;
-import fun.trackmoney.infra.redis.CacheManagerService;
+import fun.trackmoney.infra.cache.CacheManagerService;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.entity.UserEntity;
 import jakarta.mail.MessagingException;
