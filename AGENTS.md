@@ -2,12 +2,12 @@
 
 ## Projeto
 
-TrackMoney é uma API de gestão financeira pessoal construída com Java 17 e Spring Boot 3.4.5. O projeto usa Maven, PostgreSQL, Redis, Flyway e JWT.
+TrackMoney é uma API de gestão financeira pessoal construída com Java 17 e Spring Boot 3.4.5. O projeto usa Maven, PostgreSQL, Caffeine, Flyway e JWT.
 
 ## Comandos
 
 ```bash
-# Subir PostgreSQL e Redis
+# Subir PostgreSQL
 docker compose -f docker/docker-compose.yaml up -d
 
 # Executar com Swagger habilitado (perfil dev)
@@ -33,7 +33,7 @@ O código Java fica em `src/main/java/fun/trackmoney/` e é organizado por camad
 - `entity/`: entidades JPA.
 - `dto/`: contratos da API, agrupados por domínio.
 - `mapper/`: conversões entre DTOs e entidades com MapStruct.
-- `config/` e `infra/`: configuração da aplicação e integrações (segurança, JWT, e-mail e Redis).
+- `config/` e `infra/`: configuração da aplicação e integrações (segurança, JWT, e-mail e cache).
 - `exception/`, `enums/` e `utils/`: componentes compartilhados.
 - `seed/`: geração de dados de desenvolvimento.
 
