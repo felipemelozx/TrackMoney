@@ -35,4 +35,8 @@ public interface RecurringRepository extends JpaRepository<RecurringEntity, Long
   @Modifying
   @Query("DELETE FROM RecurringEntity r WHERE r.id = :id AND r.account.accountId = :accountId")
   void deleteByIdAndAccountId(Long id, Integer accountId);
+
+  @Modifying
+  @Query("DELETE FROM RecurringEntity r WHERE r.account.accountId = :accountId")
+  void deleteAllByAccountId(@Param("accountId") Integer accountId);
 }

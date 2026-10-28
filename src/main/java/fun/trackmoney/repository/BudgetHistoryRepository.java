@@ -3,6 +3,7 @@ package fun.trackmoney.repository;
 import fun.trackmoney.entity.BudgetHistoryEntity;
 import fun.trackmoney.entity.BudgetsEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -94,6 +95,10 @@ public interface BudgetHistoryRepository extends JpaRepository<BudgetHistoryEnti
   );
 
   void deleteByBudgetBudgetId(Integer budgetId);
+
+  @Modifying
+  @Query("DELETE FROM BudgetHistoryEntity bh WHERE bh.account.accountId = :accountId")
+  void deleteAllByAccountAccountId(@Param("accountId") Integer accountId);
 
   // ===== Metrics Queries =====
 

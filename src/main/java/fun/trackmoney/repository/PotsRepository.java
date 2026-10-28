@@ -20,4 +20,8 @@ public interface PotsRepository extends JpaRepository<PotsEntity, Long> {
   @Modifying
   @Query("DELETE FROM PotsEntity p WHERE p.account = :account AND p.potId = :id")
   void deleteByIdAccount(@Param("id") Long id, @Param("account") AccountEntity account);
+
+  @Modifying
+  @Query("DELETE FROM PotsEntity p WHERE p.account = :account")
+  void deleteAllByAccount(@Param("account") AccountEntity account);
 }

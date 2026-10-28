@@ -6,6 +6,7 @@ import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
 import fun.trackmoney.service.AccountService;
 import fun.trackmoney.utils.AuthUtils;
 import fun.trackmoney.utils.response.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +35,8 @@ public class AccountController {
 
   @PostMapping
   public ResponseEntity<ApiResponse<AccountResponseDTO>> createAccount(@RequestBody AccountRequestDTO dto) {
-    AccountResponseDTO createdAccount = accountService.createAccount(dto);
+    UUID userId = authUtils.getCurrentUser().getUserId();
+    AccountResponseDTO createdAccount = accountService.createAccount(dto, userId);
     return ResponseEntity.status(HttpStatus.CREATED).body(
         ApiResponse.<AccountResponseDTO>success()
             .message("Account successfully created.")
@@ -59,7 +61,8 @@ public class AccountController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<AccountResponseDTO>> findAccountById(@PathVariable Integer id) {
-    AccountResponseDTO account = accountService.findAccountById(id);
+    UUID userId = authUtils.getCurrentUser().getUserId();
+    AccountResponseDTO account = accountService.findAccountById(id, userId);
     return ResponseEntity.ok(
         ApiResponse.<AccountResponseDTO>success()
             .message("Account retrieved successfully.")
@@ -69,9 +72,10 @@ public class AccountController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<ApiResponse<AccountResponseDTO>> updateAccountById(@PathVariable Integer id,
-                                                                           @RequestBody AccountUpdateRequestDTO dto) {
-    AccountResponseDTO updatedAccount = accountService.updateAccountById(id, dto);
+  public ResponseEntity<ApiResponse<AccountResponseDTO>> updateAccountById(
+      @PathVariable Integer id, @RequestBody @Valid AccountUpdateRequestDTO dto) {
+    UUID userId = authUtils.getCurrentUser().getUserId();
+    AccountResponseDTO updatedAccount = accountService.updateAccountById(id, dto, userId);
     return ResponseEntity.ok(
         ApiResponse.<AccountResponseDTO>success()
             .message("Account updated successfully.")
@@ -82,7 +86,8 @@ public class AccountController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteAccountById(@PathVariable Integer id) {
-    accountService.deleteById(id);
+    UUID userId = authUtils.getCurrentUser().getUserId();
+    accountService.deleteById(id, userId);
     return ResponseEntity.ok(
         ApiResponse.<Void>success()
             .message("Account deleted successfully.")

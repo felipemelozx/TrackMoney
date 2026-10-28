@@ -1,6 +1,7 @@
 package fun.trackmoney.config.exception;
 
 import fun.trackmoney.exception.AccountNotFoundException;
+import fun.trackmoney.exception.AccountHasRelatedDataException;
 import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.exception.CategoryNotFoundException;
 import fun.trackmoney.exception.UserNotFoundException;
