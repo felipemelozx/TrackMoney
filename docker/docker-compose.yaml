@@ -15,20 +15,9 @@ services:
     networks:
       - app-network
 
-  redis:
-    image: redis:7
-    container_name: redis-trackmoney
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge
 
 volumes:
   postgres_data:
-  redis_data:
