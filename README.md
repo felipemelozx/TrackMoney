@@ -40,7 +40,7 @@ TrackMoney é mais do que uma simples aplicação de controle financeiro - é um
 | **Backend** | Java 17, Spring Boot 3.4, Spring Security 6, JPA/Hibernate |
 | **Arquitetura** | Layered Architecture, DTOs, MapStruct, Exception Handling |
 | **Segurança** | JWT, BCrypt, CORS configurado, proteção CSRF, validação de entrada |
-| **Persistência** | PostgreSQL, Redis Cache, Flyway Migrations, transações |
+| **Persistência** | PostgreSQL, Caffeine Cache, Flyway Migrations, transações |
 | **Testes** | JUnit 5, Mockito, testes unitários e de integração, JaCoCo |
 | **DevOps** | Docker, Docker Compose, GitHub Actions, self-hosted runner |
 | **Qualidade** | SonarCloud, Checkstyle, cobertura de código, análise estática |
@@ -67,7 +67,7 @@ TrackMoney é mais do que uma simples aplicação de controle financeiro - é um
 - [x] **CORS Restrito**: Apenas frontend autorizado pode consumir a API
 
 ### Infraestrutura e Qualidade
-- [x] **Cache Redis**: Otimização de performance para dados frequentes
+- [x] **Cache Caffeine**: Otimização de performance para dados frequentes em memória
 - [x] **Envio de E-mails**: Templates Thymeleaf para notificações profissionais
 - [x] **Migrations Versionadas**: Flyway para controle de schema
 - [x] **Health Checks**: Endpoints para monitoramento de disponibilidade
@@ -138,7 +138,7 @@ O projeto segue rigorosamente a **separação de responsabilidades** através de
 - Stateless: permite escalabilidade horizontal sem sticky sessions
 - Access token curto: reduz janela de exposição em caso de vazamento
 - Refresh token longo: melhor UX (usuário não precisa fazer login frequentemente)
-- Possibilidade de revogação via Redis (refresh tokens podem ser blacklistados)
+- Possibilidade de revogação via cache (refresh tokens podem ser blacklistados)
 
 #### 4. **Authorities Granulares**
 **Decisão**: Usar authorities específicas (USER_ROLES, USER_UNVERIFIED, etc.) ao invés de apenas roles.
@@ -158,12 +158,12 @@ O projeto segue rigorosamente a **separação de responsabilidades** através de
 - Rollback facilitado em caso de problemas
 - Integração com CI/CD para validação automática
 
-#### 6. **Redis para Cache**
-**Decisão**: Implementar camada de cache com Redis.
+#### 6. **Caffeine para Cache**
+**Decisão**: Implementar camada de cache em memória com Caffeine.
 
 **Justificativa**:
-- Redução significativa de carga no PostgreSQL
-- Latência ultra-baixa para dados frequentes (categorias, configurações)
+- Redução significativa de carga no PostgreSQL e alta performance in-memory
+- Latência ultra-baixa sem necessidade de gerenciar infraestrutura externa de Redis
 
 ## 🛠️ Stack Tecnológica
 
@@ -200,7 +200,7 @@ O projeto segue rigorosamente a **separação de responsabilidades** através de
 | Tecnologia | Versão | Propósito |
 |------------|--------|-----------|
 | **PostgreSQL** | 15+ | Banco de dados relacional ACID |
-| **Redis** | 7+ | Cache em memória e sessões |
+| **Caffeine** | 3+ | Cache de alta performance em memória |
 | **Flyway** | 9.8.1 | Migrations e versionamento de schema |
 
 
@@ -311,7 +311,7 @@ A API implementa **estratégia de segurança dual-token** com Access Token de cu
 ┌─────────────────┐
 │  Refresh Token  │  ← Usado APENAS para renovar access token
 │  (7 dias)       │  ← Armazenado em HttpOnly cookie (frontend)
-│                 │  ← Pode ser revogado via Redis
+│                 │  ← Pode ser revogado via cache
 └─────────────────┘
 ```
 
@@ -437,18 +437,18 @@ FRONT_URL=http://localhost:4200
 > openssl rand -base64 64
 > ```
 
-#### 3. Suba PostgreSQL e Redis
+#### 3. Suba o PostgreSQL
 
 ```bash
 docker compose -f docker/docker-compose.yaml up -d
 ```
 
-Aguarde os containers iniciarem:
+Aguarde o container iniciar:
 ```bash
 docker compose -f docker/docker-compose.yaml ps
 ```
 
-Deve mostrar `postgres` e `redis` como `running`.
+Deve mostrar `postgres` como `running`.
 
 #### 4. Execute a Aplicação
 
@@ -637,7 +637,7 @@ graph LR
 - Checkout código
 - Setup Java 17
 - Cache Maven dependencies
-- Docker Compose up (PostgreSQL + Redis)
+- Docker Compose up (PostgreSQL)
 - Run tests (unit + integration)
 - Generate coverage reports (JaCoCo, Checkstyle)
 - Upload artifacts

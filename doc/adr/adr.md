@@ -33,7 +33,7 @@ We will adopt the following architectural decisions for the project:
 9. **Infrastructure:**
     - Docker and Docker Compose for local environment; AWS for production, managed with Terraform.
 10. **Optional Evolutions:**
-    - Cache with Redis, PDF report generation, and external integrations.
+    - In-memory cache with Caffeine, PDF report generation, and external integrations.
 
 ### Pedagogical Objective
 
@@ -112,7 +112,7 @@ Deployment to AWS requires configuration of resources such as EC2 (for the appli
 - **Quality:** CI/CD from Sprint 1, with linting, tests, and static analysis, ensures robust code.
 - **Learning:** Stack (Spring Boot, React, CI/CD) covers modern full-stack development fundamentals.
 - **Documentation:** OpenAPI and ADRs facilitate maintenance and technical presentation.
-- **Flexibility:** Clean Architecture and well-defined layers allow evolutions (Redis, PDF, Google Sheets) without major refactoring.
+- **Flexibility:** Clean Architecture and well-defined layers allow evolutions (Caffeine, PDF, Google Sheets) without major refactoring.
 
 ### Negative
 
@@ -143,13 +143,13 @@ Deployment to AWS requires configuration of resources such as EC2 (for the appli
 ## 5. **Sprint 7: DevOps**
 
 - **Docker Multi-stage Build**: Create a multi-stage Dockerfile to optimize the image size and build process. The first stage compiles the application, and the second stage packages it into a minimal runtime image.[Java Tech Blog](https://javanexus.com/blog/docker-compose-spring-boot-postgresql?utm_source=chatgpt.com)
-- **Docker Compose**: Set up a `docker-compose.yml` file to define and run multi-container Docker applications, including services for the application, PostgreSQL database, and Redis cache.
+- **Docker Compose**: Set up a `docker-compose.yml` file to define and run multi-container Docker applications, including services for the application and PostgreSQL database.
 - **GitHub Actions CI/CD Pipeline**: Configure GitHub Actions workflows for continuous integration and deployment. The pipeline should include steps for code checkout, JDK setup, Maven build, artifact archiving, and deployment to AWS EC2 instances using SCP and SSH.[Medium](https://medium.com/%40muhibgazi/spring-boot-application-deployment-to-aws-ec2-with-github-actions-731ce940a135?utm_source=chatgpt.com)
 - **Health Checks with Spring Boot Actuator**: Integrate Spring Boot Actuator to provide production-ready features such as health checks, metrics, and application information. Configure health endpoints to monitor the application's status.
 
 ## 6. **Sprint 8: Optimizations**
 
-- **Redis Caching**: Implement caching mechanisms using Redis to improve application performance by reducing a database load for frequently accessed data.
+- **Caffeine Caching**: Implement caching mechanisms using Caffeine to improve application performance by reducing database load for frequently accessed data.
 - **PDF Reports Generation**: Develop functionality to generate PDF reports for financial summaries, transaction histories, and other relevant data.
 - **Google Sheets Integration**: Integrate with Google Sheets API to allow users to export data directly to spreadsheets for further analysis and reporting.
 - **Automatic Deployment on Merge**: Configure GitHub Actions to trigger automatic deployment to AWS upon merging changes into the main branch, ensuring continuous delivery.
