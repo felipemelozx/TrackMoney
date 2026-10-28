@@ -8,7 +8,7 @@ spring:
     baseline-on-migrate: true
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/developerDB}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/${POSTGRES_DB}}
     username: ${SPRING_DATASOURCE_USERNAME:developerDB}
     password: ${SPRING_DATASOURCE_PASSWORD:developerDB}
     driver-class-name: org.postgresql.Driver
