@@ -3,11 +3,9 @@ package fun.trackmoney.service;
 import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
-import fun.trackmoney.dto.budget.internal.BudgetFailure;
-import fun.trackmoney.dto.budget.internal.BudgetResult;
-import fun.trackmoney.dto.budget.internal.BudgetSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.BudgetsEntity;
-import fun.trackmoney.enums.BudgetError;
 import fun.trackmoney.mapper.BudgetMapper;
 import fun.trackmoney.repository.BudgetsRepository;
 import fun.trackmoney.entity.CategoryEntity;
@@ -45,23 +43,23 @@ public class BudgetsService {
   }
 
   @Transactional
-  public BudgetResult create(BudgetCreateDTO dto, UserEntity currentUser) {
+  public Result<BudgetResponseDTO> create(BudgetCreateDTO dto, UserEntity currentUser) {
     var account = currentUser.getAccount();
     var category = categoryService.findEntityById(dto.categoryId());
 
     if (category == null) {
       String message = "Category not found with this id: " + dto.categoryId();
-      return new BudgetFailure(BudgetError.CATEGORY_NOT_FOUND, message);
+      return Result.err(ErrorCode.BUDGET_CREATE_CATEGORY_NOT_FOUND, "categoryId", message);
     }
 
     var check = budgetsRepository.checkBudget(account, category);
 
     if (check.getCategoryExists()) {
-      return new BudgetFailure(BudgetError.EXIST_BUDGET, "Já existe um budget para esta categoria.");
+      return Result.err(ErrorCode.BUDGET_ALREADY_EXISTS, "category", "Já existe um budget para esta categoria.");
     }
 
     if (check.getTotalPercent() + dto.percent() > 100) {
-      return new BudgetFailure(BudgetError.PERCENT_LIMIT_EXCEEDED,
+      return Result.err(ErrorCode.BUDGET_PERCENT_LIMIT_EXCEEDED, "percent",
           "A soma das porcentagens ultrapassa 100%. Soma atual: "
           + check.getTotalPercent() + "%, valor disponível: " + (100 - check.getTotalPercent())
       );
@@ -72,7 +70,7 @@ public class BudgetsService {
         .setCategory(category)
         .setPercent(dto.percent());
     var data = budgetMapper.entityToResponseDTO(budgetsRepository.save(budget));
-    return new BudgetSuccess(data);
+    return Result.ok(data);
   }
 
   public List<BudgetResponseDTO> findAllBudgets(UserEntity currentUser) {
@@ -121,12 +119,12 @@ public class BudgetsService {
   }
 
   @Transactional
-  public BudgetResult update(BudgetCreateDTO dto, Integer id, UserEntity currentUser) {
+  public Result<BudgetResponseDTO> update(BudgetCreateDTO dto, Integer id, UserEntity currentUser) {
 
     var category = categoryService.findEntityById(dto.categoryId());
     if (category == null) {
-      return new BudgetFailure(
-          BudgetError.CATEGORY_NOT_FOUND,
+      return Result.err(
+          ErrorCode.BUDGET_CATEGORY_NOT_FOUND, "categoryId",
           "The category with this id: " + dto.categoryId() + " was not found."
       );
     }
@@ -136,8 +134,8 @@ public class BudgetsService {
 
 
     if (budget == null) {
-      return new BudgetFailure(
-          BudgetError.BUDGET_NOT_FOUND,
+      return Result.err(
+          ErrorCode.BUDGET_NOT_FOUND, "id",
           "The budget with this id: " + id + " was not found."
       );
     }
@@ -147,8 +145,8 @@ public class BudgetsService {
 
     if (newTotal > 100) {
       int maxAllowed = 100 - totalWithoutCurrent;
-      return new BudgetFailure(
-          BudgetError.PERCENT_LIMIT_EXCEEDED,
+      return Result.err(
+          ErrorCode.BUDGET_PERCENT_LIMIT_EXCEEDED, "percent",
           "The new percent exceeds the limit of 100%. The max value allowed is: " + maxAllowed + "%"
       );
     }
@@ -158,7 +156,7 @@ public class BudgetsService {
     var budgetUpdated = budgetsRepository.save(budget);
     var budgetResponseDTO = budgetMapper.entityToResponseDTO(budgetUpdated);
 
-    return new BudgetSuccess(budgetResponseDTO);
+    return Result.ok(budgetResponseDTO);
   }
 
   @Transactional

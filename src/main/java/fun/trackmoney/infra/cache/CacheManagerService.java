@@ -1,4 +1,4 @@
-package fun.trackmoney.infra.redis;
+package fun.trackmoney.infra.cache;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -12,7 +12,6 @@ public class CacheManagerService {
   public CacheManagerService(CacheManager cacheManager) {
     this.cacheManager = cacheManager;
   }
-
 
   public <T> boolean put(String cacheName, Object key, T value) {
     Cache cache = cacheManager.getCache(cacheName);

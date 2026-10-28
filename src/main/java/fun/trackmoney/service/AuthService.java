@@ -2,21 +2,12 @@ package fun.trackmoney.service;
 
 import fun.trackmoney.dto.auth.LoginRequestDTO;
 import fun.trackmoney.dto.auth.LoginResponseDTO;
-import fun.trackmoney.dto.auth.internal.AuthError;
-import fun.trackmoney.dto.auth.internal.ForgotPasswordFailure;
-import fun.trackmoney.dto.auth.internal.ForgotPasswordResult;
-import fun.trackmoney.dto.auth.internal.ForgotPasswordSuccess;
-import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailFailure;
-import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailResult;
-import fun.trackmoney.dto.auth.internal.email.verification.VerificationEmailSuccess;
-import fun.trackmoney.dto.auth.internal.login.LoginFailure;
-import fun.trackmoney.dto.auth.internal.login.LoginResult;
-import fun.trackmoney.dto.auth.internal.login.LoginSuccess;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
+import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.infra.jwt.JwtService;
 import fun.trackmoney.infra.email.EmailService;
-import fun.trackmoney.infra.redis.CacheManagerService;
+import fun.trackmoney.infra.cache.CacheManagerService;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.entity.UserEntity;
 import jakarta.mail.MessagingException;
@@ -58,9 +49,9 @@ public class AuthService {
     this.cacheManagerService = cacheManagerService;
   }
 
-  public UserRegisterResult register(UserRequestDTO userDto)  {
-    UserRegisterResult result = userService.register(userDto);
-    if(result instanceof UserRegisterSuccess) {
+  public Result<UserResponseDTO> register(UserRequestDTO userDto)  {
+    Result<UserResponseDTO> result = userService.register(userDto);
+    if(result instanceof Result.Ok<UserResponseDTO>) {
       Integer code;
       boolean codeIsSaved;
       do {
@@ -72,20 +63,21 @@ public class AuthService {
         emailService.sendEmailToVerifyEmail(userDto.email(), userDto.name(), code);
       } catch (MessagingException ex) {
         LOGGER.error(VERIFICATION_EMAIL_ERROR_MSG, userDto.email(), ex);
+        return Result.err(ErrorCode.AUTH_ERROR_SENDING_EMAIL);
       }
     }
     return result;
   }
 
-  public LoginResult login(LoginRequestDTO loginDto) {
+  public Result<LoginResponseDTO> login(LoginRequestDTO loginDto) {
     Optional<UserEntity> optionalUser = userService.findUserByEmail(loginDto.email());
     if(optionalUser.isEmpty()) {
-      return new LoginFailure(AuthError.USER_NOT_REGISTER);
+      return Result.err(ErrorCode.USER_NOT_REGISTERED);
     }
     UserEntity user = optionalUser.get();
 
     if(!passwordEncoder.matches(loginDto.password(), user.getPassword())){
-      return new LoginFailure(AuthError.INVALID_CREDENTIALS);
+      return Result.err(ErrorCode.AUTH_INVALID_CREDENTIALS);
     }
 
     if(!user.isActive()){
@@ -93,7 +85,7 @@ public class AuthService {
       String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
       LoginResponseDTO tokens = new LoginResponseDTO(verificationToken, refreshToken);
-      return new LoginSuccess(tokens);
+      return Result.ok(tokens);
     }
 
     String accessToken = jwtService.generateAccessToken(user.getEmail());
@@ -101,7 +93,7 @@ public class AuthService {
 
     LoginResponseDTO tokens = new LoginResponseDTO(accessToken, refreshToken);
 
-    return new LoginSuccess(tokens);
+    return Result.ok(tokens);
   }
 
   public Boolean activateUser(Integer code, String email) {
@@ -116,9 +108,9 @@ public class AuthService {
     return userService.activateUser(email);
   }
 
-  public VerificationEmailResult resendVerificationEmail(UserEntity user) {
+  public Result<Void> resendVerificationEmail(UserEntity user) {
     if(user.isActive()) {
-      return new VerificationEmailFailure(AuthError.USER_IS_VERIFIED);
+      return Result.err(ErrorCode.AUTH_USER_ALREADY_VERIFIED);
     }
     int code;
     boolean codeIsSaved;
@@ -130,15 +122,15 @@ public class AuthService {
       emailService.sendEmailToVerifyEmail(user.getEmail(), user.getName(), code);
     } catch (MessagingException ex) {
       LOGGER.error(VERIFICATION_EMAIL_ERROR_MSG, user.getEmail(), ex);
-      return new VerificationEmailFailure(AuthError.ERROR_SENDING_EMAIL);
+      return Result.err(ErrorCode.AUTH_ERROR_SENDING_EMAIL);
     }
-    return new VerificationEmailSuccess();
+    return Result.ok(null);
   }
 
-  public ForgotPasswordResult forgotPassword(String email) {
+  public Result<Void> forgotPassword(String email) {
     UserEntity optionalUser = userService.findUserByEmail(email).orElse(null);
     if(optionalUser == null) {
-      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+      return Result.err(ErrorCode.USER_NOT_REGISTERED);
     }
     String jwtCode = jwtService.generateResetPasswordToken(email);
     String link = frontUrl + "/reset-password?token=" +  jwtCode;
@@ -146,20 +138,20 @@ public class AuthService {
       emailService.sendEmailToResetPassword(email, optionalUser.getName(), link);
     } catch (RuntimeException | MessagingException ex) {
       LOGGER.error(RESET_PASSWORD_EMAIL_ERROR_MSG, email, ex);
-      return new ForgotPasswordFailure(AuthError.ERROR_SENDING_EMAIL);
+      return Result.err(ErrorCode.AUTH_ERROR_SENDING_EMAIL);
     }
-    return new ForgotPasswordSuccess();
+    return Result.ok(null);
   }
 
-  public ForgotPasswordResult resetPassword(String email, String newPassword) {
+  public Result<Void> resetPassword(String email, String newPassword) {
     UserEntity user = userService.findUserByEmail(email).orElse(null);
     if(user == null) {
-      return new ForgotPasswordFailure(AuthError.USER_NOT_REGISTER);
+      return Result.err(ErrorCode.USER_NOT_REGISTERED);
     }
     String password = passwordEncoder.encode(newPassword);
     user.setPassword(password);
     userService.update(user);
-    return new ForgotPasswordSuccess();
+    return Result.ok(null);
   }
 
   public String refreshAccessToken(String email) {

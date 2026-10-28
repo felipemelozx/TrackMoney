@@ -3,10 +3,8 @@ import fun.trackmoney.controller.BudgetsController;
 
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
-import fun.trackmoney.dto.budget.internal.BudgetFailure;
-import fun.trackmoney.dto.budget.internal.BudgetResult;
-import fun.trackmoney.dto.budget.internal.BudgetSuccess;
-import fun.trackmoney.enums.BudgetError;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.BudgetsService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -54,7 +52,7 @@ class BudgetsControllerTest {
 
   @Test
   void create_shouldReturnCreatedAndBudgetResponse_onSuccess() {
-    BudgetResult successResult = new BudgetSuccess(responseDTO);
+    Result<BudgetResponseDTO> successResult = Result.ok(responseDTO);
     when(budgetsService.create(createDTO, mockUser)).thenReturn(successResult);
 
     ResponseEntity<ApiResponse<BudgetResponseDTO>> response = budgetsController.create(createDTO, mockUser);
@@ -69,7 +67,8 @@ class BudgetsControllerTest {
 
   @Test
   void create_shouldReturnBadRequest_onCategoryNotFoundFailure() {
-    BudgetResult failureResult = new BudgetFailure(BudgetError.CATEGORY_NOT_FOUND, "Category not found");
+    Result<BudgetResponseDTO> failureResult = Result.err(ErrorCode.BUDGET_CREATE_CATEGORY_NOT_FOUND,
+        "categoryId", "Category not found");
     when(budgetsService.create(createDTO, mockUser)).thenReturn(failureResult);
 
     ResponseEntity<ApiResponse<BudgetResponseDTO>> response = budgetsController.create(createDTO, mockUser);
@@ -139,7 +138,7 @@ class BudgetsControllerTest {
     BudgetCreateDTO updateDTO = BudgetCreateDTOFactory.secondaryDTO();
 
     BudgetResponseDTO updatedResponseDTO = BudgetResponseDTOFactory.defaultResponse();
-    BudgetResult successResult = new BudgetSuccess(updatedResponseDTO);
+    Result<BudgetResponseDTO> successResult = Result.ok(updatedResponseDTO);
 
     when(budgetsService.update(updateDTO, updateId, mockUser)).thenReturn(successResult);
 
@@ -158,7 +157,7 @@ class BudgetsControllerTest {
 
     BudgetCreateDTO updateDTO = BudgetCreateDTOFactory.defaultDTO();
 
-    BudgetResult failureResult = new BudgetFailure(BudgetError.BUDGET_NOT_FOUND, "Budget not found");
+    Result<BudgetResponseDTO> failureResult = Result.err(ErrorCode.BUDGET_NOT_FOUND, "id", "Budget not found");
 
     when(budgetsService.update(updateDTO, updateId, mockUser)).thenReturn(failureResult);
 
@@ -174,7 +173,8 @@ class BudgetsControllerTest {
   void updateById_shouldReturnNotFound_onCategoryNotFoundFailure() {
     Integer updateId = 1;
     BudgetCreateDTO updateDTO = BudgetCreateDTOFactory.defaultDTO();
-    BudgetResult failureResult = new BudgetFailure(BudgetError.CATEGORY_NOT_FOUND, "Category not found");
+    Result<BudgetResponseDTO> failureResult = Result.err(ErrorCode.BUDGET_CATEGORY_NOT_FOUND,
+        "categoryId", "Category not found");
 
     when(budgetsService.update(updateDTO, updateId, mockUser)).thenReturn(failureResult);
 
@@ -191,7 +191,8 @@ class BudgetsControllerTest {
   void updateById_shouldReturnBadRequest_onPercentLimitExceededFailure() {
     Integer updateId = 1;
     BudgetCreateDTO updateDTO = BudgetCreateDTOFactory.defaultDTO();
-    BudgetResult failureResult = new BudgetFailure(BudgetError.PERCENT_LIMIT_EXCEEDED, "Percent limit exceeded");
+    Result<BudgetResponseDTO> failureResult = Result.err(ErrorCode.BUDGET_PERCENT_LIMIT_EXCEEDED,
+        "percent", "Percent limit exceeded");
 
     when(budgetsService.update(updateDTO, updateId, mockUser)).thenReturn(failureResult);
 
@@ -208,7 +209,8 @@ class BudgetsControllerTest {
   void updateById_shouldReturnBadRequest_onDefaultFailureCase() {
     Integer updateId = 1;
     BudgetCreateDTO updateDTO = BudgetCreateDTOFactory.defaultDTO();
-    BudgetResult failureResult = new BudgetFailure(BudgetError.EXIST_BUDGET, "Budget already exists");
+    Result<BudgetResponseDTO> failureResult = Result.err(ErrorCode.BUDGET_ALREADY_EXISTS,
+        "category", "Budget already exists");
 
     when(budgetsService.update(updateDTO, updateId, mockUser)).thenReturn(failureResult);
 
@@ -225,7 +227,8 @@ class BudgetsControllerTest {
   void create_shouldReturnBadRequest_onPercentLimitExceededFailure() {
     BudgetCreateDTO highPercentDTO = BudgetCreateDTOFactory.defaultDTO();
 
-    BudgetResult failureResult = new BudgetFailure(BudgetError.PERCENT_LIMIT_EXCEEDED, "Percent limit exceeded");
+    Result<BudgetResponseDTO> failureResult = Result.err(ErrorCode.BUDGET_PERCENT_LIMIT_EXCEEDED,
+        "percent", "Percent limit exceeded");
     when(budgetsService.create(highPercentDTO, mockUser)).thenReturn(failureResult);
 
     ResponseEntity<ApiResponse<BudgetResponseDTO>> response = budgetsController.create(highPercentDTO, mockUser);
@@ -239,7 +242,8 @@ class BudgetsControllerTest {
 
   @Test
   void create_shouldReturnBadRequest_onDefaultFailureCase() {
-    BudgetResult failureResult = new BudgetFailure(BudgetError.EXIST_BUDGET, "Budget already exists for this category");
+    Result<BudgetResponseDTO> failureResult = Result.err(ErrorCode.BUDGET_ALREADY_EXISTS,
+        "category", "Budget already exists for this category");
     when(budgetsService.create(createDTO, mockUser)).thenReturn(failureResult);
 
     ResponseEntity<ApiResponse<BudgetResponseDTO>> response = budgetsController.create(createDTO, mockUser);

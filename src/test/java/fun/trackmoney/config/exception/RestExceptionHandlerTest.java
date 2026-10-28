@@ -1,9 +1,10 @@
 package fun.trackmoney.config.exception;
 
+import fun.trackmoney.exception.AccountHasRelatedDataException;
 import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.exception.CategoryNotFoundException;
-import fun.trackmoney.exception.TransactionNotFoundException;
+import fun.trackmoney.exception.InvalidAccountRequestException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -40,11 +41,11 @@ class RestExceptionHandlerTest {
     when(bindingResult.getAllErrors()).thenReturn(mockedErrors);
     MethodArgumentNotValidException exception = new MethodArgumentNotValidException(null, bindingResult);
 
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.handleValidationExceptions(exception);
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.handleValidationExceptions(exception);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return status 400 BAD_REQUEST");
 
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    ApiResponse<Void> apiResponse = response.getBody();
     assertNotNull(apiResponse, "Response body must not be null");
     assertFalse(apiResponse.isSuccess(), "'success' field should be false");
     assertEquals("Validation failed", apiResponse.getMessage(), "The message should be 'Validation failed'");
@@ -71,10 +72,10 @@ class RestExceptionHandlerTest {
         new CustomFieldError("user", "Email not found!")
     );
     UserNotFoundException exception = new UserNotFoundException("Email not found!",errors);
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.emailNotFound(exception);
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.emailNotFound(exception);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    ApiResponse<Void> apiResponse = response.getBody();
 
     assertNotNull(apiResponse);
     assertFalse(apiResponse.isSuccess());
@@ -87,10 +88,10 @@ class RestExceptionHandlerTest {
   @Test
   void categoryNotFound_shouldReturnNotFoundWithError() {
     CategoryNotFoundException exception = new CategoryNotFoundException("Category with id 99 not found.");
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.categoryNotFound(exception);
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.categoryNotFound(exception);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    ApiResponse<Void> apiResponse = response.getBody();
     assertNotNull(apiResponse);
     assertFalse(apiResponse.isSuccess());
     assertEquals("Category with id 99 not found.", apiResponse.getMessage());
@@ -105,10 +106,10 @@ class RestExceptionHandlerTest {
   @Test
   void AccountNotFound_shouldReturnNotFoundWithError() {
     AccountNotFoundException exception = new AccountNotFoundException("Account not found.");
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.accountNotFound(exception);
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.accountNotFound(exception);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    ApiResponse<Void> apiResponse = response.getBody();
     assertNotNull(apiResponse);
     assertFalse(apiResponse.isSuccess());
     assertEquals("Account not found.", apiResponse.getMessage());
@@ -121,30 +122,12 @@ class RestExceptionHandlerTest {
   }
 
   @Test
-  void TransactionNotFound_shouldReturnNotFoundWithError() {
-    TransactionNotFoundException exception = new TransactionNotFoundException("Transaction not found.");
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.transactionNotFound(exception);
-
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
-    assertNotNull(apiResponse);
-    assertFalse(apiResponse.isSuccess());
-    assertEquals("Transaction not found.", apiResponse.getMessage());
-    assertNull(apiResponse.getData());
-    assertNotNull(apiResponse.getErrors());
-    assertEquals(1, (apiResponse.getErrors()).size());
-    CustomFieldError error = apiResponse.getErrors().get(0);
-    assertEquals("Transaction", error.getField());
-    assertEquals("Transaction not found.", error.getMessage());
-  }
-
-  @Test
   void budgetsNotFound_shouldReturnNotFoundWithError() {
     BudgetsNotFoundException exception = new BudgetsNotFoundException("Budgets not found.");
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response = restExceptionHandler.budgetsNotFound(exception);
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.budgetsNotFound(exception);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    ApiResponse<List<CustomFieldError>> apiResponse = response.getBody();
+    ApiResponse<Void> apiResponse = response.getBody();
     assertNotNull(apiResponse);
     assertFalse(apiResponse.isSuccess());
     assertEquals("Budgets not found.", apiResponse.getMessage());
@@ -157,6 +140,42 @@ class RestExceptionHandlerTest {
   }
 
   @Test
+  void accountHasRelatedData_shouldReturnConflictWithError() {
+    AccountHasRelatedDataException exception = new AccountHasRelatedDataException(1);
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.accountHasRelatedData(exception);
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    ApiResponse<Void> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals(exception.getMessage(), apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, apiResponse.getErrors().size());
+    CustomFieldError error = apiResponse.getErrors().get(0);
+    assertEquals("Account", error.getField());
+    assertEquals(exception.getMessage(), error.getMessage());
+  }
+
+  @Test
+  void invalidAccountRequest_shouldReturnBadRequestWithError() {
+    InvalidAccountRequestException exception = new InvalidAccountRequestException("Account request is required.");
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.invalidAccountRequest(exception);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<Void> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Account request is required.", apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, apiResponse.getErrors().size());
+    CustomFieldError error = apiResponse.getErrors().get(0);
+    assertEquals("Account", error.getField());
+    assertEquals("Account request is required.", error.getMessage());
+  }
+
+  @Test
   void shouldReturnBadRequestResponseWithErrors() {
     HandlerMethodValidationException ex = mock(HandlerMethodValidationException.class);
 
@@ -165,7 +184,7 @@ class RestExceptionHandlerTest {
     List<? extends MessageSourceResolvable> mocklist = List.of(fieldError, globalError);
     doReturn(mocklist).when(ex).getAllErrors();
     // when
-    ResponseEntity<ApiResponse<List<CustomFieldError>>> response =
+    ResponseEntity<ApiResponse<Void>> response =
         restExceptionHandler.handlePathVariableValidationExceptions(ex);
 
     // then
@@ -182,5 +201,21 @@ class RestExceptionHandlerTest {
     CustomFieldError secondError = errors.get(1);
     assertEquals("param", secondError.getField());
     assertEquals("invalid user data", secondError.getMessage());
+  }
+
+  @Test
+  void unexpectedException_shouldReturnSanitizedInternalServerError() {
+    RuntimeException exception = new RuntimeException("sensitive database details");
+
+    ResponseEntity<ApiResponse<Void>> response =
+        restExceptionHandler.unexpectedException(exception);
+
+    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertFalse(response.getBody().isSuccess());
+    assertEquals("An unexpected error occurred.", response.getBody().getMessage());
+    assertFalse(response.getBody().getMessage().contains("sensitive"));
+    assertEquals("INTERNAL_ERROR", response.getBody().getError().code());
+    assertNull(response.getBody().getError().details());
   }
 }

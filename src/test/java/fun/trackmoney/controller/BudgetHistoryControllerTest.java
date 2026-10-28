@@ -29,6 +29,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -207,7 +208,8 @@ class BudgetHistoryControllerTest {
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
     assertEquals("Cannot generate history for the current month", response.getBody().getMessage());
-    assertEquals(0, response.getBody().getData().generatedCount());
+    assertEquals("REQUEST_ERROR", response.getBody().getError().code());
+    assertNull(response.getBody().getData());
     verify(budgetHistoryService, times(1)).generateHistoryForMonth(mockUser, dto.month(), dto.year());
   }
 
@@ -225,7 +227,8 @@ class BudgetHistoryControllerTest {
     assertNotNull(response.getBody());
     assertFalse(response.getBody().isSuccess());
     assertEquals("Cannot generate history: no transactions found for this month", response.getBody().getMessage());
-    assertEquals(0, response.getBody().getData().generatedCount());
+    assertEquals("REQUEST_ERROR", response.getBody().getError().code());
+    assertNull(response.getBody().getData());
     verify(budgetHistoryService, times(1)).generateHistoryForMonth(mockUser, dto.month(), dto.year());
   }
 

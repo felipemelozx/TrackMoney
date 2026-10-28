@@ -2,11 +2,10 @@ package fun.trackmoney.controller;
 
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
-import fun.trackmoney.dto.budget.internal.BudgetFailure;
-import fun.trackmoney.dto.budget.internal.BudgetSuccess;
+import fun.trackmoney.common.result.HttpErrorMapper;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.service.BudgetsService;
 import fun.trackmoney.entity.UserEntity;
-import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -39,31 +38,13 @@ public class BudgetsController {
                                                                BudgetCreateDTO dto,
                                                                @AuthenticationPrincipal UserEntity currentUser) {
 
-    var budgetResult = budgetsService.create(dto, currentUser);
-
-    if (budgetResult instanceof BudgetSuccess success) {
-      return ResponseEntity
+    Result<BudgetResponseDTO> budgetResult = budgetsService.create(dto, currentUser);
+    return budgetResult.fold(data -> ResponseEntity
           .status(HttpStatus.CREATED)
           .body(ApiResponse.<BudgetResponseDTO>success()
               .message("Budget created")
-              .data(success.response())
-              .build());
-    }
-
-    BudgetFailure failure = (BudgetFailure) budgetResult;
-
-    String field = switch (failure.reason()) {
-      case CATEGORY_NOT_FOUND -> "categoryId";
-      case PERCENT_LIMIT_EXCEEDED -> "percent";
-      default -> "category";
-    };
-
-    return ResponseEntity
-        .badRequest()
-        .body(ApiResponse.<BudgetResponseDTO>failure()
-            .message("Error while trying to save budget")
-            .errors(new CustomFieldError(field, failure.message()))
-            .build());
+              .data(data)
+              .build()), HttpErrorMapper::toResponse);
   }
 
   @GetMapping
@@ -114,39 +95,13 @@ public class BudgetsController {
                                                                    BudgetCreateDTO dto,
                                                                    @AuthenticationPrincipal UserEntity currentUser) {
 
-    var budgetResult = budgetsService.update(dto, id, currentUser);
-
-    if (budgetResult instanceof BudgetSuccess success) {
-      return ResponseEntity
+    Result<BudgetResponseDTO> budgetResult = budgetsService.update(dto, id, currentUser);
+    return budgetResult.fold(data -> ResponseEntity
           .status(HttpStatus.OK)
           .body(ApiResponse.<BudgetResponseDTO>success()
               .message("Budget updated successfully")
-              .data(success.response())
-              .build());
-    }
-
-    BudgetFailure failure = (BudgetFailure) budgetResult;
-
-    String field = switch (failure.reason()) {
-      case CATEGORY_NOT_FOUND -> "categoryId";
-      case BUDGET_NOT_FOUND -> "id";
-      case PERCENT_LIMIT_EXCEEDED -> "percent";
-      default -> "category";
-    };
-
-    HttpStatus status = switch (failure.reason()) {
-      case CATEGORY_NOT_FOUND, BUDGET_NOT_FOUND -> HttpStatus.NOT_FOUND;
-      case PERCENT_LIMIT_EXCEEDED -> HttpStatus.BAD_REQUEST;
-      default -> HttpStatus.BAD_REQUEST;
-    };
-
-    return ResponseEntity
-        .status(status)
-        .body(ApiResponse.<BudgetResponseDTO>failure()
-            .message("Error while trying to update budget")
-            .errors(new CustomFieldError(field, failure.message()))
-            .build());
+              .data(data)
+              .build()), HttpErrorMapper::toResponse);
   }
 
 }
-

@@ -174,7 +174,6 @@ jobs:
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
           POSTGRES_PORT=5432
-          REDIS_PORT=6379
           SPRING_MAIL_HOST=${{ secrets.SPRING_MAIL_HOST }}
           SPRING_MAIL_PORT=${{ secrets.SPRING_MAIL_PORT }}
           SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}

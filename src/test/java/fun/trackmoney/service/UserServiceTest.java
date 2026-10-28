@@ -2,10 +2,8 @@ package fun.trackmoney.service;
 import fun.trackmoney.service.UserService;
 
 
-import fun.trackmoney.dto.auth.internal.AuthError;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterFailure;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterResult;
-import fun.trackmoney.dto.auth.internal.register.UserRegisterSuccess;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.dto.user.UserRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
 import fun.trackmoney.entity.AccountEntity;
@@ -92,17 +90,17 @@ class UserServiceTest {
     UserEntity savedEntityReturn = new UserEntity(uuid, "name", "test@example.com", "encodedPass");
 
     UserResponseDTO mockDTO = new UserResponseDTO(savedEntityReturn.getUserId(), savedEntityReturn.getName(), savedEntityReturn.getEmail());
-    UserRegisterSuccess expectedResponse = new UserRegisterSuccess(mockDTO);
 
     when(userMapper.userRequestDTOToEntity(requestDTO)).thenReturn(entityToSave);
     when(passwordEncoder.encode("StrongPassword123#")).thenReturn("encodedPass");
     when(userRepository.save(entityToSave)).thenReturn(savedEntityReturn);
     when(userMapper.userEntityToUserResponseDto(savedEntityReturn)).thenReturn(mockDTO);
 
-    UserRegisterResult actualResponse = userService.register(requestDTO);
+    Result<UserResponseDTO> actualResponse = userService.register(requestDTO);
 
     assertNotNull(actualResponse);
-    assertInstanceOf(UserRegisterSuccess.class, expectedResponse);
+    assertInstanceOf(Result.Ok.class, actualResponse);
+    assertEquals(mockDTO, ((Result.Ok<UserResponseDTO>) actualResponse).value());
     verify(userRepository, times(1)).save(entityToSave);
   }
 
@@ -112,14 +110,12 @@ class UserServiceTest {
     UserRequestDTO requestDTO = new UserRequestDTO("name", "duplicate@example.com", "StrongPassword123#");
     UUID uuid = UUID.randomUUID();
     UserEntity existingEntity = new UserEntity(uuid, requestDTO.name(), requestDTO.email(), "encodedPass");
-    UserRegisterFailure reponseExpected = new UserRegisterFailure(AuthError.EMAIL_ALREADY_EXISTS);
     when(userService.findUserByEmail(requestDTO.email())).thenReturn(Optional.of(existingEntity));
 
-    UserRegisterResult result = userService.register(requestDTO);
+    Result<UserResponseDTO> result = userService.register(requestDTO);
 
-    assertInstanceOf(UserRegisterFailure.class, result);
-    UserRegisterFailure resultCast = (UserRegisterFailure)result;
-    assertEquals(reponseExpected.errorList().getMessage(), resultCast.errorList().getMessage());
+    assertInstanceOf(Result.Err.class, result);
+    assertEquals(ErrorCode.USER_EMAIL_ALREADY_EXISTS, ((Result.Err<UserResponseDTO>) result).error().code());
     verify(userRepository, times(0)).save(any());
   }
 
