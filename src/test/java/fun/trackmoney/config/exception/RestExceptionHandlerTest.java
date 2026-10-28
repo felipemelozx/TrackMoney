@@ -1,8 +1,10 @@
 package fun.trackmoney.config.exception;
 
+import fun.trackmoney.exception.AccountHasRelatedDataException;
 import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.exception.CategoryNotFoundException;
+import fun.trackmoney.exception.InvalidAccountRequestException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -135,6 +137,42 @@ class RestExceptionHandlerTest {
     CustomFieldError error = apiResponse.getErrors().get(0);
     assertEquals("Budgets", error.getField());
     assertEquals("Budgets not found.", error.getMessage());
+  }
+
+  @Test
+  void accountHasRelatedData_shouldReturnConflictWithError() {
+    AccountHasRelatedDataException exception = new AccountHasRelatedDataException(1);
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.accountHasRelatedData(exception);
+
+    assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    ApiResponse<Void> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals(exception.getMessage(), apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, apiResponse.getErrors().size());
+    CustomFieldError error = apiResponse.getErrors().get(0);
+    assertEquals("Account", error.getField());
+    assertEquals(exception.getMessage(), error.getMessage());
+  }
+
+  @Test
+  void invalidAccountRequest_shouldReturnBadRequestWithError() {
+    InvalidAccountRequestException exception = new InvalidAccountRequestException("Account request is required.");
+    ResponseEntity<ApiResponse<Void>> response = restExceptionHandler.invalidAccountRequest(exception);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    ApiResponse<Void> apiResponse = response.getBody();
+    assertNotNull(apiResponse);
+    assertFalse(apiResponse.isSuccess());
+    assertEquals("Account request is required.", apiResponse.getMessage());
+    assertNull(apiResponse.getData());
+    assertNotNull(apiResponse.getErrors());
+    assertEquals(1, apiResponse.getErrors().size());
+    CustomFieldError error = apiResponse.getErrors().get(0);
+    assertEquals("Account", error.getField());
+    assertEquals("Account request is required.", error.getMessage());
   }
 
   @Test

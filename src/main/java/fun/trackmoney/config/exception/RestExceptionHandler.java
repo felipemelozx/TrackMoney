@@ -1,9 +1,10 @@
 package fun.trackmoney.config.exception;
 
-import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.exception.AccountHasRelatedDataException;
+import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.exception.BudgetsNotFoundException;
 import fun.trackmoney.exception.CategoryNotFoundException;
+import fun.trackmoney.exception.InvalidAccountRequestException;
 import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.utils.CustomFieldError;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -62,6 +63,18 @@ public class RestExceptionHandler {
   @ExceptionHandler(AccountNotFoundException.class)
   public ResponseEntity<ApiResponse<Void>> accountNotFound(AccountNotFoundException ex) {
     return errorResponse(HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND", ex.getMessage(), toDetails(ex.getErrors()));
+  }
+
+  @ExceptionHandler(AccountHasRelatedDataException.class)
+  public ResponseEntity<ApiResponse<Void>> accountHasRelatedData(AccountHasRelatedDataException ex) {
+    return errorResponse(HttpStatus.CONFLICT, "ACCOUNT_HAS_RELATED_DATA", ex.getMessage(),
+        Map.of("Account", ex.getMessage()));
+  }
+
+  @ExceptionHandler(InvalidAccountRequestException.class)
+  public ResponseEntity<ApiResponse<Void>> invalidAccountRequest(InvalidAccountRequestException ex) {
+    return errorResponse(HttpStatus.BAD_REQUEST, "INVALID_ACCOUNT_REQUEST", ex.getMessage(),
+        Map.of("Account", ex.getMessage()));
   }
 
   @ExceptionHandler(BudgetsNotFoundException.class)
