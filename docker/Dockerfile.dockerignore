@@ -27,6 +27,7 @@ logs/
 README.md
 HELP.md
 doc/
+docs/
 
 # Environment files
 .env
