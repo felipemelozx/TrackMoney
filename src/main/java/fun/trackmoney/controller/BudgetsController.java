@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.BudgetsControllerDocs;
 import fun.trackmoney.dto.budget.BudgetCreateDTO;
 import fun.trackmoney.dto.budget.BudgetResponseDTO;
 import fun.trackmoney.common.result.HttpErrorMapper;
@@ -24,7 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("budgets")
-public class BudgetsController {
+public class BudgetsController implements BudgetsControllerDocs {
 
   private final BudgetsService budgetsService;
 
@@ -32,6 +33,7 @@ public class BudgetsController {
     this.budgetsService = budgetsService;
   }
 
+  @Override
   @PostMapping
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> create(@RequestBody
                                                                @Valid
@@ -47,6 +49,7 @@ public class BudgetsController {
               .build()), HttpErrorMapper::toResponse);
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<ApiResponse<List<BudgetResponseDTO>>> findAllByAccountId(@AuthenticationPrincipal
                                                                                  UserEntity currentUser) {
@@ -59,6 +62,7 @@ public class BudgetsController {
     );
   }
 
+  @Override
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> findById(@PathVariable Integer id,
                                                                  @AuthenticationPrincipal UserEntity currentUser) {
@@ -77,6 +81,7 @@ public class BudgetsController {
     return ResponseEntity.status(HttpStatus.OK).body(body);
   }
 
+  @Override
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteById(@PathVariable Integer id,
                                                       @AuthenticationPrincipal UserEntity currentUser) {
@@ -88,6 +93,7 @@ public class BudgetsController {
     );
   }
 
+  @Override
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<BudgetResponseDTO>> updateById(@PathVariable Integer id,
                                                                    @RequestBody
