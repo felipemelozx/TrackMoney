@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.RecurringControllerDocs;
 import fun.trackmoney.dto.recurring.CreateRecurringRequest;
 import fun.trackmoney.dto.recurring.RecurringResponse;
 import fun.trackmoney.service.RecurringService;
@@ -23,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("recurring")
-public class RecurringController {
+public class RecurringController implements RecurringControllerDocs {
 
   private final RecurringService recurringService;
 
@@ -31,6 +32,7 @@ public class RecurringController {
     this.recurringService = recurringService;
   }
 
+  @Override
   @PostMapping
   public ResponseEntity<ApiResponse<RecurringResponse>> createRecurring(
       @Valid @RequestBody
@@ -57,6 +59,7 @@ public class RecurringController {
     );
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<ApiResponse<List<RecurringResponse>>> findAll(
       @AuthenticationPrincipal UserEntity currentUser
@@ -69,6 +72,7 @@ public class RecurringController {
     return ResponseEntity.ok(body);
   }
 
+  @Override
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<RecurringResponse>> update(
       @PathVariable
@@ -97,6 +101,7 @@ public class RecurringController {
     );
   }
 
+  @Override
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> delete(
       @PathVariable Long id,
@@ -106,6 +111,7 @@ public class RecurringController {
     return ResponseEntity.ok().body(ApiResponse.<Void>successWithNoContent().build());
   }
 
+  @Override
   @GetMapping("/bills")
   public ResponseEntity<ApiResponse<BillResponseDTO>> getBills(@AuthenticationPrincipal UserEntity currentUser) {
     BillResponseDTO bills = recurringService.getBill(currentUser);

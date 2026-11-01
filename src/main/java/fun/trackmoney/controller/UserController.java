@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.UserControllerDocs;
 import fun.trackmoney.dto.user.ChangePasswordRequestDTO;
 import fun.trackmoney.dto.user.DeleteAccountRequestDTO;
 import fun.trackmoney.dto.user.UserResponseDTO;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("user")
-public class UserController {
+public class UserController implements UserControllerDocs {
 
   private final AuthUtils authUtils;
   private final UserService userService;
@@ -29,6 +30,7 @@ public class UserController {
     this.userService = userService;
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<ApiResponse<UserResponseDTO>> getUserInfo() {
     UserEntity actualUser = authUtils.getCurrentUser();
@@ -45,6 +47,7 @@ public class UserController {
             .build());
   }
 
+  @Override
   @PutMapping("/password")
   public ResponseEntity<ApiResponse<Void>> changePassword(@RequestBody @Valid ChangePasswordRequestDTO request) {
     UserEntity actualUser = authUtils.getCurrentUser();
@@ -62,6 +65,7 @@ public class UserController {
             .build());
   }
 
+  @Override
   @DeleteMapping
   public ResponseEntity<ApiResponse<Void>> deleteUser(@RequestBody @Valid DeleteAccountRequestDTO request,
                                                       @AuthenticationPrincipal UserEntity currentUser) {

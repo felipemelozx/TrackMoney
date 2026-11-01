@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.PotsControllerDocs;
 import fun.trackmoney.dto.pots.MoneyRequest;
 import fun.trackmoney.dto.pots.CreatePotsDTO;
 import fun.trackmoney.dto.pots.PotsResponseDTO;
@@ -24,7 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("pots")
-public class PotsController {
+public class PotsController implements PotsControllerDocs {
 
   private final PotsService potsService;
 
@@ -32,6 +33,7 @@ public class PotsController {
     this.potsService = potsService;
   }
 
+  @Override
   @PostMapping
   public ResponseEntity<ApiResponse<PotsResponseDTO>> createPots(@Valid @RequestBody CreatePotsDTO dto,
                                                                  @AuthenticationPrincipal UserEntity currentUser) {
@@ -44,6 +46,7 @@ public class PotsController {
             .build());
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<ApiResponse<List<PotsResponseDTO>>> getPots(@AuthenticationPrincipal UserEntity currentUser) {
     return ResponseEntity.ok(
@@ -54,6 +57,7 @@ public class PotsController {
     );
   }
 
+  @Override
   @PutMapping("/{id}/balance")
   public ResponseEntity<ApiResponse<PotsResponseDTO>> addMoney(
       @PathVariable Long id,
@@ -69,6 +73,7 @@ public class PotsController {
       ), HttpErrorMapper::toResponse);
   }
 
+  @Override
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id,
                                                   @AuthenticationPrincipal UserEntity currentUser) {
@@ -81,6 +86,7 @@ public class PotsController {
     );
   }
 
+  @Override
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<PotsResponseDTO>> update(
       @PathVariable Long id,
