@@ -1,81 +1,70 @@
-name: SonarCloud CI
+name: TrackMoney CI & Code Quality
 
 on:
+  push:
+    branches:
+      - main
+      - develop
   pull_request:
+    branches:
+      - main
+      - develop
     types: [opened, synchronize, reopened]
 
 jobs:
   build-and-test:
+    name: Build, Test & SonarCloud
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
-      - name: Set up JDK
+      - name: Set up JDK 17
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 17
 
-      - name: Cache Maven
+      - name: Cache Maven dependencies
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven
 
-      - name: Start Docker Compose
-        run: docker compose -f docker/docker-compose.yaml up -d
-
-      - name: Build & Run Tests
-        run: mvn -B clean verify -Dspring.profiles.active=dev
-
-      - name: Upload Test Reports for Sonar
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: test-reports
-          path: |
-            target/site/jacoco/jacoco.xml
-            target/checkstyle-result.xml
-
-  sonar-analysis:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Cache Sonar
+      - name: Cache SonarCloud packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Start Docker Compose
+      - name: Start Database & Dependencies
         run: docker compose -f docker/docker-compose.yaml up -d
 
+      - name: Build & Run Tests with Coverage
+        run: mvn -B clean verify -Dspring.profiles.active=dev
+
       - name: SonarCloud Analysis
+        if: env.SONAR_TOKEN != ''
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn verify sonar:sonar \
+          mvn sonar:sonar \
             -Dspring.profiles.active=dev \
             -Dsonar.projectKey=felipemelozx_TrackMoney \
             -Dsonar.organization=felipemelozx-trackmoney \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml \
             -Dsonar.coverage.exclusions=**/*Entity.java \
             -Dsonar.exclusions=**/seed/**
+
+      - name: Stop Database & Dependencies
+        if: always()
+        run: docker compose -f docker/docker-compose.yaml down
