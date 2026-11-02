@@ -1,6 +1,6 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.budget.dtos.BudgetCreateDTO;
+import fun.trackmoney.dto.budget.BudgetCreateDTO;
 
 public class BudgetCreateDTOFactory {
 

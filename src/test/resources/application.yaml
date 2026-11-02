@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/developerDB
+    username: developerDB
+    password: developerDB
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: false
+
+  cache:
+    type: none
+
+  mail:
+    host: localhost
+    port: 25
+    username: test@test.com
+    password: test
+
+  security:
+    user:
+      name: admin
+      password: admin
+
+server:
+  servlet:
+    context-path: /api/v1
+
+front:
+  url: http://localhost:4200
+
+api:
+  secret:
+    key: test-secret-key-for-testing-only
+
+logging:
+  level:
+    ROOT: WARN
+    fun.trackmoney: INFO

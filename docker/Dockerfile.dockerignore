@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+.github
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea
+*.iml
+*.ipr
+*.iws
+.vscode
+.settings
+.project
+.classpath
+
+# Logs
+logs/
+*.log
+
+# Documentation
+README.md
+HELP.md
+doc/
+docs/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Other
+*.tar.gz
+*.zip

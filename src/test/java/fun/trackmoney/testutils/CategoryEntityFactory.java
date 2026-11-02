@@ -1,6 +1,6 @@
 package fun.trackmoney.testutils;
 
-import fun.trackmoney.category.entity.CategoryEntity;
+import fun.trackmoney.entity.CategoryEntity;
 
 public class CategoryEntityFactory {
 

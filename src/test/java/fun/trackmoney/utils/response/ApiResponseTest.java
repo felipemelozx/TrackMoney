@@ -63,6 +63,16 @@ class ApiResponseTest {
   }
 
   @Test
+  void shouldDefaultFailureErrorsToEmptyCollection() {
+    ApiResponse<Void> response = ApiResponse.<Void>failure().build();
+
+    assertFalse(response.isSuccess());
+    assertNotNull(response.getErrors());
+    assertTrue(response.getErrors().isEmpty());
+    assertNull(response.getData());
+  }
+
+  @Test
   void shouldCreateSuccessResponseWithNoContent_whenUseSuccessWithNoContentBuilder() {
     ApiResponse<String> response = ApiResponse.<String>successWithNoContent().build();
 

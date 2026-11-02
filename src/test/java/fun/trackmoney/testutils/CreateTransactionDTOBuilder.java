@@ -1,7 +1,7 @@
 package fun.trackmoney.testutils;
 
 import fun.trackmoney.enums.TransactionType;
-import fun.trackmoney.transaction.dto.CreateTransactionDTO;
+import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
