@@ -113,31 +113,42 @@ System architecture and interaction flow across layers:
 
 ```mermaid
 flowchart TD
-    User([Client / Web Browser]) -->|HTTPS / REST API| Presentation[REST Controllers / Presentation Layer]
+    User(["Client / Web Browser"]) -->|HTTPS / REST API| SecurityChain
 
-    subgraph Security Layer
-        Presentation -->|JWT Token Validation| JWTFilter[Spring Security & JWT Filter]
+    subgraph SecurityLayer ["Security Layer (Spring Security)"]
+        SecurityChain["Security Filter Chain & JWT Filter<br/><i>(JwtAuthenticationFilter)</i>"]
+        JWTService["JWT Token Service<br/><i>(HMAC-SHA256 Claims & Expiration)</i>"]
+        SecurityChain <-->|Token Verification| JWTService
     end
 
-    subgraph Core Services Layer
-        Presentation -->|Validated DTOs| Services[Service Layer / Business Logic]
-        Services -->|Object Mapping| Mappers[Domain Mappers (@Component)]
-        Services -->|Cache-Aside Pattern| Cache[(Caffeine In-Memory Cache)]
-        Services -->|Email Notification Dispatch| MailService[JavaMail & Thymeleaf Service]
+    SecurityChain -->|Authorized Request| Controllers
+
+    subgraph PresentationLayer ["Presentation Layer"]
+        Controllers["REST Controllers<br/><i>(@RestController / Payload Validation)</i>"]
+        ExceptionHandler["Global Exception Handler<br/><i>(@RestControllerAdvice)</i>"]
+        Controllers -.->|Catches Exceptions & Domain Errors| ExceptionHandler
     end
 
-    subgraph Persistence Layer
-        Services -->|ACID Transactions| Repositories[Spring Data JPA Repositories]
-        Repositories -->|Optimized SQL & Projections| DB[(PostgreSQL 16 Database)]
-        Flyway[Flyway Migrations Engine] -.->|Schema Version Control| DB
+    subgraph CoreServicesLayer ["Core Services Layer"]
+        Controllers -->|Validated DTOs| Services["Service Layer / Business Logic<br/><i>(Domain Rules & Result&lt;T&gt;)</i>"]
+        Services <-->|Object Conversion| Mappers["Domain Mappers<br/><i>(@Component)</i>"]
+        Services <-->|Cache-Aside Pattern| Cache[("Caffeine In-Memory Cache")]
+        Services -->|Email Notification Dispatch| MailService["Email Service<br/><i>(JavaMail & Thymeleaf)</i>"]
+    end
+
+    subgraph PersistenceLayer ["Persistence Layer"]
+        Services -->|ACID Transactions| Repositories["Spring Data JPA Repositories"]
+        Repositories -->|Optimized SQL & Projections| DB[("PostgreSQL 16 Database")]
+        Flyway["Flyway Migrations Engine"] -.->|Schema Version Control| DB
     end
 ```
 
+- **Security Layer**: Stateless `OncePerRequestFilter` (`JwtAuthenticationFilter`), dual-token validation (HMAC-SHA256 via `JwtService`), and role-based access control (RBAC).
 - **Presentation Layer (Controllers)**: Receives HTTP requests, validates incoming request payloads via Bean Validation (`@Valid`), documents contracts via OpenAPI/Swagger, and returns standardized `ApiResponse<T>` envelopes.
 - **Service Layer (Business Logic)**: Encapsulates domain business rules, financial percentage constraints, transactional boundaries (`@Transactional`), and explicit error handling via the functional `Result<T>` pattern.
 - **Mapping Layer**: Hand-written Spring `@Component` mappers performing clean, reflection-free object conversions between DTOs and persistent Entities without third-party annotation processor overhead.
 - **Persistence Layer (Repositories & DB)**: Spring Data JPA interfaces executing optimized aggregate queries, pagination, and projections against PostgreSQL 16 with Flyway-managed schema migrations.
-- **Infrastructure & Security**: Stateless JWT filters, in-memory caching with Caffeine, and centralized exception handling via `@RestControllerAdvice`.
+- **Infrastructure & Cross-Cutting**: Centralized exception handling via `@RestControllerAdvice` (`RestExceptionHandler`), in-memory caching with Caffeine, and asynchronous email dispatch with JavaMail and Thymeleaf.
 
 ---
 
