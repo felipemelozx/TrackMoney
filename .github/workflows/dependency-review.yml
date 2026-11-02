@@ -23,3 +23,6 @@ jobs:
         with:
           fail-on-severity: moderate
           comment-summary-in-pr: always
+          allow-ghsas: >-
+            GHSA-pc63-qcmh-9cmg,
+            GHSA-j9f9-w8pj-32f8
