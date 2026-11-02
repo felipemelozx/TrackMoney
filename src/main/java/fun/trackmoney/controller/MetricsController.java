@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.MetricsControllerDocs;
 import fun.trackmoney.dto.metrics.response.BudgetPerformanceDTO;
 import fun.trackmoney.dto.metrics.response.CategoryBreakdownDTO;
 import fun.trackmoney.dto.metrics.response.DashboardOverviewDTO;
@@ -7,8 +8,6 @@ import fun.trackmoney.dto.metrics.response.MonthlySummaryDTO;
 import fun.trackmoney.service.MetricsService;
 import fun.trackmoney.entity.UserEntity;
 import fun.trackmoney.utils.response.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,8 +26,7 @@ import java.time.LocalDate;
  */
 @RestController
 @RequestMapping("metrics")
-@Tag(name = "Metrics", description = "Financial analytics and dashboard endpoints")
-public class MetricsController {
+public class MetricsController implements MetricsControllerDocs {
 
   private final MetricsService metricsService;
 
@@ -46,8 +44,8 @@ public class MetricsController {
    * @param endDate     the end date (optional, overrides year if provided)
    * @return monthly summary with income, expense, and balance per month
    */
+  @Override
   @GetMapping("/monthly-summary")
-  @Operation(summary = "Get monthly income vs expense summary")
   public ResponseEntity<ApiResponse<MonthlySummaryDTO>> getMonthlySummary(
       @AuthenticationPrincipal UserEntity currentUser,
       @RequestParam(required = false) @Min(2000) @Max(2100) Integer year,
@@ -86,8 +84,8 @@ public class MetricsController {
    * @param endDate     the end date (optional, overrides year/month if provided)
    * @return category breakdown with amounts and percentages
    */
+  @Override
   @GetMapping("/by-category")
-  @Operation(summary = "Get expense breakdown by category")
   public ResponseEntity<ApiResponse<CategoryBreakdownDTO>> getByCategory(
       @AuthenticationPrincipal UserEntity currentUser,
       @RequestParam(required = false) @Min(2000) @Max(2100) Integer year,
@@ -127,8 +125,8 @@ public class MetricsController {
    * @param endDate     the end date (optional, overrides year if provided)
    * @return budget performance grouped by month and category
    */
+  @Override
   @GetMapping("/budgets/performance")
-  @Operation(summary = "Get budget performance history")
   public ResponseEntity<ApiResponse<BudgetPerformanceDTO>> getBudgetPerformance(
       @AuthenticationPrincipal UserEntity currentUser,
       @RequestParam(required = false) @Min(2000) @Max(2100) Integer year,
@@ -165,8 +163,8 @@ public class MetricsController {
    * @param endDate     the end date (optional, if provided shows overview for date range)
    * @return dashboard overview with financials and budget status
    */
+  @Override
   @GetMapping("/overview")
-  @Operation(summary = "Get dashboard overview")
   public ResponseEntity<ApiResponse<DashboardOverviewDTO>> getOverview(
       @AuthenticationPrincipal UserEntity currentUser,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,

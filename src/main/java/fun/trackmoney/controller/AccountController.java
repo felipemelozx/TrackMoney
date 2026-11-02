@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.AccountControllerDocs;
 import fun.trackmoney.dto.account.AccountRequestDTO;
 import fun.trackmoney.dto.account.AccountResponseDTO;
 import fun.trackmoney.dto.account.AccountUpdateRequestDTO;
@@ -23,7 +24,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/accounts")
-public class AccountController {
+public class AccountController implements AccountControllerDocs {
 
   private final AccountService accountService;
   private final AuthUtils authUtils;
@@ -33,6 +34,7 @@ public class AccountController {
     this.authUtils = authUtils;
   }
 
+  @Override
   @PostMapping
   public ResponseEntity<ApiResponse<AccountResponseDTO>> createAccount(@RequestBody AccountRequestDTO dto) {
     UUID userId = authUtils.getCurrentUser().getUserId();
@@ -45,7 +47,7 @@ public class AccountController {
         );
   }
 
-
+  @Override
   @GetMapping
   public ResponseEntity<ApiResponse<List<AccountResponseDTO>>> findAllAccounts() {
     UUID email = authUtils.getCurrentUser().getUserId();
@@ -58,7 +60,7 @@ public class AccountController {
     );
   }
 
-
+  @Override
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<AccountResponseDTO>> findAccountById(@PathVariable Integer id) {
     UUID userId = authUtils.getCurrentUser().getUserId();
@@ -71,6 +73,7 @@ public class AccountController {
     );
   }
 
+  @Override
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<AccountResponseDTO>> updateAccountById(
       @PathVariable Integer id, @RequestBody @Valid AccountUpdateRequestDTO dto) {
@@ -84,6 +87,7 @@ public class AccountController {
     );
   }
 
+  @Override
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteAccountById(@PathVariable Integer id) {
     UUID userId = authUtils.getCurrentUser().getUserId();

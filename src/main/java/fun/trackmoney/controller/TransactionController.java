@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.TransactionControllerDocs;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
@@ -33,7 +34,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("transaction")
-public class TransactionController {
+public class TransactionController implements TransactionControllerDocs {
 
   private final TransactionService transactionService;
   private final TransactionMapper transactionMapper;
@@ -43,6 +44,7 @@ public class TransactionController {
     this.transactionMapper = transactionMapper;
   }
 
+  @Override
   @PostMapping
   public ResponseEntity<ApiResponse<TransactionResponseDTO>> createTransaction(@RequestBody
                                                                                @Valid
@@ -59,6 +61,7 @@ public class TransactionController {
     }, HttpErrorMapper::toResponse);
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<ApiResponse<List<TransactionResponseDTO>>> findAllTransaction(@AuthenticationPrincipal
                                                                                       UserEntity currentUser) {
@@ -70,6 +73,7 @@ public class TransactionController {
     return ResponseEntity.ok().body(body);
   }
 
+  @Override
   @GetMapping("/page")
   public ResponseEntity<ApiResponse<Page<TransactionResponseDTO>>> getPaginatedTransactions(
       Pageable pageable,
@@ -94,6 +98,7 @@ public class TransactionController {
     );
   }
 
+  @Override
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<TransactionResponseDTO>> findTransactionById(@PathVariable Integer id,
                                                                                  @AuthenticationPrincipal
@@ -107,6 +112,7 @@ public class TransactionController {
         .orElseGet(() -> HttpErrorMapper.toResponse(new AppError(ErrorCode.TRANSACTION_NOT_FOUND)));
   }
 
+  @Override
   @GetMapping("/income")
   public ResponseEntity<ApiResponse<BigDecimal>> getIncome(@AuthenticationPrincipal UserEntity actualUser) {
     var result = transactionService.getIncome(actualUser.getUserId());
@@ -117,6 +123,7 @@ public class TransactionController {
     return ResponseEntity.ok().body(body);
   }
 
+  @Override
   @GetMapping("/expense")
   public ResponseEntity<ApiResponse<BigDecimal>> getExpense(@AuthenticationPrincipal UserEntity actualUser) {
     var result = transactionService.getExpense(actualUser);
@@ -127,6 +134,7 @@ public class TransactionController {
     return ResponseEntity.ok().body(body);
   }
 
+  @Override
   @PutMapping("/{id}")
   public ResponseEntity<ApiResponse<TransactionResponseDTO>> updateTransaction(@PathVariable Integer id,
                                                                                @RequestBody TransactionUpdateDTO dto,
@@ -141,6 +149,7 @@ public class TransactionController {
         HttpErrorMapper::toResponse);
   }
 
+  @Override
   @DeleteMapping("/{id}")
   public ResponseEntity<ApiResponse<Void>> deleteTransaction(@PathVariable Integer id,
                                                              @AuthenticationPrincipal

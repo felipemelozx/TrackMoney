@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.BudgetHistoryControllerDocs;
 import fun.trackmoney.dto.budget.BudgetHistoryGenerateDTO;
 import fun.trackmoney.dto.budget.BudgetHistoryGenerationResponse;
 import fun.trackmoney.dto.budget.BudgetHistoryResponseDTO;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("budgets/history")
-public class BudgetHistoryController {
+public class BudgetHistoryController implements BudgetHistoryControllerDocs {
 
   private final BudgetHistoryService budgetHistoryService;
 
@@ -32,6 +33,7 @@ public class BudgetHistoryController {
     this.budgetHistoryService = budgetHistoryService;
   }
 
+  @Override
   @PostMapping("/generate")
   public ResponseEntity<ApiResponse<BudgetHistoryGenerationResponse>> generateHistory(
       @RequestBody @Valid BudgetHistoryGenerateDTO dto,
@@ -91,6 +93,7 @@ public class BudgetHistoryController {
     );
   }
 
+  @Override
   @GetMapping
   public ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> getHistory(
       @AuthenticationPrincipal UserEntity currentUser,
@@ -120,6 +123,7 @@ public class BudgetHistoryController {
     );
   }
 
+  @Override
   @GetMapping("/{month}/{year}")
   public ResponseEntity<ApiResponse<List<BudgetHistoryResponseDTO>>> getHistoryByMonth(
       @PathVariable Short month,
@@ -141,6 +145,7 @@ public class BudgetHistoryController {
     );
   }
 
+  @Override
   @DeleteMapping("/{historyId}")
   public ResponseEntity<ApiResponse<Void>> deleteHistory(
       @PathVariable Integer historyId,

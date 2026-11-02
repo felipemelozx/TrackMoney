@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.CategoryControllerDocs;
 import fun.trackmoney.dto.category.CategoryResponseDTO;
 import fun.trackmoney.service.CategoryService;
 import fun.trackmoney.utils.response.ApiResponse;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("category")
-public class CategoryController {
+public class CategoryController implements CategoryControllerDocs {
 
   private final CategoryService categoryService;
 
@@ -21,6 +22,7 @@ public class CategoryController {
     this.categoryService = categoryService;
   }
 
+  @Override
   @GetMapping("/findAll")
   public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> findAll() {
     return ResponseEntity.ok().body(
@@ -31,6 +33,7 @@ public class CategoryController {
     );
   }
 
+  @Override
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<CategoryResponseDTO>> findById(@PathVariable Integer id) {
     return ResponseEntity.ok().body(

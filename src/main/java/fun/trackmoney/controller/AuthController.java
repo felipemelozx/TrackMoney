@@ -1,5 +1,6 @@
 package fun.trackmoney.controller;
 
+import fun.trackmoney.controller.docs.AuthControllerDocs;
 import fun.trackmoney.dto.auth.LoginRequestDTO;
 import fun.trackmoney.dto.auth.LoginResponseDTO;
 import fun.trackmoney.dto.auth.PasswordRequest;
@@ -32,7 +33,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("auth")
-public class AuthController {
+public class AuthController implements AuthControllerDocs {
 
   private static final String FIELD_EMAIL = "Email";
 
@@ -44,6 +45,7 @@ public class AuthController {
     this.authUtils = authUtils;
   }
 
+  @Override
   @PostMapping("/register")
   public ResponseEntity<ApiResponse<UserResponseDTO>> register(@RequestBody @Valid UserRequestDTO userDto) {
     return authService.register(userDto).fold(
@@ -55,6 +57,7 @@ public class AuthController {
                 failure.code().name(), "Unregistered user.", Map.of(FIELD_EMAIL, failure.message())))));
   }
 
+  @Override
   @PostMapping("/login")
   public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody LoginRequestDTO loginDto) {
     return authService.login(loginDto).fold(
@@ -66,6 +69,7 @@ public class AuthController {
                 loginError.message())))));
   }
 
+  @Override
   @PostMapping("/verify-email/{code}")
   public ResponseEntity<ApiResponse<Void>> verifyEmail(@PathVariable
                                                        @Min(value = 1000,
@@ -91,6 +95,7 @@ public class AuthController {
     );
   }
 
+  @Override
   @PostMapping("/resend-verification-email")
   public ResponseEntity<ApiResponse<Void>> resendVerificationEmail(){
     UserEntity user = authUtils.getCurrentUser();
@@ -103,6 +108,7 @@ public class AuthController {
             Map.of(FIELD_EMAIL, failure.message())))));
   }
 
+  @Override
   @PostMapping("/reset-password")
   public ResponseEntity<ApiResponse<PasswordResponse>> resetPassword(@RequestBody @Valid PasswordRequest request) {
     UserEntity user = authUtils.getCurrentUser();
@@ -122,6 +128,7 @@ public class AuthController {
         });
   }
 
+  @Override
   @PostMapping("/forgot-password/{email}")
   public ResponseEntity<ApiResponse<Void>> forgotPassword(@PathVariable String email) {
     return authService.forgotPassword(email).fold(
@@ -138,6 +145,7 @@ public class AuthController {
         });
   }
 
+  @Override
   @GetMapping("/refresh")
   public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshAccessToken() {
     UserEntity actualUser = authUtils.getCurrentUser();
@@ -160,6 +168,7 @@ public class AuthController {
     );
   }
 
+  @Override
   @GetMapping("/verify")
   public ResponseEntity<ApiResponse<Boolean>> verify() {
     return ResponseEntity.ok().body(
