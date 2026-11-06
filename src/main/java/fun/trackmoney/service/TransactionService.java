@@ -111,15 +111,19 @@ public class TransactionService {
 
   @Transactional
   public void delete(Integer id, UserEntity currentUser) {
-    TransactionEntity transaction = transactionRepository.findById(id).orElse(null);
-
-    if(transaction != null){
-      boolean isCredit = !transaction.getTransactionType().equals(TransactionType.INCOME);
-      Integer accountId = currentUser.getAccount().getAccountId();
-      accountService.updateAccountBalance(transaction.getAmount(), accountId , isCredit);
+    if (currentUser == null || currentUser.getAccount() == null) {
+      return;
     }
 
-    transactionRepository.deleteByIdAndAccountId(id, currentUser.getAccount());
+    TransactionEntity transaction = transactionRepository.findByIdAndAccount(id, currentUser.getAccount())
+        .orElse(null);
+
+    if (transaction != null) {
+      boolean isCredit = !transaction.getTransactionType().equals(TransactionType.INCOME);
+      Integer accountId = currentUser.getAccount().getAccountId();
+      accountService.updateAccountBalance(transaction.getAmount(), accountId, isCredit);
+      transactionRepository.deleteByIdAndAccountId(id, currentUser.getAccount());
+    }
   }
 
   public BigDecimal getIncome(UUID userId) {
