@@ -18,9 +18,11 @@ import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
 import fun.trackmoney.common.result.ErrorCode;
 import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.TransactionEntity;
+import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.mapper.TransactionMapper;
 import fun.trackmoney.repository.TransactionRepository;
 import fun.trackmoney.entity.UserEntity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -57,6 +59,11 @@ class TransactionServiceTest {
 
   @Mock
   private CategoryService categoryService;
+
+  @BeforeEach
+  void setUp() {
+    lenient().when(accountService.updateAccountBalance(any(), any(), any())).thenReturn(true);
+  }
 
 
   @Test
@@ -206,8 +213,50 @@ class TransactionServiceTest {
   @Test
   void delete_shouldCallRepositoryDeleteById() {
     UserEntity currentUser = UserEntityFactory.defaultUser();
+    var transaction = TransactionEntityFactory.defaultExpenseNow();
+    when(transactionRepository.findByIdAndAccount(1, currentUser.getAccount()))
+        .thenReturn(Optional.of(transaction));
+
     transactionService.delete(1, currentUser);
     verify(transactionRepository).deleteByIdAndAccountId(1, currentUser.getAccount());
+  }
+
+  @Test
+  void createTransaction_shouldThrowAccountNotFoundException_whenBalanceUpdateFails() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    CreateTransactionDTO dto = CreateTransactionDTOBuilder.defaultTransaction();
+    CategoryEntity category = new CategoryEntity(dto.categoryId(), "Food", "#fff");
+    TransactionEntity transaction = TransactionEntityFactory.defaultExpenseNow();
+
+    when(categoryService.findEntityById(dto.categoryId())).thenReturn(category);
+    when(transactionMapper.createTransactionToEntity(dto)).thenReturn(transaction);
+    when(transactionRepository.save(transaction)).thenReturn(transaction);
+    when(accountService.updateAccountBalance(any(), any(), any())).thenReturn(false);
+
+    assertThrows(AccountNotFoundException.class, () -> transactionService.createTransaction(dto, currentUser));
+  }
+
+  @Test
+  void update_shouldThrowAccountNotFoundException_whenBalanceUpdateFails() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    TransactionEntity entity = TransactionEntityFactory.defaultExpenseNow();
+    TransactionUpdateDTO dto = TransactionUpdateDTOFactory.defaultUpdateTransaction();
+
+    when(transactionRepository.findByIdAndAccount(1, currentUser.getAccount())).thenReturn(Optional.of(entity));
+    when(accountService.updateAccountBalance(any(), any(), any())).thenReturn(false);
+
+    assertThrows(AccountNotFoundException.class, () -> transactionService.update(1, dto, currentUser));
+  }
+
+  @Test
+  void delete_shouldThrowAccountNotFoundException_whenBalanceUpdateFails() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    var transaction = TransactionEntityFactory.defaultExpenseNow();
+    when(transactionRepository.findByIdAndAccount(1, currentUser.getAccount())).thenReturn(Optional.of(transaction));
+    when(accountService.updateAccountBalance(any(), any(), any())).thenReturn(false);
+
+    assertThrows(AccountNotFoundException.class, () -> transactionService.delete(1, currentUser));
+    verify(transactionRepository, never()).deleteByIdAndAccountId(any(), any());
   }
 
   @Test

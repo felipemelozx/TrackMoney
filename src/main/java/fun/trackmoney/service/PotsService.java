@@ -7,6 +7,7 @@ import fun.trackmoney.dto.pots.PotsResponseDTO;
 import fun.trackmoney.common.result.ErrorCode;
 import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.PotsEntity;
+import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.mapper.PotsMapper;
 import fun.trackmoney.repository.PotsRepository;
 import fun.trackmoney.entity.UserEntity;
@@ -74,7 +75,11 @@ public class PotsService {
     pot.get().setCurrentAmount(newValue);
 
     var potUpdated = potsRepository.save(pot.get());
-    accountService.updateAccountBalance(money.amount(), currentUser.getAccount().getAccountId(), !isIncome);
+    Integer accountId = currentUser.getAccount().getAccountId();
+    boolean updated = accountService.updateAccountBalance(money.amount(), accountId, !isIncome);
+    if (!updated) {
+      throw new AccountNotFoundException("Account not found!");
+    }
     return Result.ok(potsMapper.toResponse(potUpdated));
   }
 
@@ -91,7 +96,10 @@ public class PotsService {
     boolean isCredit = true;
     Integer accountId = currentUser.getAccount().getAccountId();
     if(!(pot.getCurrentAmount().equals(BigDecimal.ZERO))) {
-      accountService.updateAccountBalance(pot.getCurrentAmount(), accountId, isCredit);
+      boolean balanceUpdated = accountService.updateAccountBalance(pot.getCurrentAmount(), accountId, isCredit);
+      if (!balanceUpdated) {
+        throw new AccountNotFoundException("Account not found!");
+      }
     }
   }
 

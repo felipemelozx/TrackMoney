@@ -91,13 +91,13 @@ public class AccountService {
   public boolean updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
     AccountEntity account = findById(accountId);
 
-    if(account == null) {
-      return false;
+    if (account == null) {
+      throw new AccountNotFoundException(ACCOUNT_NOT_FOUND_MESSAGE);
     }
 
-    if (isCredit) {
+    if (Boolean.TRUE.equals(isCredit)) {
       account.setBalance(account.getBalance().add(balance));
-    } else{
+    } else {
       account.setBalance(account.getBalance().subtract(balance));
     }
 
