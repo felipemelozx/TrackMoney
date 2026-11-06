@@ -141,7 +141,7 @@ class AccountBalanceConcurrencyIntegrationTest {
 
     for (int i = 0; i < threadCount; i++) {
       final boolean isCredit = (i % 2 == 0);
-      final BigDecimal amount = isCredit ? new BigDecimal("50.0000") : new BigDecimal("100.0000");
+      final BigDecimal amount = new BigDecimal(isCredit ? "50.0000" : "100.0000");
 
       futures.add(executor.submit(() -> {
         readyLatch.countDown();

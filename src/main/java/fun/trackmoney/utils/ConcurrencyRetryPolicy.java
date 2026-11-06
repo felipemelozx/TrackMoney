@@ -4,6 +4,7 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PessimisticLockException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ public class ConcurrencyRetryPolicy {
   private final double backoffMultiplier;
   private final long maxDelayMs;
 
+  @Autowired
   public ConcurrencyRetryPolicy() {
     this(DEFAULT_MAX_ATTEMPTS, DEFAULT_INITIAL_DELAY_MS, DEFAULT_BACKOFF_MULTIPLIER, DEFAULT_MAX_DELAY_MS);
   }
