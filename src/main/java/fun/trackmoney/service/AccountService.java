@@ -11,8 +11,14 @@ import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.repository.AccountRepository;
 import fun.trackmoney.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import fun.trackmoney.utils.ConcurrencyRetryPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,13 +32,27 @@ public class AccountService {
   private final AccountRepository accountRepository;
   private final AccountMapper accountMapper;
   private final UserRepository userRepository;
+  private final ConcurrencyRetryPolicy retryPolicy;
+  private final TransactionTemplate transactionTemplate;
 
   public AccountService(AccountRepository accountRepository,
                         AccountMapper accountMapper,
                         UserRepository userRepository) {
+    this(accountRepository, accountMapper, userRepository,
+        new ConcurrencyRetryPolicy(), (PlatformTransactionManager) null);
+  }
+
+  @Autowired
+  public AccountService(AccountRepository accountRepository,
+                        AccountMapper accountMapper,
+                        UserRepository userRepository,
+                        ConcurrencyRetryPolicy retryPolicy,
+                        PlatformTransactionManager transactionManager) {
     this.accountRepository = accountRepository;
     this.accountMapper = accountMapper;
     this.userRepository = userRepository;
+    this.retryPolicy = retryPolicy != null ? retryPolicy : new ConcurrencyRetryPolicy();
+    this.transactionTemplate = transactionManager != null ? new TransactionTemplate(transactionManager) : null;
   }
 
   public AccountResponseDTO createAccount(AccountRequestDTO dto, UUID authenticatedUserId) {
@@ -89,16 +109,39 @@ public class AccountService {
   }
 
   public boolean updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
-    AccountEntity account = findById(accountId);
-
-    if(account == null) {
+    if (balance == null || accountId == null) {
       return false;
     }
 
-    if (isCredit) {
-      account.setBalance(account.getBalance().add(balance));
-    } else{
-      account.setBalance(account.getBalance().subtract(balance));
+    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+      return executeUpdateBalance(balance, accountId, isCredit);
+    }
+
+    if (transactionTemplate == null) {
+      return retryPolicy.execute(() -> executeUpdateBalance(balance, accountId, isCredit));
+    }
+
+    return retryPolicy.execute(() ->
+        Boolean.TRUE.equals(transactionTemplate.execute(status ->
+            executeUpdateBalance(balance, accountId, isCredit)))
+    );
+  }
+
+  @Transactional(propagation = Propagation.REQUIRED)
+  public boolean executeUpdateBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
+    AccountEntity account = accountRepository.findByIdForUpdate(accountId)
+        .or(() -> accountRepository.findById(accountId))
+        .orElse(null);
+
+    if (account == null) {
+      return false;
+    }
+
+    BigDecimal currentBalance = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
+    if (Boolean.TRUE.equals(isCredit)) {
+      account.setBalance(currentBalance.add(balance));
+    } else {
+      account.setBalance(currentBalance.subtract(balance));
     }
 
     accountRepository.save(account);
