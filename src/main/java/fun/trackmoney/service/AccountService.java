@@ -11,8 +11,8 @@ import fun.trackmoney.exception.UserNotFoundException;
 import fun.trackmoney.mapper.AccountMapper;
 import fun.trackmoney.repository.AccountRepository;
 import fun.trackmoney.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -88,17 +88,25 @@ public class AccountService {
     accountRepository.deleteByAccountIdDirect(account.getAccountId());
   }
 
+  @Transactional
   public boolean updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
-    AccountEntity account = findById(accountId);
-
-    if(account == null) {
+    if (balance == null || accountId == null) {
       return false;
     }
 
-    if (isCredit) {
-      account.setBalance(account.getBalance().add(balance));
-    } else{
-      account.setBalance(account.getBalance().subtract(balance));
+    AccountEntity account = accountRepository.findByIdForUpdate(accountId)
+        .or(() -> accountRepository.findById(accountId))
+        .orElse(null);
+
+    if (account == null) {
+      return false;
+    }
+
+    BigDecimal currentBalance = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
+    if (Boolean.TRUE.equals(isCredit)) {
+      account.setBalance(currentBalance.add(balance));
+    } else {
+      account.setBalance(currentBalance.subtract(balance));
     }
 
     accountRepository.save(account);

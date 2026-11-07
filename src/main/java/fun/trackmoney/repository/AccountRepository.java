@@ -1,7 +1,9 @@
 package fun.trackmoney.repository;
 
 import fun.trackmoney.entity.AccountEntity;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +22,10 @@ public interface AccountRepository extends JpaRepository<AccountEntity, Integer>
   @Query("SELECT a FROM AccountEntity a WHERE a.accountId = :accountId AND a.user.userId = :userId")
   Optional<AccountEntity> findByAccountIdAndUserId(@Param("accountId") Integer accountId,
                                                    @Param("userId") UUID userId);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT a FROM AccountEntity a WHERE a.accountId = :accountId")
+  Optional<AccountEntity> findByIdForUpdate(@Param("accountId") Integer accountId);
 
   @Query(value = """
       SELECT EXISTS (
