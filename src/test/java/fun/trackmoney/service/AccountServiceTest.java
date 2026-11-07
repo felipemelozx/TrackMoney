@@ -198,4 +198,13 @@ class AccountServiceTest {
     assertEquals(new BigDecimal("0"), account.getBalance());
     verify(accountRepository, times(1)).save(account);
   }
+
+  @Test
+  void testUpdateAccountBalance_whenAccountNotFound_shouldThrowAccountNotFoundException() {
+    when(accountRepository.findById(999)).thenReturn(Optional.empty());
+
+    assertThrows(AccountNotFoundException.class,
+        () -> accountService.updateAccountBalance(BigDecimal.valueOf(100), 999, true));
+    verify(accountRepository, never()).save(any());
+  }
 }

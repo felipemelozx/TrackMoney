@@ -11,6 +11,7 @@ import fun.trackmoney.dto.pots.PotsResponseDTO;
 import fun.trackmoney.common.result.ErrorCode;
 import fun.trackmoney.common.result.Result;
 import fun.trackmoney.entity.PotsEntity;
+import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.enums.ColorPick;
 import fun.trackmoney.mapper.PotsMapper;
 import fun.trackmoney.repository.PotsRepository;
@@ -19,6 +20,7 @@ import fun.trackmoney.testutils.PotsEntityFactory;
 import fun.trackmoney.testutils.PotsResponseDTOFactory;
 import fun.trackmoney.testutils.UserEntityFactory;
 import fun.trackmoney.entity.UserEntity;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -53,6 +56,11 @@ class PotsServiceTest {
 
   @Mock
   private AccountService accountService;
+
+  @BeforeEach
+  void setUp() {
+    lenient().when(accountService.updateAccountBalance(any(), any(), any())).thenReturn(true);
+  }
 
   @Test
   void findAllPots_shouldReturnMappedPotsList() {
@@ -304,6 +312,21 @@ class PotsServiceTest {
 
     assertInstanceOf(Result.Ok.class, result);
     assertEquals(new BigDecimal("40"), pot.getCurrentAmount());
+  }
+
+  @Test
+  void addMoney_shouldThrowAccountNotFoundException_whenBalanceUpdateFails() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    PotsEntity pot = PotsEntityFactory.defaultPot();
+    when(potsRepository.findByIdAndAccount(pot.getPotId(), currentUser.getAccount()))
+        .thenReturn(Optional.of(pot));
+    when(potsRepository.save(any())).thenReturn(pot);
+    when(accountService.updateAccountBalance(any(), any(), any())).thenReturn(false);
+
+    MoneyRequest moneyRequest = new MoneyRequest(TransactionType.INCOME, new BigDecimal("20"));
+    Long potId = pot.getPotId();
+    assertThrows(AccountNotFoundException.class,
+        () -> potsService.addMoney(potId, moneyRequest, currentUser));
   }
 
   @Test

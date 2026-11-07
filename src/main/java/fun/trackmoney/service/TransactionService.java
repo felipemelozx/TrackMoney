@@ -1,17 +1,18 @@
 package fun.trackmoney.service;
 
-import fun.trackmoney.entity.AccountEntity;
-import fun.trackmoney.entity.CategoryEntity;
-import fun.trackmoney.enums.TransactionType;
+import fun.trackmoney.common.result.ErrorCode;
+import fun.trackmoney.common.result.Result;
 import fun.trackmoney.dto.transaction.CreateTransactionDTO;
 import fun.trackmoney.dto.transaction.TransactionResponseDTO;
 import fun.trackmoney.dto.transaction.TransactionUpdateDTO;
-import fun.trackmoney.common.result.ErrorCode;
-import fun.trackmoney.common.result.Result;
+import fun.trackmoney.entity.AccountEntity;
+import fun.trackmoney.entity.CategoryEntity;
 import fun.trackmoney.entity.TransactionEntity;
+import fun.trackmoney.entity.UserEntity;
+import fun.trackmoney.enums.TransactionType;
+import fun.trackmoney.exception.AccountNotFoundException;
 import fun.trackmoney.mapper.TransactionMapper;
 import fun.trackmoney.repository.TransactionRepository;
-import fun.trackmoney.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -67,7 +68,10 @@ public class TransactionService {
     var response = transactionMapper.toResponseDTO(transactionRepository.save(transactionEntity));
 
     boolean isCredit = TransactionType.INCOME.equals(transactionDTO.transactionType());
-    accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
+    boolean updated = accountService.updateAccountBalance(transactionDTO.amount(), account.getAccountId(), isCredit);
+    if (!updated) {
+      throw new AccountNotFoundException("Account not found!");
+    }
 
     return Result.ok(response);
   }
@@ -90,14 +94,21 @@ public class TransactionService {
       return Result.err(ErrorCode.TRANSACTION_NOT_FOUND);
     }
 
+    boolean updated;
     if (oldTransaction.getTransactionType() == TransactionType.INCOME) {
-      accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), false);
+      updated = accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), false);
     } else {
-      accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), true);
+      updated = accountService.updateAccountBalance(oldTransaction.getAmount(), account.getAccountId(), true);
+    }
+    if (!updated) {
+      throw new AccountNotFoundException("Account not found!");
     }
 
     boolean newIsCredit = (dto.transactionType() == TransactionType.INCOME);
-    accountService.updateAccountBalance(dto.amount(), account.getAccountId(), newIsCredit);
+    updated = accountService.updateAccountBalance(dto.amount(), account.getAccountId(), newIsCredit);
+    if (!updated) {
+      throw new AccountNotFoundException("Account not found!");
+    }
 
     oldTransaction.setTransactionName(dto.transactionName());
     oldTransaction.setAmount(dto.amount());
@@ -121,7 +132,10 @@ public class TransactionService {
     if (transaction != null) {
       boolean isCredit = !transaction.getTransactionType().equals(TransactionType.INCOME);
       Integer accountId = currentUser.getAccount().getAccountId();
-      accountService.updateAccountBalance(transaction.getAmount(), accountId, isCredit);
+      boolean updated = accountService.updateAccountBalance(transaction.getAmount(), accountId, isCredit);
+      if (!updated) {
+        throw new AccountNotFoundException("Account not found!");
+      }
       transactionRepository.deleteByIdAndAccountId(id, currentUser.getAccount());
     }
   }

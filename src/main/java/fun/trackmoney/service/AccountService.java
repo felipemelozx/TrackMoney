@@ -90,7 +90,11 @@ public class AccountService {
 
   @Transactional
   public boolean updateAccountBalance(BigDecimal balance, Integer accountId, Boolean isCredit) {
-    if (balance == null || accountId == null) {
+    if (accountId == null) {
+      throw new AccountNotFoundException(ACCOUNT_NOT_FOUND_MESSAGE);
+    }
+
+    if (balance == null) {
       return false;
     }
 
@@ -99,7 +103,7 @@ public class AccountService {
         .orElse(null);
 
     if (account == null) {
-      return false;
+      throw new AccountNotFoundException(ACCOUNT_NOT_FOUND_MESSAGE);
     }
 
     BigDecimal currentBalance = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
