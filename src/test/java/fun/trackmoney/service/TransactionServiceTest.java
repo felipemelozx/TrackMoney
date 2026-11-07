@@ -204,10 +204,50 @@ class TransactionServiceTest {
 
 
   @Test
-  void delete_shouldCallRepositoryDeleteById() {
+  void delete_shouldRevertBalanceAndCallDelete_whenExpenseTransactionOwnedByUser() {
     UserEntity currentUser = UserEntityFactory.defaultUser();
+    var transaction = TransactionEntityFactory.defaultExpenseNow();
+    when(transactionRepository.findByIdAndAccount(1, currentUser.getAccount()))
+        .thenReturn(Optional.of(transaction));
+
     transactionService.delete(1, currentUser);
+
+    verify(accountService).updateAccountBalance(transaction.getAmount(), currentUser.getAccount().getAccountId(), true);
     verify(transactionRepository).deleteByIdAndAccountId(1, currentUser.getAccount());
+  }
+
+  @Test
+  void delete_shouldRevertBalanceAndCallDelete_whenIncomeTransactionOwnedByUser() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    var transaction = TransactionEntityFactory.defaultIncomeNow();
+    when(transactionRepository.findByIdAndAccount(1, currentUser.getAccount()))
+        .thenReturn(Optional.of(transaction));
+
+    transactionService.delete(1, currentUser);
+
+    verify(accountService).updateAccountBalance(transaction.getAmount(), currentUser.getAccount().getAccountId(), false);
+    verify(transactionRepository).deleteByIdAndAccountId(1, currentUser.getAccount());
+  }
+
+  @Test
+  void delete_shouldNotChangeBalanceOrDelete_whenTransactionNotFoundOrNotOwned() {
+    UserEntity currentUser = UserEntityFactory.defaultUser();
+    when(transactionRepository.findByIdAndAccount(1, currentUser.getAccount()))
+        .thenReturn(Optional.empty());
+
+    transactionService.delete(1, currentUser);
+
+    verify(accountService, never()).updateAccountBalance(any(), any(), any());
+    verify(transactionRepository, never()).deleteByIdAndAccountId(any(), any());
+  }
+
+  @Test
+  void delete_shouldDoNothing_whenUserOrAccountIsNull() {
+    transactionService.delete(1, null);
+    UserEntity userWithoutAccount = new UserEntity();
+    transactionService.delete(1, userWithoutAccount);
+
+    verifyNoInteractions(transactionRepository, accountService);
   }
 
   @Test
